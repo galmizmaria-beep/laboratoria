@@ -430,36 +430,13 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        * { box-sizing: border-box; font-family: '${fontFamily}', sans-serif; }
-        
-        body { 
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; /* Changed vw/vh to % */
-            background: #000; /* Default background for the iframe itself */
-            display: flex; justify-content: center; align-items: center; /* Center the game content */
-        }
-
-        .game-wrapper {
-            width: 100%;
-            height: 100%;
-            max-width: calc(100vh * (16 / 9)); /* Limit width based on 16:9 aspect if height is 100% */
-            max-height: calc(100vw * (9 / 16)); /* Limit height based on 16:9 aspect if width is 100% */
-            
+        /* ИСПРАВЛЕНИЕ ДЛЯ GENIALLY: Использование 100% вместо 100vw/100vh */
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; /* <--- ИЗМЕНЕНО ЗДЕСЬ */
             background: url('${bgUrl}') no-repeat center center/cover;
-            background-size: cover;
-            background-position: center;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; 
-            align-items: center;
-            position: relative; /* Crucial for absolute positioning of children */
-            overflow: hidden;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
-
-        /* Elements that were top-level and directly styled should now be within .game-wrapper and styled relative to it */
-        .overlay { 
-            position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;
-        }
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
         
         .players-container {
             display: flex; gap: 40px; margin-bottom: 50px; z-index: 2; position: relative;
@@ -514,8 +491,7 @@
 
         /* Modal Task */
         .modal-bg {
-            display: none; position: absolute; /* Changed from fixed to absolute */
-            top:0; left:0; width:100%; height:100%; /* Cover parent .game-wrapper */
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
         }
         
@@ -545,8 +521,7 @@
 
         /* Winner Screen */
         .winner-screen {
-            display: none; position: absolute; /* Changed from fixed to absolute */
-            top:0; left:0; width:100%; height:100%; /* Cover parent .game-wrapper */
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
             justify-content: center; align-items: center; color: white;
         }
@@ -554,25 +529,23 @@
     </style>
 </head>
 <body>
-    <div class="game-wrapper">
-        <div class="overlay"></div>
-        <div class="players-container" id="pc"></div>
+    <div class="overlay"></div>
+    <div class="players-container" id="pc"></div>
 
-        <!-- Modal -->
-        <div class="modal-bg" id="modalBg">
-            <div class="modal">
-                <div class="question" id="qText"></div>
-                <div class="options" id="optsDiv"></div>
-                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
-            </div>
+    <!-- Modal -->
+    <div class="modal-bg" id="modalBg">
+        <div class="modal">
+            <div class="question" id="qText"></div>
+            <div class="options" id="optsDiv"></div>
+            <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
         </div>
+    </div>
 
-        <!-- Winner -->
-        <div class="winner-screen" id="winnerScreen">
-            <h1>${txt.win}</h1>
-            <img id="winnerAvatar" style="width:200px; border-radius:20px; border: 4px solid ${liquidColor};">
-            <h2 id="winnerName"></h2>
-        </div>
+    <!-- Winner -->
+    <div class="winner-screen" id="winnerScreen">
+        <h1>${txt.win}</h1>
+        <img id="winnerAvatar" style="width:200px; border-radius:20px; border: 4px solid ${liquidColor};">
+        <h2 id="winnerName"></h2>
     </div>
 
     <script>
@@ -611,6 +584,7 @@
             ).join('');
             
             selectedOption = null;
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected')); // Clear previous selection visuals
             document.getElementById('modalBg').style.display = 'flex';
         }
 
