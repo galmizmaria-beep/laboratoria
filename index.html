@@ -1107,6 +1107,2964 @@
     </style>
 </head>
 <body>
+    <h1>Genially Game Widget Creator</h1>
+
+    <div class="main-wrapper">
+        <div class="editor-controls">
+            <section class="section">
+                <h2>Настройки игры</h2>
+                <div class="input-group">
+                    <label for="gameLang">Язык игры:</label>
+                    <select id="gameLang" class="input-field">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="titleFont">Шрифт заголовков:</label>
+                    <select id="titleFont" class="input-field font-select">
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="uiFont">Шрифт интерфейса:</label>
+                    <select id="uiFont" class="input-field font-select">
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="avatarSize">Размер аватара (px):</label>
+                    <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
+                </div>
+                <div class="input-group">
+                    <label for="liquidColor">Цвет жидкости:</label>
+                    <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
+                </div>
+                <div class="input-group">
+                    <label for="highlightColor">Цвет подсветки активного игрока:</label>
+                    <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
+                </div>
+                <div class="input-group">
+                    <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
+                    <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Фон игры</h2>
+                <div class="input-group">
+                    <label for="bgImageUrl">URL фонового изображения:</label>
+                    <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
+                </div>
+                <div class="input-group">
+                    <label>Или загрузите файл:</label>
+                    <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
+                    <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
+                </div>
+                <div class="image-preview" id="bgImagePreview">
+                    <img src="#" alt="Background Preview" style="display: none;">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
+                <div id="playersContainer">
+                    <!-- Player templates will be inserted here by JS -->
+                </div>
+                <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
+            </section>
+        </div>
+
+        <div class="preview-panel">
+            <section class="section">
+                <h2>Предпросмотр игры</h2>
+                <p>Нажмите "Сгенерировать код", чтобы обновить предпросмотр.</p>
+                <div class="preview-container">
+                    <iframe id="gamePreviewFrame" sandbox="allow-scripts allow-forms allow-popups" frameborder="0"></iframe>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Сгенерированный код для Genially</h2>
+                <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
+                <textarea id="outputCode" readonly class="code-output"></textarea>
+                <button id="generateCodeBtn" class="btn primary-btn">Сгенерировать код</button>
+                <button id="copyCodeBtn" class="btn secondary-btn" style="display: none;">Копировать</button>
+            </section>
+        </div>
+    </div>
+
+    <!-- Hidden Player Template -->
+    <template id="playerTemplate">
+        <div class="player-config card">
+            <h3>Игрок <span class="player-number"></span> <button class="remove-player-btn btn icon-btn danger-btn">✕</button></h3>
+            <div class="input-group">
+                <label for="playerName">Имя игрока:</label>
+                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie" value="Игрок ">
+            </div>
+            <div class="input-group">
+                <label for="avatarUrl">URL аватара:</label>
+                <input type="text" class="input-field avatar-url" placeholder="https://example.com/avatar.png">
+            </div>
+            <div class="input-group">
+                <label>Или загрузите файл:</label>
+                <input type="file" accept="image/*" class="input-field file-input avatar-upload">
+                <small class="image-note">Изображения будут автоматически сжаты.</small>
+            </div>
+            <div class="image-preview avatar-preview">
+                <img src="#" alt="Avatar Preview" style="display: none;">
+            </div>
+
+            <h4>Задания для игрока</h4>
+            <div class="questions-container">
+                <!-- Questions will be added here -->
+            </div>
+            <button class="add-question-btn btn secondary-btn">Добавить вопрос</button>
+        </div>
+    </template>
+
+    <!-- Hidden Question Template -->
+    <template id="questionTemplate">
+        <div class="question-item">
+            <label for="questionType">Тип вопроса:</label>
+            <select class="input-field question-type">
+                <option value="open">Без вариантов ответа</option>
+                <option value="mc">С вариантами ответа</option>
+            </select>
+
+            <label for="questionText">Текст вопроса:</label>
+            <textarea class="input-field question-text" rows="2" placeholder="Введите текст задания..."></textarea>
+            
+            <div class="mc-options-container" style="display: none;">
+                <label>Варианты ответа:</label>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 1">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 2">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 3">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 4">
+                </div>
+            </div>
+            <button class="remove-question-btn btn icon-btn danger-btn">✕</button>
+        </div>
+    </template>
+
+    <script>
+        /* --- JavaScript для редактора и генерации кода --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            const playersContainer = document.getElementById('playersContainer');
+            const addPlayerBtn = document.getElementById('addPlayerBtn');
+            const playerCountText = document.getElementById('playerCountText');
+            const playerTemplate = document.getElementById('playerTemplate');
+            const questionTemplate = document.getElementById('questionTemplate');
+            const generateCodeBtn = document.getElementById('generateCodeBtn');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            const outputCode = document.getElementById('outputCode');
+            const bgImageUpload = document.getElementById('bgImageUpload');
+            const bgImageUrl = document.getElementById('bgImageUrl');
+            const bgImagePreview = document.getElementById('bgImagePreview').querySelector('img');
+            const gamePreviewFrame = document.getElementById('gamePreviewFrame');
+
+            let playersData = []; // Array to store configuration for each player
+
+            // --- Utility Functions ---
+
+            // Function to compress image using canvas
+            async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Calculate new dimensions
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert canvas to JPEG data URL
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+
+                    img.onerror = () => {
+                        console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
+                        // If it's a valid HTTP URL, just use it directly, otherwise empty string
+                        resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); 
+                    };
+                    
+                    if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
+                        img.src = fileOrUrl; // Already a data URL, process it
+                    } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
+                         // For external URLs, CORS might be an issue. Attempt to load with crossOrigin.
+                        img.crossOrigin = "anonymous"; 
+                        img.src = fileOrUrl;
+                    } else if (fileOrUrl instanceof File) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { img.src = e.target.result; };
+                        reader.readAsDataURL(fileOrUrl);
+                    } else {
+                        resolve(''); // No valid input
+                    }
+                });
+            }
+
+            function updatePlayerCount() {
+                playerCountText.textContent = playersData.length;
+                addPlayerBtn.disabled = playersData.length >= 4;
+            }
+
+            async function updateImagePreview(fileInput, urlInput, previewImgElement) {
+                let imageData = '';
+                if (fileInput.files && fileInput.files[0]) {
+                    imageData = await compressImage(fileInput.files[0]);
+                    urlInput.value = ''; // Clear URL if file is uploaded
+                } else if (urlInput.value) {
+                    // Attempt to compress/process URL. If it's a data URL already, compress it. If it's an external URL, compress if possible or just use it.
+                    const processedData = await compressImage(urlInput.value);
+                    if (processedData) {
+                        imageData = processedData;
+                    } else {
+                        // Fallback if compression failed or input was invalid
+                        imageData = urlInput.value.startsWith('http') ? urlInput.value : '';
+                    }
+                    fileInput.value = ''; // Clear file input if URL is entered
+                }
+
+                if (imageData) {
+                    previewImgElement.src = imageData;
+                    previewImgElement.style.display = 'block';
+                } else {
+                    previewImgElement.src = '#';
+                    previewImgElement.style.display = 'none';
+                }
+                return imageData; // Return processed image data for direct use
+            }
+
+            // --- Player Management ---
+            addPlayerBtn.addEventListener('click', () => {
+                if (playersData.length < 4) {
+                    const playerIndex = playersData.length;
+                    const playerConfig = {
+                        id: Date.now(), // Unique ID for keying
+                        name: `Игрок ${playerIndex + 1}`,
+                        avatar: '', // data URL or external URL
+                        questions: []
+                    };
+                    playersData.push(playerConfig);
+                    renderPlayer(playerConfig, playerIndex);
+                    updatePlayerCount();
+                }
+            });
+
+            function renderPlayer(playerConfig, playerIndex) {
+                const clone = playerTemplate.content.cloneNode(true);
+                const playerDiv = clone.querySelector('.player-config');
+                playerDiv.dataset.playerId = playerConfig.id;
+                playerDiv.querySelector('.player-number').textContent = playerIndex + 1;
+
+                const playerNameInput = playerDiv.querySelector('.player-name');
+                playerNameInput.value = playerConfig.name;
+                playerNameInput.addEventListener('input', (e) => {
+                    playerConfig.name = e.target.value;
+                });
+
+                const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+
+                // Set initial URL/Data URL if playerConfig.avatar already has one
+                if (playerConfig.avatar) {
+                    avatarUrlInput.value = playerConfig.avatar.startsWith('http') ? playerConfig.avatar : ''; // Only show URL in text input if it's an actual URL
+                    avatarPreviewImg.src = playerConfig.avatar;
+                    avatarPreviewImg.style.display = 'block';
+                }
+
+                avatarUrlInput.addEventListener('input', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                avatarUploadInput.addEventListener('change', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
+                removePlayerBtn.addEventListener('click', () => {
+                    playersData = playersData.filter(p => p.id !== playerConfig.id);
+                    playersContainer.innerHTML = ''; // Clear and re-render all to update numbers
+                    playersData.forEach((p, idx) => renderPlayer(p, idx));
+                    updatePlayerCount();
+                });
+
+                const questionsContainer = playerDiv.querySelector('.questions-container');
+                const addQuestionBtn = playerDiv.querySelector('.add-question-btn');
+                addQuestionBtn.addEventListener('click', () => {
+                    const newQuestion = {
+                        type: 'open',
+                        text: '',
+                        options: ['', '', '', ''],
+                        correctAnswerIndex: -1 // -1 means no correct answer selected for MC
+                    };
+                    playerConfig.questions.push(newQuestion);
+                    // Re-render all questions for this player to correctly update `name` attributes for radio buttons
+                    questionsContainer.innerHTML = ''; 
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                // Render existing questions
+                playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+
+                // Append to container or re-insert if re-rendering (for correct player order)
+                const existingPlayerDiv = playersContainer.querySelector(`[data-player-id="${playerConfig.id}"]`);
+                if (existingPlayerDiv) {
+                    existingPlayerDiv.replaceWith(playerDiv);
+                } else {
+                    playersContainer.appendChild(clone);
+                }
+            }
+
+            function renderQuestion(questionObj, playerConfig, questionsContainer, questionIndex) {
+                const clone = questionTemplate.content.cloneNode(true);
+                const questionItemDiv = clone.querySelector('.question-item');
+                
+                const questionTypeSelect = questionItemDiv.querySelector('.question-type');
+                const questionTextInput = questionItemDiv.querySelector('.question-text');
+                const mcOptionsContainer = questionItemDiv.querySelector('.mc-options-container');
+                const optionInputs = questionItemDiv.querySelectorAll('.option-text');
+                const correctOptionRadios = questionItemDiv.querySelectorAll('.correct-option-radio');
+
+                // Set initial values
+                questionTypeSelect.value = questionObj.type;
+                questionTextInput.value = questionObj.text;
+                
+                // Unique name for radio buttons within this specific question
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`;
+                });
+
+                if (questionObj.type === 'mc') {
+                    mcOptionsContainer.style.display = 'block';
+                    questionObj.options.forEach((opt, idx) => {
+                        if (optionInputs[idx]) optionInputs[idx].value = opt;
+                    });
+                    if (questionObj.correctAnswerIndex !== -1 && correctOptionRadios[questionObj.correctAnswerIndex]) {
+                        correctOptionRadios[questionObj.correctAnswerIndex].checked = true;
+                    }
+                } else {
+                    mcOptionsContainer.style.display = 'none';
+                }
+
+                // Event Listeners
+                questionTypeSelect.addEventListener('change', (e) => {
+                    questionObj.type = e.target.value;
+                    mcOptionsContainer.style.display = (e.target.value === 'mc') ? 'block' : 'none';
+                    // Reset MC specific data if changing to open-ended
+                    if (e.target.value === 'open') {
+                        questionObj.options = ['', '', '', ''];
+                        questionObj.correctAnswerIndex = -1;
+                        optionInputs.forEach(input => input.value = '');
+                        correctOptionRadios.forEach(radio => radio.checked = false);
+                    }
+                });
+
+                questionTextInput.addEventListener('input', (e) => {
+                    questionObj.text = e.target.value;
+                });
+
+                optionInputs.forEach((input, idx) => {
+                    input.addEventListener('input', (e) => {
+                        questionObj.options[idx] = e.target.value;
+                    });
+                });
+
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.addEventListener('change', () => {
+                        if (radio.checked) {
+                            questionObj.correctAnswerIndex = idx;
+                        }
+                    });
+                });
+
+                const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
+                removeQuestionBtn.addEventListener('click', () => {
+                    playerConfig.questions.splice(questionIndex, 1);
+                    questionsContainer.innerHTML = ''; // Clear and re-render all questions for this player
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                questionsContainer.appendChild(clone);
+            }
+
+            // --- Global Image Preview for Background ---
+            let bgImageFinalData = '';
+            bgImageUpload.addEventListener('change', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+            bgImageUrl.addEventListener('input', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+
+
+            // --- Code Generation ---
+            generateCodeBtn.addEventListener('click', async () => {
+                const gameLang = document.getElementById('gameLang').value;
+                const titleFont = document.getElementById('titleFont').value;
+                const uiFont = document.getElementById('uiFont').value;
+                const avatarSize = document.getElementById('avatarSize').value;
+                const liquidColor = document.getElementById('liquidColor').value;
+                const highlightColor = document.getElementById('highlightColor').value;
+                const pointsToWin = parseInt(document.getElementById('pointsToWin').value);
+
+                // Ensure background image data is up-to-date before final generation
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+
+
+                // Finalize players data, ensuring avatars are processed
+                const finalPlayersData = [];
+                for (const player of playersData) {
+                    const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
+                    const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                    const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                    const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+                    
+                    // Update and get final avatar data for this player
+                    const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+
+                    finalPlayersData.push({
+                        name: player.name,
+                        avatar: finalAvatar,
+                        questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
+                    });
+                }
+                
+                // Basic validation
+                if (finalPlayersData.length === 0) {
+                    alert('Пожалуйста, добавьте хотя бы одного игрока.');
+                    return;
+                }
+                for (const player of finalPlayersData) {
+                    if (!player.avatar) {
+                        alert(`Игрок "${player.name}" не имеет аватара. Пожалуйста, загрузите изображение или укажите URL.`);
+                        return;
+                    }
+                    if (player.questions.length < pointsToWin) {
+                        alert(`У игрока "${player.name}" количество вопросов (${player.questions.length}) меньше, чем "Очков для победы" (${pointsToWin}). Пожалуйста, добавьте больше вопросов.`);
+                        return;
+                    }
+                    if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
+                        alert(`У игрока "${player.name}" есть вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Пожалуйста, проверьте все вопросы.`);
+                        return;
+                    }
+                }
+
+
+                // --- START OF GENIALLY WIDGET CODE GENERATION ---
+                const generatedHtml = `
+<!DOCTYPE html>
+<html lang="${gameLang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genially Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=${titleFont.replace(/ /g, '+')}:wght@700&family=${uiFont.replace(/ /g, '+')}:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align players to the bottom */
+            height: 100vh;
+            background-image: url('${bgImageFinalData}');
+            background-size: cover;
+            background-position: center;
+            font-family: '${uiFont}', sans-serif;
+            color: #fff;
+            position: relative;
+            background-color: #1A1A2E; /* Fallback if image fails */
+        }
+        .game-title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-family: '${titleFont}', sans-serif;
+            font-size: 2.5em;
+            color: #BB86FC; /* Fixed color for title, can be customizable */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        .players-container {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 50px; /* Space from bottom */
+            z-index: 5;
+            flex-wrap: wrap; /* Allow wrapping for more players */
+            justify-content: center;
+        }
+        .player-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            border: 2px solid transparent;
+        }
+        .player-card.active {
+            border-color: ${highlightColor};
+            box-shadow: 0 0 20px ${highlightColor}, 0 0 40px rgba(255, 255, 0, 0.3);
+            transform: translateY(-10px) scale(1.05);
+        }
+        .avatar-frame {
+            width: ${avatarSize}px;
+            height: ${avatarSize}px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #BB86FC; /* Avatar frame color */
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .avatar-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .player-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .flask-container {
+            width: 80px; /* Width of the flask area */
+            height: 180px; /* Height of the flask area */
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" fill="none" stroke="%23BB86FC" stroke-width="4"><path d="M20 0 L80 0 Q90 0 90 10 L90 180 Q90 200 70 200 L30 200 Q10 200 10 180 L10 10 Q10 0 20 0 Z" fill="rgba(0,0,0,0.3)"/></svg>') no-repeat center bottom;
+            background-size: contain;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 0%;
+            background-color: ${liquidColor};
+            border-radius: 0 0 10px 10px;
+            transition: height 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.5);
+        }
+        .fill-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: -20px; /* Position above the flask */
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+        }
+        .player-card.active .fill-button {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        .fill-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        /* Question Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .question-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #BB86FC;
+        }
+        .question-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #BB86FC;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        .question-modal p {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .modal-options-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+        .modal-option {
+            display: flex;
+            align-items: center;
+            background: #4A4A6A;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #BB86FC66;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+        .modal-option:hover {
+            background-color: #5A5A7A;
+            border-color: #BB86FC;
+        }
+        .modal-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.5);
+            cursor: inherit;
+        }
+        .modal-option.selected {
+            border-color: ${highlightColor};
+            background-color: #5A5A7A;
+            box-shadow: 0 0 10px rgba(255,255,0,0.5);
+        }
+        .modal-feedback {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+        }
+        .modal-feedback.correct {
+            color: #7FFF00; /* Lime green */
+        }
+        .modal-feedback.incorrect {
+            color: #FF4500; /* Orange-red */
+        }
+
+        .modal-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            margin-top: 30px;
+        }
+        .modal-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        .game-over-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #CF6679; /* Red accent for game over */
+            color: #E0E0E0;
+        }
+        .game-over-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #CF6679;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+        }
+        .game-over-modal p {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+        .game-over-modal .modal-button {
+             background-color: #CF6679;
+             color: #1A1A2E;
+        }
+        .game-over-modal .modal-button:hover {
+            background-color: #E07A8B;
+        }
+    </style>
+</head>
+<body>
+    <h1>Genially Game Widget Creator</h1>
+
+    <div class="main-wrapper">
+        <div class="editor-controls">
+            <section class="section">
+                <h2>Настройки игры</h2>
+                <div class="input-group">
+                    <label for="gameLang">Язык игры:</label>
+                    <select id="gameLang" class="input-field">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="titleFont">Шрифт заголовков:</label>
+                    <select id="titleFont" class="input-field font-select">
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="uiFont">Шрифт интерфейса:</label>
+                    <select id="uiFont" class="input-field font-select">
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="avatarSize">Размер аватара (px):</label>
+                    <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
+                </div>
+                <div class="input-group">
+                    <label for="liquidColor">Цвет жидкости:</label>
+                    <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
+                </div>
+                <div class="input-group">
+                    <label for="highlightColor">Цвет подсветки активного игрока:</label>
+                    <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
+                </div>
+                <div class="input-group">
+                    <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
+                    <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Фон игры</h2>
+                <div class="input-group">
+                    <label for="bgImageUrl">URL фонового изображения:</label>
+                    <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
+                </div>
+                <div class="input-group">
+                    <label>Или загрузите файл:</label>
+                    <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
+                    <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
+                </div>
+                <div class="image-preview" id="bgImagePreview">
+                    <img src="#" alt="Background Preview" style="display: none;">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
+                <div id="playersContainer">
+                    <!-- Player templates will be inserted here by JS -->
+                </div>
+                <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
+            </section>
+        </div>
+
+        <div class="preview-panel">
+            <section class="section">
+                <h2>Предпросмотр игры</h2>
+                <p>Нажмите "Сгенерировать код", чтобы обновить предпросмотр.</p>
+                <div class="preview-container">
+                    <iframe id="gamePreviewFrame" sandbox="allow-scripts allow-forms allow-popups" frameborder="0"></iframe>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Сгенерированный код для Genially</h2>
+                <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
+                <textarea id="outputCode" readonly class="code-output"></textarea>
+                <button id="generateCodeBtn" class="btn primary-btn">Сгенерировать код</button>
+                <button id="copyCodeBtn" class="btn secondary-btn" style="display: none;">Копировать</button>
+            </section>
+        </div>
+    </div>
+
+    <!-- Hidden Player Template -->
+    <template id="playerTemplate">
+        <div class="player-config card">
+            <h3>Игрок <span class="player-number"></span> <button class="remove-player-btn btn icon-btn danger-btn">✕</button></h3>
+            <div class="input-group">
+                <label for="playerName">Имя игрока:</label>
+                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie" value="Игрок ">
+            </div>
+            <div class="input-group">
+                <label for="avatarUrl">URL аватара:</label>
+                <input type="text" class="input-field avatar-url" placeholder="https://example.com/avatar.png">
+            </div>
+            <div class="input-group">
+                <label>Или загрузите файл:</label>
+                <input type="file" accept="image/*" class="input-field file-input avatar-upload">
+                <small class="image-note">Изображения будут автоматически сжаты.</small>
+            </div>
+            <div class="image-preview avatar-preview">
+                <img src="#" alt="Avatar Preview" style="display: none;">
+            </div>
+
+            <h4>Задания для игрока</h4>
+            <div class="questions-container">
+                <!-- Questions will be added here -->
+            </div>
+            <button class="add-question-btn btn secondary-btn">Добавить вопрос</button>
+        </div>
+    </template>
+
+    <!-- Hidden Question Template -->
+    <template id="questionTemplate">
+        <div class="question-item">
+            <label for="questionType">Тип вопроса:</label>
+            <select class="input-field question-type">
+                <option value="open">Без вариантов ответа</option>
+                <option value="mc">С вариантами ответа</option>
+            </select>
+
+            <label for="questionText">Текст вопроса:</label>
+            <textarea class="input-field question-text" rows="2" placeholder="Введите текст задания..."></textarea>
+            
+            <div class="mc-options-container" style="display: none;">
+                <label>Варианты ответа:</label>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 1">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 2">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 3">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 4">
+                </div>
+            </div>
+            <button class="remove-question-btn btn icon-btn danger-btn">✕</button>
+        </div>
+    </template>
+
+    <script>
+        /* --- JavaScript для редактора и генерации кода --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            const playersContainer = document.getElementById('playersContainer');
+            const addPlayerBtn = document.getElementById('addPlayerBtn');
+            const playerCountText = document.getElementById('playerCountText');
+            const playerTemplate = document.getElementById('playerTemplate');
+            const questionTemplate = document.getElementById('questionTemplate');
+            const generateCodeBtn = document.getElementById('generateCodeBtn');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            const outputCode = document.getElementById('outputCode');
+            const bgImageUpload = document.getElementById('bgImageUpload');
+            const bgImageUrl = document.getElementById('bgImageUrl');
+            const bgImagePreview = document.getElementById('bgImagePreview').querySelector('img');
+            const gamePreviewFrame = document.getElementById('gamePreviewFrame');
+
+            let playersData = []; // Array to store configuration for each player
+
+            // --- Utility Functions ---
+
+            // Function to compress image using canvas
+            async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Calculate new dimensions
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert canvas to JPEG data URL
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+
+                    img.onerror = () => {
+                        console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
+                        // If it's a valid HTTP URL, just use it directly, otherwise empty string
+                        resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); 
+                    };
+                    
+                    if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
+                        img.src = fileOrUrl; // Already a data URL, process it
+                    } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
+                         // For external URLs, CORS might be an issue. Attempt to load with crossOrigin.
+                        img.crossOrigin = "anonymous"; 
+                        img.src = fileOrUrl;
+                    } else if (fileOrUrl instanceof File) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { img.src = e.target.result; };
+                        reader.readAsDataURL(fileOrUrl);
+                    } else {
+                        resolve(''); // No valid input
+                    }
+                });
+            }
+
+            function updatePlayerCount() {
+                playerCountText.textContent = playersData.length;
+                addPlayerBtn.disabled = playersData.length >= 4;
+            }
+
+            async function updateImagePreview(fileInput, urlInput, previewImgElement) {
+                let imageData = '';
+                if (fileInput.files && fileInput.files[0]) {
+                    imageData = await compressImage(fileInput.files[0]);
+                    urlInput.value = ''; // Clear URL if file is uploaded
+                } else if (urlInput.value) {
+                    // Attempt to compress/process URL. If it's a data URL already, compress it. If it's an external URL, compress if possible or just use it.
+                    const processedData = await compressImage(urlInput.value);
+                    if (processedData) {
+                        imageData = processedData;
+                    } else {
+                        // Fallback if compression failed or input was invalid
+                        imageData = urlInput.value.startsWith('http') ? urlInput.value : '';
+                    }
+                    fileInput.value = ''; // Clear file input if URL is entered
+                }
+
+                if (imageData) {
+                    previewImgElement.src = imageData;
+                    previewImgElement.style.display = 'block';
+                } else {
+                    previewImgElement.src = '#';
+                    previewImgElement.style.display = 'none';
+                }
+                return imageData; // Return processed image data for direct use
+            }
+
+            // --- Player Management ---
+            addPlayerBtn.addEventListener('click', () => {
+                if (playersData.length < 4) {
+                    const playerIndex = playersData.length;
+                    const playerConfig = {
+                        id: Date.now(), // Unique ID for keying
+                        name: `Игрок ${playerIndex + 1}`,
+                        avatar: '', // data URL or external URL
+                        questions: []
+                    };
+                    playersData.push(playerConfig);
+                    renderPlayer(playerConfig, playerIndex);
+                    updatePlayerCount();
+                }
+            });
+
+            function renderPlayer(playerConfig, playerIndex) {
+                const clone = playerTemplate.content.cloneNode(true);
+                const playerDiv = clone.querySelector('.player-config');
+                playerDiv.dataset.playerId = playerConfig.id;
+                playerDiv.querySelector('.player-number').textContent = playerIndex + 1;
+
+                const playerNameInput = playerDiv.querySelector('.player-name');
+                playerNameInput.value = playerConfig.name;
+                playerNameInput.addEventListener('input', (e) => {
+                    playerConfig.name = e.target.value;
+                });
+
+                const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+
+                // Set initial URL/Data URL if playerConfig.avatar already has one
+                if (playerConfig.avatar) {
+                    avatarUrlInput.value = playerConfig.avatar.startsWith('http') ? playerConfig.avatar : ''; // Only show URL in text input if it's an actual URL
+                    avatarPreviewImg.src = playerConfig.avatar;
+                    avatarPreviewImg.style.display = 'block';
+                }
+
+                avatarUrlInput.addEventListener('input', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                avatarUploadInput.addEventListener('change', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
+                removePlayerBtn.addEventListener('click', () => {
+                    playersData = playersData.filter(p => p.id !== playerConfig.id);
+                    playersContainer.innerHTML = ''; // Clear and re-render all to update numbers
+                    playersData.forEach((p, idx) => renderPlayer(p, idx));
+                    updatePlayerCount();
+                });
+
+                const questionsContainer = playerDiv.querySelector('.questions-container');
+                const addQuestionBtn = playerDiv.querySelector('.add-question-btn');
+                addQuestionBtn.addEventListener('click', () => {
+                    const newQuestion = {
+                        type: 'open',
+                        text: '',
+                        options: ['', '', '', ''],
+                        correctAnswerIndex: -1 // -1 means no correct answer selected for MC
+                    };
+                    playerConfig.questions.push(newQuestion);
+                    // Re-render all questions for this player to correctly update `name` attributes for radio buttons
+                    questionsContainer.innerHTML = ''; 
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                // Render existing questions
+                playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+
+                // Append to container or re-insert if re-rendering (for correct player order)
+                const existingPlayerDiv = playersContainer.querySelector(`[data-player-id="${playerConfig.id}"]`);
+                if (existingPlayerDiv) {
+                    existingPlayerDiv.replaceWith(playerDiv);
+                } else {
+                    playersContainer.appendChild(clone);
+                }
+            }
+
+            function renderQuestion(questionObj, playerConfig, questionsContainer, questionIndex) {
+                const clone = questionTemplate.content.cloneNode(true);
+                const questionItemDiv = clone.querySelector('.question-item');
+                
+                const questionTypeSelect = questionItemDiv.querySelector('.question-type');
+                const questionTextInput = questionItemDiv.querySelector('.question-text');
+                const mcOptionsContainer = questionItemDiv.querySelector('.mc-options-container');
+                const optionInputs = questionItemDiv.querySelectorAll('.option-text');
+                const correctOptionRadios = questionItemDiv.querySelectorAll('.correct-option-radio');
+
+                // Set initial values
+                questionTypeSelect.value = questionObj.type;
+                questionTextInput.value = questionObj.text;
+                
+                // Unique name for radio buttons within this specific question
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`;
+                });
+
+                if (questionObj.type === 'mc') {
+                    mcOptionsContainer.style.display = 'block';
+                    questionObj.options.forEach((opt, idx) => {
+                        if (optionInputs[idx]) optionInputs[idx].value = opt;
+                    });
+                    if (questionObj.correctAnswerIndex !== -1 && correctOptionRadios[questionObj.correctAnswerIndex]) {
+                        correctOptionRadios[questionObj.correctAnswerIndex].checked = true;
+                    }
+                } else {
+                    mcOptionsContainer.style.display = 'none';
+                }
+
+                // Event Listeners
+                questionTypeSelect.addEventListener('change', (e) => {
+                    questionObj.type = e.target.value;
+                    mcOptionsContainer.style.display = (e.target.value === 'mc') ? 'block' : 'none';
+                    // Reset MC specific data if changing to open-ended
+                    if (e.target.value === 'open') {
+                        questionObj.options = ['', '', '', ''];
+                        questionObj.correctAnswerIndex = -1;
+                        optionInputs.forEach(input => input.value = '');
+                        correctOptionRadios.forEach(radio => radio.checked = false);
+                    }
+                });
+
+                questionTextInput.addEventListener('input', (e) => {
+                    questionObj.text = e.target.value;
+                });
+
+                optionInputs.forEach((input, idx) => {
+                    input.addEventListener('input', (e) => {
+                        questionObj.options[idx] = e.target.value;
+                    });
+                });
+
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.addEventListener('change', () => {
+                        if (radio.checked) {
+                            questionObj.correctAnswerIndex = idx;
+                        }
+                    });
+                });
+
+                const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
+                removeQuestionBtn.addEventListener('click', () => {
+                    playerConfig.questions.splice(questionIndex, 1);
+                    questionsContainer.innerHTML = ''; // Clear and re-render all questions for this player
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                questionsContainer.appendChild(clone);
+            }
+
+            // --- Global Image Preview for Background ---
+            let bgImageFinalData = '';
+            bgImageUpload.addEventListener('change', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+            bgImageUrl.addEventListener('input', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+
+
+            // --- Code Generation ---
+            generateCodeBtn.addEventListener('click', async () => {
+                const gameLang = document.getElementById('gameLang').value;
+                const titleFont = document.getElementById('titleFont').value;
+                const uiFont = document.getElementById('uiFont').value;
+                const avatarSize = document.getElementById('avatarSize').value;
+                const liquidColor = document.getElementById('liquidColor').value;
+                const highlightColor = document.getElementById('highlightColor').value;
+                const pointsToWin = parseInt(document.getElementById('pointsToWin').value);
+
+                // Ensure background image data is up-to-date before final generation
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+
+
+                // Finalize players data, ensuring avatars are processed
+                const finalPlayersData = [];
+                for (const player of playersData) {
+                    const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
+                    const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                    const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                    const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+                    
+                    // Update and get final avatar data for this player
+                    const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+
+                    finalPlayersData.push({
+                        name: player.name,
+                        avatar: finalAvatar,
+                        questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
+                    });
+                }
+                
+                // Basic validation
+                if (finalPlayersData.length === 0) {
+                    alert('Пожалуйста, добавьте хотя бы одного игрока.');
+                    return;
+                }
+                for (const player of finalPlayersData) {
+                    if (!player.avatar) {
+                        alert(`Игрок "${player.name}" не имеет аватара. Пожалуйста, загрузите изображение или укажите URL.`);
+                        return;
+                    }
+                    if (player.questions.length < pointsToWin) {
+                        alert(`У игрока "${player.name}" количество вопросов (${player.questions.length}) меньше, чем "Очков для победы" (${pointsToWin}). Пожалуйста, добавьте больше вопросов.`);
+                        return;
+                    }
+                    if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
+                        alert(`У игрока "${player.name}" есть вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Пожалуйста, проверьте все вопросы.`);
+                        return;
+                    }
+                }
+
+
+                // --- START OF GENIALLY WIDGET CODE GENERATION ---
+                const generatedHtml = `
+<!DOCTYPE html>
+<html lang="${gameLang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genially Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=${titleFont.replace(/ /g, '+')}:wght@700&family=${uiFont.replace(/ /g, '+')}:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align players to the bottom */
+            height: 100vh;
+            background-image: url('${bgImageFinalData}');
+            background-size: cover;
+            background-position: center;
+            font-family: '${uiFont}', sans-serif;
+            color: #fff;
+            position: relative;
+            background-color: #1A1A2E; /* Fallback if image fails */
+        }
+        .game-title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-family: '${titleFont}', sans-serif;
+            font-size: 2.5em;
+            color: #BB86FC; /* Fixed color for title, can be customizable */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        .players-container {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 50px; /* Space from bottom */
+            z-index: 5;
+            flex-wrap: wrap; /* Allow wrapping for more players */
+            justify-content: center;
+        }
+        .player-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            border: 2px solid transparent;
+        }
+        .player-card.active {
+            border-color: ${highlightColor};
+            box-shadow: 0 0 20px ${highlightColor}, 0 0 40px rgba(255, 255, 0, 0.3);
+            transform: translateY(-10px) scale(1.05);
+        }
+        .avatar-frame {
+            width: ${avatarSize}px;
+            height: ${avatarSize}px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #BB86FC; /* Avatar frame color */
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .avatar-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .player-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .flask-container {
+            width: 80px; /* Width of the flask area */
+            height: 180px; /* Height of the flask area */
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" fill="none" stroke="%23BB86FC" stroke-width="4"><path d="M20 0 L80 0 Q90 0 90 10 L90 180 Q90 200 70 200 L30 200 Q10 200 10 180 L10 10 Q10 0 20 0 Z" fill="rgba(0,0,0,0.3)"/></svg>') no-repeat center bottom;
+            background-size: contain;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 0%;
+            background-color: ${liquidColor};
+            border-radius: 0 0 10px 10px;
+            transition: height 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.5);
+        }
+        .fill-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: -20px; /* Position above the flask */
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+        }
+        .player-card.active .fill-button {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        .fill-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        /* Question Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .question-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #BB86FC;
+        }
+        .question-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #BB86FC;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        .question-modal p {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .modal-options-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+        .modal-option {
+            display: flex;
+            align-items: center;
+            background: #4A4A6A;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #BB86FC66;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+        .modal-option:hover {
+            background-color: #5A5A7A;
+            border-color: #BB86FC;
+        }
+        .modal-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.5);
+            cursor: inherit;
+        }
+        .modal-option.selected {
+            border-color: ${highlightColor};
+            background-color: #5A5A7A;
+            box-shadow: 0 0 10px rgba(255,255,0,0.5);
+        }
+        .modal-feedback {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+        }
+        .modal-feedback.correct {
+            color: #7FFF00; /* Lime green */
+        }
+        .modal-feedback.incorrect {
+            color: #FF4500; /* Orange-red */
+        }
+
+        .modal-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            margin-top: 30px;
+        }
+        .modal-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        .game-over-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #CF6679; /* Red accent for game over */
+            color: #E0E0E0;
+        }
+        .game-over-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #CF6679;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+        }
+        .game-over-modal p {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+        .game-over-modal .modal-button {
+             background-color: #CF6679;
+             color: #1A1A2E;
+        }
+        .game-over-modal .modal-button:hover {
+            background-color: #E07A8B;
+        }
+    </style>
+</head>
+<body>
+    <h1>Genially Game Widget Creator</h1>
+
+    <div class="main-wrapper">
+        <div class="editor-controls">
+            <section class="section">
+                <h2>Настройки игры</h2>
+                <div class="input-group">
+                    <label for="gameLang">Язык игры:</label>
+                    <select id="gameLang" class="input-field">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="titleFont">Шрифт заголовков:</label>
+                    <select id="titleFont" class="input-field font-select">
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="uiFont">Шрифт интерфейса:</label>
+                    <select id="uiFont" class="input-field font-select">
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="avatarSize">Размер аватара (px):</label>
+                    <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
+                </div>
+                <div class="input-group">
+                    <label for="liquidColor">Цвет жидкости:</label>
+                    <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
+                </div>
+                <div class="input-group">
+                    <label for="highlightColor">Цвет подсветки активного игрока:</label>
+                    <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
+                </div>
+                <div class="input-group">
+                    <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
+                    <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Фон игры</h2>
+                <div class="input-group">
+                    <label for="bgImageUrl">URL фонового изображения:</label>
+                    <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
+                </div>
+                <div class="input-group">
+                    <label>Или загрузите файл:</label>
+                    <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
+                    <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
+                </div>
+                <div class="image-preview" id="bgImagePreview">
+                    <img src="#" alt="Background Preview" style="display: none;">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
+                <div id="playersContainer">
+                    <!-- Player templates will be inserted here by JS -->
+                </div>
+                <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
+            </section>
+        </div>
+
+        <div class="preview-panel">
+            <section class="section">
+                <h2>Предпросмотр игры</h2>
+                <p>Нажмите "Сгенерировать код", чтобы обновить предпросмотр.</p>
+                <div class="preview-container">
+                    <iframe id="gamePreviewFrame" sandbox="allow-scripts allow-forms allow-popups" frameborder="0"></iframe>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Сгенерированный код для Genially</h2>
+                <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
+                <textarea id="outputCode" readonly class="code-output"></textarea>
+                <button id="generateCodeBtn" class="btn primary-btn">Сгенерировать код</button>
+                <button id="copyCodeBtn" class="btn secondary-btn" style="display: none;">Копировать</button>
+            </section>
+        </div>
+    </div>
+
+    <!-- Hidden Player Template -->
+    <template id="playerTemplate">
+        <div class="player-config card">
+            <h3>Игрок <span class="player-number"></span> <button class="remove-player-btn btn icon-btn danger-btn">✕</button></h3>
+            <div class="input-group">
+                <label for="playerName">Имя игрока:</label>
+                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie" value="Игрок ">
+            </div>
+            <div class="input-group">
+                <label for="avatarUrl">URL аватара:</label>
+                <input type="text" class="input-field avatar-url" placeholder="https://example.com/avatar.png">
+            </div>
+            <div class="input-group">
+                <label>Или загрузите файл:</label>
+                <input type="file" accept="image/*" class="input-field file-input avatar-upload">
+                <small class="image-note">Изображения будут автоматически сжаты.</small>
+            </div>
+            <div class="image-preview avatar-preview">
+                <img src="#" alt="Avatar Preview" style="display: none;">
+            </div>
+
+            <h4>Задания для игрока</h4>
+            <div class="questions-container">
+                <!-- Questions will be added here -->
+            </div>
+            <button class="add-question-btn btn secondary-btn">Добавить вопрос</button>
+        </div>
+    </template>
+
+    <!-- Hidden Question Template -->
+    <template id="questionTemplate">
+        <div class="question-item">
+            <label for="questionType">Тип вопроса:</label>
+            <select class="input-field question-type">
+                <option value="open">Без вариантов ответа</option>
+                <option value="mc">С вариантами ответа</option>
+            </select>
+
+            <label for="questionText">Текст вопроса:</label>
+            <textarea class="input-field question-text" rows="2" placeholder="Введите текст задания..."></textarea>
+            
+            <div class="mc-options-container" style="display: none;">
+                <label>Варианты ответа:</label>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 1">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 2">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 3">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 4">
+                </div>
+            </div>
+            <button class="remove-question-btn btn icon-btn danger-btn">✕</button>
+        </div>
+    </template>
+
+    <script>
+        /* --- JavaScript для редактора и генерации кода --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            const playersContainer = document.getElementById('playersContainer');
+            const addPlayerBtn = document.getElementById('addPlayerBtn');
+            const playerCountText = document.getElementById('playerCountText');
+            const playerTemplate = document.getElementById('playerTemplate');
+            const questionTemplate = document.getElementById('questionTemplate');
+            const generateCodeBtn = document.getElementById('generateCodeBtn');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            const outputCode = document.getElementById('outputCode');
+            const bgImageUpload = document.getElementById('bgImageUpload');
+            const bgImageUrl = document.getElementById('bgImageUrl');
+            const bgImagePreview = document.getElementById('bgImagePreview').querySelector('img');
+            const gamePreviewFrame = document.getElementById('gamePreviewFrame');
+
+            let playersData = []; // Array to store configuration for each player
+
+            // --- Utility Functions ---
+
+            // Function to compress image using canvas
+            async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Calculate new dimensions
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert canvas to JPEG data URL
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+
+                    img.onerror = () => {
+                        console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
+                        // If it's a valid HTTP URL, just use it directly, otherwise empty string
+                        resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); 
+                    };
+                    
+                    if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
+                        img.src = fileOrUrl; // Already a data URL, process it
+                    } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
+                         // For external URLs, CORS might be an issue. Attempt to load with crossOrigin.
+                        img.crossOrigin = "anonymous"; 
+                        img.src = fileOrUrl;
+                    } else if (fileOrUrl instanceof File) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { img.src = e.target.result; };
+                        reader.readAsDataURL(fileOrUrl);
+                    } else {
+                        resolve(''); // No valid input
+                    }
+                });
+            }
+
+            function updatePlayerCount() {
+                playerCountText.textContent = playersData.length;
+                addPlayerBtn.disabled = playersData.length >= 4;
+            }
+
+            async function updateImagePreview(fileInput, urlInput, previewImgElement) {
+                let imageData = '';
+                if (fileInput.files && fileInput.files[0]) {
+                    imageData = await compressImage(fileInput.files[0]);
+                    urlInput.value = ''; // Clear URL if file is uploaded
+                } else if (urlInput.value) {
+                    // Attempt to compress/process URL. If it's a data URL already, compress it. If it's an external URL, compress if possible or just use it.
+                    const processedData = await compressImage(urlInput.value);
+                    if (processedData) {
+                        imageData = processedData;
+                    } else {
+                        // Fallback if compression failed or input was invalid
+                        imageData = urlInput.value.startsWith('http') ? urlInput.value : '';
+                    }
+                    fileInput.value = ''; // Clear file input if URL is entered
+                }
+
+                if (imageData) {
+                    previewImgElement.src = imageData;
+                    previewImgElement.style.display = 'block';
+                } else {
+                    previewImgElement.src = '#';
+                    previewImgElement.style.display = 'none';
+                }
+                return imageData; // Return processed image data for direct use
+            }
+
+            // --- Player Management ---
+            addPlayerBtn.addEventListener('click', () => {
+                if (playersData.length < 4) {
+                    const playerIndex = playersData.length;
+                    const playerConfig = {
+                        id: Date.now(), // Unique ID for keying
+                        name: `Игрок ${playerIndex + 1}`,
+                        avatar: '', // data URL or external URL
+                        questions: []
+                    };
+                    playersData.push(playerConfig);
+                    renderPlayer(playerConfig, playerIndex);
+                    updatePlayerCount();
+                }
+            });
+
+            function renderPlayer(playerConfig, playerIndex) {
+                const clone = playerTemplate.content.cloneNode(true);
+                const playerDiv = clone.querySelector('.player-config');
+                playerDiv.dataset.playerId = playerConfig.id;
+                playerDiv.querySelector('.player-number').textContent = playerIndex + 1;
+
+                const playerNameInput = playerDiv.querySelector('.player-name');
+                playerNameInput.value = playerConfig.name;
+                playerNameInput.addEventListener('input', (e) => {
+                    playerConfig.name = e.target.value;
+                });
+
+                const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+
+                // Set initial URL/Data URL if playerConfig.avatar already has one
+                if (playerConfig.avatar) {
+                    avatarUrlInput.value = playerConfig.avatar.startsWith('http') ? playerConfig.avatar : ''; // Only show URL in text input if it's an actual URL
+                    avatarPreviewImg.src = playerConfig.avatar;
+                    avatarPreviewImg.style.display = 'block';
+                }
+
+                avatarUrlInput.addEventListener('input', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                avatarUploadInput.addEventListener('change', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
+                removePlayerBtn.addEventListener('click', () => {
+                    playersData = playersData.filter(p => p.id !== playerConfig.id);
+                    playersContainer.innerHTML = ''; // Clear and re-render all to update numbers
+                    playersData.forEach((p, idx) => renderPlayer(p, idx));
+                    updatePlayerCount();
+                });
+
+                const questionsContainer = playerDiv.querySelector('.questions-container');
+                const addQuestionBtn = playerDiv.querySelector('.add-question-btn');
+                addQuestionBtn.addEventListener('click', () => {
+                    const newQuestion = {
+                        type: 'open',
+                        text: '',
+                        options: ['', '', '', ''],
+                        correctAnswerIndex: -1 // -1 means no correct answer selected for MC
+                    };
+                    playerConfig.questions.push(newQuestion);
+                    // Re-render all questions for this player to correctly update `name` attributes for radio buttons
+                    questionsContainer.innerHTML = ''; 
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                // Render existing questions
+                playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+
+                // Append to container or re-insert if re-rendering (for correct player order)
+                const existingPlayerDiv = playersContainer.querySelector(`[data-player-id="${playerConfig.id}"]`);
+                if (existingPlayerDiv) {
+                    existingPlayerDiv.replaceWith(playerDiv);
+                } else {
+                    playersContainer.appendChild(clone);
+                }
+            }
+
+            function renderQuestion(questionObj, playerConfig, questionsContainer, questionIndex) {
+                const clone = questionTemplate.content.cloneNode(true);
+                const questionItemDiv = clone.querySelector('.question-item');
+                
+                const questionTypeSelect = questionItemDiv.querySelector('.question-type');
+                const questionTextInput = questionItemDiv.querySelector('.question-text');
+                const mcOptionsContainer = questionItemDiv.querySelector('.mc-options-container');
+                const optionInputs = questionItemDiv.querySelectorAll('.option-text');
+                const correctOptionRadios = questionItemDiv.querySelectorAll('.correct-option-radio');
+
+                // Set initial values
+                questionTypeSelect.value = questionObj.type;
+                questionTextInput.value = questionObj.text;
+                
+                // Unique name for radio buttons within this specific question
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`;
+                });
+
+                if (questionObj.type === 'mc') {
+                    mcOptionsContainer.style.display = 'block';
+                    questionObj.options.forEach((opt, idx) => {
+                        if (optionInputs[idx]) optionInputs[idx].value = opt;
+                    });
+                    if (questionObj.correctAnswerIndex !== -1 && correctOptionRadios[questionObj.correctAnswerIndex]) {
+                        correctOptionRadios[questionObj.correctAnswerIndex].checked = true;
+                    }
+                } else {
+                    mcOptionsContainer.style.display = 'none';
+                }
+
+                // Event Listeners
+                questionTypeSelect.addEventListener('change', (e) => {
+                    questionObj.type = e.target.value;
+                    mcOptionsContainer.style.display = (e.target.value === 'mc') ? 'block' : 'none';
+                    // Reset MC specific data if changing to open-ended
+                    if (e.target.value === 'open') {
+                        questionObj.options = ['', '', '', ''];
+                        questionObj.correctAnswerIndex = -1;
+                        optionInputs.forEach(input => input.value = '');
+                        correctOptionRadios.forEach(radio => radio.checked = false);
+                    }
+                });
+
+                questionTextInput.addEventListener('input', (e) => {
+                    questionObj.text = e.target.value;
+                });
+
+                optionInputs.forEach((input, idx) => {
+                    input.addEventListener('input', (e) => {
+                        questionObj.options[idx] = e.target.value;
+                    });
+                });
+
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.addEventListener('change', () => {
+                        if (radio.checked) {
+                            questionObj.correctAnswerIndex = idx;
+                        }
+                    });
+                });
+
+                const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
+                removeQuestionBtn.addEventListener('click', () => {
+                    playerConfig.questions.splice(questionIndex, 1);
+                    questionsContainer.innerHTML = ''; // Clear and re-render all questions for this player
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                questionsContainer.appendChild(clone);
+            }
+
+            // --- Global Image Preview for Background ---
+            let bgImageFinalData = '';
+            bgImageUpload.addEventListener('change', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+            bgImageUrl.addEventListener('input', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+
+
+            // --- Code Generation ---
+            generateCodeBtn.addEventListener('click', async () => {
+                const gameLang = document.getElementById('gameLang').value;
+                const titleFont = document.getElementById('titleFont').value;
+                const uiFont = document.getElementById('uiFont').value;
+                const avatarSize = document.getElementById('avatarSize').value;
+                const liquidColor = document.getElementById('liquidColor').value;
+                const highlightColor = document.getElementById('highlightColor').value;
+                const pointsToWin = parseInt(document.getElementById('pointsToWin').value);
+
+                // Ensure background image data is up-to-date before final generation
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+
+
+                // Finalize players data, ensuring avatars are processed
+                const finalPlayersData = [];
+                for (const player of playersData) {
+                    const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
+                    const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                    const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                    const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+                    
+                    // Update and get final avatar data for this player
+                    const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+
+                    finalPlayersData.push({
+                        name: player.name,
+                        avatar: finalAvatar,
+                        questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
+                    });
+                }
+                
+                // Basic validation
+                if (finalPlayersData.length === 0) {
+                    alert('Пожалуйста, добавьте хотя бы одного игрока.');
+                    return;
+                }
+                for (const player of finalPlayersData) {
+                    if (!player.avatar) {
+                        alert(`Игрок "${player.name}" не имеет аватара. Пожалуйста, загрузите изображение или укажите URL.`);
+                        return;
+                    }
+                    if (player.questions.length < pointsToWin) {
+                        alert(`У игрока "${player.name}" количество вопросов (${player.questions.length}) меньше, чем "Очков для победы" (${pointsToWin}). Пожалуйста, добавьте больше вопросов.`);
+                        return;
+                    }
+                    if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
+                        alert(`У игрока "${player.name}" есть вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Пожалуйста, проверьте все вопросы.`);
+                        return;
+                    }
+                }
+
+
+                // --- START OF GENIALLY WIDGET CODE GENERATION ---
+                const generatedHtmlContent = `
+<!DOCTYPE html>
+<html lang="${gameLang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genially Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=${titleFont.replace(/ /g, '+')}:wght@700&family=${uiFont.replace(/ /g, '+')}:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align players to the bottom */
+            height: 100vh;
+            background-image: url('${bgImageFinalData}');
+            background-size: cover;
+            background-position: center;
+            font-family: '${uiFont}', sans-serif;
+            color: #fff;
+            position: relative;
+            background-color: #1A1A2E; /* Fallback if image fails */
+        }
+        .game-title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-family: '${titleFont}', sans-serif;
+            font-size: 2.5em;
+            color: #BB86FC; /* Fixed color for title, can be customizable */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        .players-container {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 50px; /* Space from bottom */
+            z-index: 5;
+            flex-wrap: wrap; /* Allow wrapping for more players */
+            justify-content: center;
+        }
+        .player-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            border: 2px solid transparent;
+        }
+        .player-card.active {
+            border-color: ${highlightColor};
+            box-shadow: 0 0 20px ${highlightColor}, 0 0 40px rgba(255, 255, 0, 0.3);
+            transform: translateY(-10px) scale(1.05);
+        }
+        .avatar-frame {
+            width: ${avatarSize}px;
+            height: ${avatarSize}px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #BB86FC; /* Avatar frame color */
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .avatar-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .player-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .flask-container {
+            width: 80px; /* Width of the flask area */
+            height: 180px; /* Height of the flask area */
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" fill="none" stroke="%23BB86FC" stroke-width="4"><path d="M20 0 L80 0 Q90 0 90 10 L90 180 Q90 200 70 200 L30 200 Q10 200 10 180 L10 10 Q10 0 20 0 Z" fill="rgba(0,0,0,0.3)"/></svg>') no-repeat center bottom;
+            background-size: contain;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 0%;
+            background-color: ${liquidColor};
+            border-radius: 0 0 10px 10px;
+            transition: height 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.5);
+        }
+        .fill-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: -20px; /* Position above the flask */
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+        }
+        .player-card.active .fill-button {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        .fill-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        /* Question Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .question-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #BB86FC;
+        }
+        .question-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #BB86FC;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        .question-modal p {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .modal-options-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+        .modal-option {
+            display: flex;
+            align-items: center;
+            background: #4A4A6A;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #BB86FC66;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+        .modal-option:hover {
+            background-color: #5A5A7A;
+            border-color: #BB86FC;
+        }
+        .modal-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.5);
+            cursor: inherit;
+        }
+        .modal-option.selected {
+            border-color: ${highlightColor};
+            background-color: #5A5A7A;
+            box-shadow: 0 0 10px rgba(255,255,0,0.5);
+        }
+        .modal-feedback {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+        }
+        .modal-feedback.correct {
+            color: #7FFF00; /* Lime green */
+        }
+        .modal-feedback.incorrect {
+            color: #FF4500; /* Orange-red */
+        }
+
+        .modal-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            margin-top: 30px;
+        }
+        .modal-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        .game-over-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #CF6679; /* Red accent for game over */
+            color: #E0E0E0;
+        }
+        .game-over-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #CF6679;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+        }
+        .game-over-modal p {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+        .game-over-modal .modal-button {
+             background-color: #CF6679;
+             color: #1A1A2E;
+        }
+        .game-over-modal .modal-button:hover {
+            background-color: #E07A8B;
+        }
+    </style>
+</head>
+<body>
+    <h1>Genially Game Widget Creator</h1>
+
+    <div class="main-wrapper">
+        <div class="editor-controls">
+            <section class="section">
+                <h2>Настройки игры</h2>
+                <div class="input-group">
+                    <label for="gameLang">Язык игры:</label>
+                    <select id="gameLang" class="input-field">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="titleFont">Шрифт заголовков:</label>
+                    <select id="titleFont" class="input-field font-select">
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="uiFont">Шрифт интерфейса:</label>
+                    <select id="uiFont" class="input-field font-select">
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="avatarSize">Размер аватара (px):</label>
+                    <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
+                </div>
+                <div class="input-group">
+                    <label for="liquidColor">Цвет жидкости:</label>
+                    <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
+                </div>
+                <div class="input-group">
+                    <label for="highlightColor">Цвет подсветки активного игрока:</label>
+                    <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
+                </div>
+                <div class="input-group">
+                    <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
+                    <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Фон игры</h2>
+                <div class="input-group">
+                    <label for="bgImageUrl">URL фонового изображения:</label>
+                    <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
+                </div>
+                <div class="input-group">
+                    <label>Или загрузите файл:</label>
+                    <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
+                    <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
+                </div>
+                <div class="image-preview" id="bgImagePreview">
+                    <img src="#" alt="Background Preview" style="display: none;">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
+                <div id="playersContainer">
+                    <!-- Player templates will be inserted here by JS -->
+                </div>
+                <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
+            </section>
+        </div>
+
+        <div class="preview-panel">
+            <section class="section">
+                <h2>Предпросмотр игры</h2>
+                <p>Нажмите "Сгенерировать код", чтобы обновить предпросмотр.</p>
+                <div class="preview-container">
+                    <iframe id="gamePreviewFrame" sandbox="allow-scripts allow-forms allow-popups" frameborder="0"></iframe>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Сгенерированный код для Genially</h2>
+                <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
+                <textarea id="outputCode" readonly class="code-output"></textarea>
+                <button id="generateCodeBtn" class="btn primary-btn">Сгенерировать код</button>
+                <button id="copyCodeBtn" class="btn secondary-btn" style="display: none;">Копировать</button>
+            </section>
+        </div>
+    </div>
+
+    <!-- Hidden Player Template -->
+    <template id="playerTemplate">
+        <div class="player-config card">
+            <h3>Игрок <span class="player-number"></span> <button class="remove-player-btn btn icon-btn danger-btn">✕</button></h3>
+            <div class="input-group">
+                <label for="playerName">Имя игрока:</label>
+                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie" value="Игрок ">
+            </div>
+            <div class="input-group">
+                <label for="avatarUrl">URL аватара:</label>
+                <input type="text" class="input-field avatar-url" placeholder="https://example.com/avatar.png">
+            </div>
+            <div class="input-group">
+                <label>Или загрузите файл:</label>
+                <input type="file" accept="image/*" class="input-field file-input avatar-upload">
+                <small class="image-note">Изображения будут автоматически сжаты.</small>
+            </div>
+            <div class="image-preview avatar-preview">
+                <img src="#" alt="Avatar Preview" style="display: none;">
+            </div>
+
+            <h4>Задания для игрока</h4>
+            <div class="questions-container">
+                <!-- Questions will be added here -->
+            </div>
+            <button class="add-question-btn btn secondary-btn">Добавить вопрос</button>
+        </div>
+    </template>
+
+    <!-- Hidden Question Template -->
+    <template id="questionTemplate">
+        <div class="question-item">
+            <label for="questionType">Тип вопроса:</label>
+            <select class="input-field question-type">
+                <option value="open">Без вариантов ответа</option>
+                <option value="mc">С вариантами ответа</option>
+            </select>
+
+            <label for="questionText">Текст вопроса:</label>
+            <textarea class="input-field question-text" rows="2" placeholder="Введите текст задания..."></textarea>
+            
+            <div class="mc-options-container" style="display: none;">
+                <label>Варианты ответа:</label>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 1">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 2">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 3">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 4">
+                </div>
+            </div>
+            <button class="remove-question-btn btn icon-btn danger-btn">✕</button>
+        </div>
+    </template>
+
+    <script>
+        /* --- JavaScript для редактора и генерации кода --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            const playersContainer = document.getElementById('playersContainer');
+            const addPlayerBtn = document.getElementById('addPlayerBtn');
+            const playerCountText = document.getElementById('playerCountText');
+            const playerTemplate = document.getElementById('playerTemplate');
+            const questionTemplate = document.getElementById('questionTemplate');
+            const generateCodeBtn = document.getElementById('generateCodeBtn');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            const outputCode = document.getElementById('outputCode');
+            const bgImageUpload = document.getElementById('bgImageUpload');
+            const bgImageUrl = document.getElementById('bgImageUrl');
+            const bgImagePreview = document.getElementById('bgImagePreview').querySelector('img');
+            const gamePreviewFrame = document.getElementById('gamePreviewFrame');
+
+            let playersData = []; // Array to store configuration for each player
+
+            // --- Utility Functions ---
+
+            // Function to compress image using canvas
+            async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Calculate new dimensions
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert canvas to JPEG data URL
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+
+                    img.onerror = () => {
+                        console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
+                        // If it's a valid HTTP URL, just use it directly, otherwise empty string
+                        resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); 
+                    };
+                    
+                    if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
+                        img.src = fileOrUrl; // Already a data URL, process it
+                    } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
+                         // For external URLs, CORS might be an issue. Attempt to load with crossOrigin.
+                        img.crossOrigin = "anonymous"; 
+                        img.src = fileOrUrl;
+                    } else if (fileOrUrl instanceof File) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { img.src = e.target.result; };
+                        reader.readAsDataURL(fileOrUrl);
+                    } else {
+                        resolve(''); // No valid input
+                    }
+                });
+            }
+
+            function updatePlayerCount() {
+                playerCountText.textContent = playersData.length;
+                addPlayerBtn.disabled = playersData.length >= 4;
+            }
+
+            async function updateImagePreview(fileInput, urlInput, previewImgElement) {
+                let imageData = '';
+                if (fileInput.files && fileInput.files[0]) {
+                    imageData = await compressImage(fileInput.files[0]);
+                    urlInput.value = ''; // Clear URL if file is uploaded
+                } else if (urlInput.value) {
+                    // Attempt to compress/process URL. If it's a data URL already, compress it. If it's an external URL, compress if possible or just use it.
+                    const processedData = await compressImage(urlInput.value);
+                    if (processedData) {
+                        imageData = processedData;
+                    } else {
+                        // Fallback if compression failed or input was invalid
+                        imageData = urlInput.value.startsWith('http') ? urlInput.value : '';
+                    }
+                    fileInput.value = ''; // Clear file input if URL is entered
+                }
+
+                if (imageData) {
+                    previewImgElement.src = imageData;
+                    previewImgElement.style.display = 'block';
+                } else {
+                    previewImgElement.src = '#';
+                    previewImgElement.style.display = 'none';
+                }
+                return imageData; // Return processed image data for direct use
+            }
+
+            // --- Player Management ---
+            addPlayerBtn.addEventListener('click', () => {
+                if (playersData.length < 4) {
+                    const playerIndex = playersData.length;
+                    const playerConfig = {
+                        id: Date.now(), // Unique ID for keying
+                        name: `Игрок ${playerIndex + 1}`,
+                        avatar: '', // data URL or external URL
+                        questions: []
+                    };
+                    playersData.push(playerConfig);
+                    renderPlayer(playerConfig, playerIndex);
+                    updatePlayerCount();
+                }
+            });
+
+            function renderPlayer(playerConfig, playerIndex) {
+                const clone = playerTemplate.content.cloneNode(true);
+                const playerDiv = clone.querySelector('.player-config');
+                playerDiv.dataset.playerId = playerConfig.id;
+                playerDiv.querySelector('.player-number').textContent = playerIndex + 1;
+
+                const playerNameInput = playerDiv.querySelector('.player-name');
+                playerNameInput.value = playerConfig.name;
+                playerNameInput.addEventListener('input', (e) => {
+                    playerConfig.name = e.target.value;
+                });
+
+                const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+
+                // Set initial URL/Data URL if playerConfig.avatar already has one
+                if (playerConfig.avatar) {
+                    avatarUrlInput.value = playerConfig.avatar.startsWith('http') ? playerConfig.avatar : ''; // Only show URL in text input if it's an actual URL
+                    avatarPreviewImg.src = playerConfig.avatar;
+                    avatarPreviewImg.style.display = 'block';
+                }
+
+                avatarUrlInput.addEventListener('input', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                avatarUploadInput.addEventListener('change', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
+                removePlayerBtn.addEventListener('click', () => {
+                    playersData = playersData.filter(p => p.id !== playerConfig.id);
+                    playersContainer.innerHTML = ''; // Clear and re-render all to update numbers
+                    playersData.forEach((p, idx) => renderPlayer(p, idx));
+                    updatePlayerCount();
+                });
+
+                const questionsContainer = playerDiv.querySelector('.questions-container');
+                const addQuestionBtn = playerDiv.querySelector('.add-question-btn');
+                addQuestionBtn.addEventListener('click', () => {
+                    const newQuestion = {
+                        type: 'open',
+                        text: '',
+                        options: ['', '', '', ''],
+                        correctAnswerIndex: -1 // -1 means no correct answer selected for MC
+                    };
+                    playerConfig.questions.push(newQuestion);
+                    // Re-render all questions for this player to correctly update `name` attributes for radio buttons
+                    questionsContainer.innerHTML = ''; 
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                // Render existing questions
+                playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+
+                // Append to container or re-insert if re-rendering (for correct player order)
+                const existingPlayerDiv = playersContainer.querySelector(`[data-player-id="${playerConfig.id}"]`);
+                if (existingPlayerDiv) {
+                    existingPlayerDiv.replaceWith(playerDiv);
+                } else {
+                    playersContainer.appendChild(clone);
+                }
+            }
+
+            function renderQuestion(questionObj, playerConfig, questionsContainer, questionIndex) {
+                const clone = questionTemplate.content.cloneNode(true);
+                const questionItemDiv = clone.querySelector('.question-item');
+                
+                const questionTypeSelect = questionItemDiv.querySelector('.question-type');
+                const questionTextInput = questionItemDiv.querySelector('.question-text');
+                const mcOptionsContainer = questionItemDiv.querySelector('.mc-options-container');
+                const optionInputs = questionItemDiv.querySelectorAll('.option-text');
+                const correctOptionRadios = questionItemDiv.querySelectorAll('.correct-option-radio');
+
+                // Set initial values
+                questionTypeSelect.value = questionObj.type;
+                questionTextInput.value = questionObj.text;
+                
+                // Unique name for radio buttons within this specific question
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`;
+                });
+
+                if (questionObj.type === 'mc') {
+                    mcOptionsContainer.style.display = 'block';
+                    questionObj.options.forEach((opt, idx) => {
+                        if (optionInputs[idx]) optionInputs[idx].value = opt;
+                    });
+                    if (questionObj.correctAnswerIndex !== -1 && correctOptionRadios[questionObj.correctAnswerIndex]) {
+                        correctOptionRadios[questionObj.correctAnswerIndex].checked = true;
+                    }
+                } else {
+                    mcOptionsContainer.style.display = 'none';
+                }
+
+                // Event Listeners
+                questionTypeSelect.addEventListener('change', (e) => {
+                    questionObj.type = e.target.value;
+                    mcOptionsContainer.style.display = (e.target.value === 'mc') ? 'block' : 'none';
+                    // Reset MC specific data if changing to open-ended
+                    if (e.target.value === 'open') {
+                        questionObj.options = ['', '', '', ''];
+                        questionObj.correctAnswerIndex = -1;
+                        optionInputs.forEach(input => input.value = '');
+                        correctOptionRadios.forEach(radio => radio.checked = false);
+                    }
+                });
+
+                questionTextInput.addEventListener('input', (e) => {
+                    questionObj.text = e.target.value;
+                });
+
+                optionInputs.forEach((input, idx) => {
+                    input.addEventListener('input', (e) => {
+                        questionObj.options[idx] = e.target.value;
+                    });
+                });
+
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.addEventListener('change', () => {
+                        if (radio.checked) {
+                            questionObj.correctAnswerIndex = idx;
+                        }
+                    });
+                });
+
+                const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
+                removeQuestionBtn.addEventListener('click', () => {
+                    playerConfig.questions.splice(questionIndex, 1);
+                    questionsContainer.innerHTML = ''; // Clear and re-render all questions for this player
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                questionsContainer.appendChild(clone);
+            }
+
+            // --- Global Image Preview for Background ---
+            let bgImageFinalData = ''; // This variable will hold the processed image data for the background
+            bgImageUpload.addEventListener('change', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+            bgImageUrl.addEventListener('input', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+
+
+            // --- Code Generation ---
+            generateCodeBtn.addEventListener('click', async () => {
+                const gameLang = document.getElementById('gameLang').value;
+                const titleFont = document.getElementById('titleFont').value;
+                const uiFont = document.getElementById('uiFont').value;
+                const avatarSize = document.getElementById('avatarSize').value;
+                const liquidColor = document.getElementById('liquidColor').value;
+                const highlightColor = document.getElementById('highlightColor').value;
+                const pointsToWin = parseInt(document.getElementById('pointsToWin').value);
+
+                // Ensure background image data is up-to-date before final generation
+                // This call updates bgImageFinalData based on current inputs
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+
+
+                // Finalize players data, ensuring avatars are processed
+                const finalPlayersData = [];
+                for (const player of playersData) {
+                    const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
+                    const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                    const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                    const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+                    
+                    // Update and get final avatar data for this player
+                    const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+
+                    finalPlayersData.push({
+                        name: player.name,
+                        avatar: finalAvatar,
+                        questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
+                    });
+                }
+                
+                // Basic validation
+                if (finalPlayersData.length === 0) {
+                    alert('Пожалуйста, добавьте хотя бы одного игрока.');
+                    return;
+                }
+                for (const player of finalPlayersData) {
+                    if (!player.avatar) {
+                        alert(`Игрок "${player.name}" не имеет аватара. Пожалуйста, загрузите изображение или укажите URL.`);
+                        return;
+                    }
+                    if (player.questions.length < pointsToWin) {
+                        alert(`У игрока "${player.name}" количество вопросов (${player.questions.length}) меньше, чем "Очков для победы" (${pointsToWin}). Пожалуйста, добавьте больше вопросов.`);
+                        return;
+                    }
+                    if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
+                        alert(`У игрока "${player.name}" есть вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Пожалуйста, проверьте все вопросы.`);
+                        return;
+                    }
+                }
+
+
+                // --- START OF GENIALLY WIDGET CODE GENERATION ---
+                // The JavaScript inside generatedHtmlContent is part of the IFRAME content, not the editor itself.
+                const generatedHtmlContent = `
+<!DOCTYPE html>
+<html lang="${gameLang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genially Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=${titleFont.replace(/ /g, '+')}:wght@700&family=${uiFont.replace(/ /g, '+')}:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align players to the bottom */
+            height: 100vh;
+            background-image: url('${bgImageFinalData}');
+            background-size: cover;
+            background-position: center;
+            font-family: '${uiFont}', sans-serif;
+            color: #fff;
+            position: relative;
+            background-color: #1A1A2E; /* Fallback if image fails */
+        }
+        .game-title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-family: '${titleFont}', sans-serif;
+            font-size: 2.5em;
+            color: #BB86FC; /* Fixed color for title, can be customizable */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        .players-container {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 50px; /* Space from bottom */
+            z-index: 5;
+            flex-wrap: wrap; /* Allow wrapping for more players */
+            justify-content: center;
+        }
+        .player-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            border: 2px solid transparent;
+        }
+        .player-card.active {
+            border-color: ${highlightColor};
+            box-shadow: 0 0 20px ${highlightColor}, 0 0 40px rgba(255, 255, 0, 0.3);
+            transform: translateY(-10px) scale(1.05);
+        }
+        .avatar-frame {
+            width: ${avatarSize}px;
+            height: ${avatarSize}px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #BB86FC; /* Avatar frame color */
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .avatar-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .player-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .flask-container {
+            width: 80px; /* Width of the flask area */
+            height: 180px; /* Height of the flask area */
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" fill="none" stroke="%23BB86FC" stroke-width="4"><path d="M20 0 L80 0 Q90 0 90 10 L90 180 Q90 200 70 200 L30 200 Q10 200 10 180 L10 10 Q10 0 20 0 Z" fill="rgba(0,0,0,0.3)"/></svg>') no-repeat center bottom;
+            background-size: contain;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 0%;
+            background-color: ${liquidColor};
+            border-radius: 0 0 10px 10px;
+            transition: height 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.5);
+        }
+        .fill-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: -20px; /* Position above the flask */
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+        }
+        .player-card.active .fill-button {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        .fill-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        /* Question Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .question-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #BB86FC;
+        }
+        .question-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #BB86FC;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        .question-modal p {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .modal-options-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+        .modal-option {
+            display: flex;
+            align-items: center;
+            background: #4A4A6A;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #BB86FC66;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+        .modal-option:hover {
+            background-color: #5A5A7A;
+            border-color: #BB86FC;
+        }
+        .modal-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.5);
+            cursor: inherit;
+        }
+        .modal-option.selected {
+            border-color: ${highlightColor};
+            background-color: #5A5A7A;
+            box-shadow: 0 0 10px rgba(255,255,0,0.5);
+        }
+        .modal-feedback {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+        }
+        .modal-feedback.correct {
+            color: #7FFF00; /* Lime green */
+        }
+        .modal-feedback.incorrect {
+            color: #FF4500; /* Orange-red */
+        }
+
+        .modal-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            margin-top: 30px;
+        }
+        .modal-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        .game-over-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #CF6679; /* Red accent for game over */
+            color: #E0E0E0;
+        }
+        .game-over-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #CF6679;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+        }
+        .game-over-modal p {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+        .game-over-modal .modal-button {
+             background-color: #CF6679;
+             color: #1A1A2E;
+        }
+        .game-over-modal .modal-button:hover {
+            background-color: #E07A8B;
+        }
+    </style>
+</head>
+<body>
     <div class="game-title"></div>
     <div class="players-container" id="playersContainer">
         <!-- Player cards will be injected here by JS -->
@@ -1131,9 +4089,13 @@
     </div>
 
     <script>
-        const gameData = ${JSON.stringify(finalPlayersData, null, 2)}; // null, 2 for pretty print in generated code
-        const POINTS_TO_WIN = ${pointsToWin};
-        const LANGUAGE = '${gameLang}';
+        // These constants are defined for the *generated* game, not the editor itself.
+        // They are dynamically inserted into the 'generatedHtmlContent' string.
+        // The editor's script does not directly use them.
+
+        const gameData = ${JSON.stringify(finalPlayersData, null, 2)}; // This will be replaced by actual data when code is generated
+        const POINTS_TO_WIN = ${pointsToWin}; // This will be replaced by actual value
+        const LANGUAGE = '${gameLang}'; // This will be replaced by actual value
 
         const texts = {
             ru: {
@@ -1367,6 +4329,31 @@
         }
 
         initializeGame(); // Start the game on load
+    </script>
+</body>
+</html>
+`;
+                // Set the generated HTML to the iframe's srcdoc
+                gamePreviewFrame.srcdoc = generatedHtmlContent;
+                outputCode.value = generatedHtmlContent;
+
+                copyCodeBtn.style.display = 'inline-block'; // Show copy button
+                copyCodeBtn.textContent = 'Копировать'; // Reset text
+            });
+
+            // Code for copy button
+            let copyTimeout;
+            copyCodeBtn.addEventListener('click', () => {
+                outputCode.select();
+                outputCode.setSelectionRange(0, 99999); // For mobile devices
+                document.execCommand('copy');
+                copyCodeBtn.textContent = 'Скопировано!';
+                clearTimeout(copyTimeout);
+                copyTimeout = setTimeout(() => {
+                    copyCodeBtn.textContent = 'Копировать';
+                }, 2000);
+            });
+        });
     </script>
 </body>
 </html>
