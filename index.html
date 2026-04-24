@@ -536,6 +536,16 @@
 
             // --- Utility Functions ---
 
+            // Функция для экранирования HTML-специальных символов
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
             // Function to compress image using canvas
             async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
                 return new Promise((resolve) => {
@@ -624,7 +634,7 @@
                     const playerIndex = playersData.length;
                     const playerConfig = {
                         id: Date.now(), // Unique ID for keying
-                        name: `Игрок ${playerIndex + 1}`,
+                        name: `Игрок ${playerIndex + 1}`, // Исправлено: Начальное имя с номером
                         avatar: '', // data URL or external URL
                         questions: []
                     };
@@ -832,6 +842,8 @@
                     }
                 }
 
+                // Экранируем URL для CSS, чтобы избежать проблем со специальными символами
+                const escapedBgImageUrl = escapeHtml(bgImageFinalData);
 
                 // --- START OF GENIALLY WIDGET CODE GENERATION ---
                 const generatedHtmlContent = `
@@ -850,7 +862,8 @@
             justify-content: center;
             align-items: flex-end; /* Align players to the bottom */
             height: 100vh;
-            background-image: url('${bgImageFinalData}');
+            /* Используем экранированный URL для фона */
+            background-image: url('${escapedBgImageUrl}'); 
             background-size: cover;
             background-position: center;
             font-family: '${uiFont}', sans-serif;
@@ -1348,6 +1361,11 @@
 </body>
 </html>
 `;
+                // Выводим сгенерированный HTML в консоль для отладки
+                console.log("--- Сгенерированный HTML для предпросмотра ---");
+                console.log(generatedHtmlContent);
+                console.log("------------------------------------------");
+
                 outputCode.value = generatedHtmlContent; // Update textarea
 
                 // --- Update Preview Frame ---
@@ -1356,7 +1374,13 @@
                 }
                 const blob = new Blob([generatedHtmlContent], { type: 'text/html' });
                 previewObjectURL = URL.createObjectURL(blob);
-                gamePreviewFrame.src = previewObjectURL;
+                
+                if (previewObjectURL) {
+                    gamePreviewFrame.src = previewObjectURL; // ИСПОЛЬЗУЕМ SRC, НЕ SRCDOC!
+                } else {
+                    console.error("Ошибка: Не удалось создать URL объекта для предпросмотра.");
+                    alert("Ошибка при создании предпросмотра. Проверьте консоль разработчика.");
+                }
 
 
                 // --- Handle Copy Button ---
@@ -1366,20 +1390,15 @@
                 copyCodeBtn.classList.remove('copied'); 
             });
 
-            // ... (outside generateCodeBtn.addEventListener, in DOMContentLoaded) ...
-
             copyCodeBtn.addEventListener('click', async () => {
                 try {
                     await navigator.clipboard.writeText(outputCode.value);
                     copyCodeBtn.textContent = 'Скопировано!';
-                    // Опционально добавьте класс для визуальной обратной связи
-                    // copyCodeBtn.classList.add('copied'); // Можно добавить для стилизации
                     setTimeout(() => {
                         copyCodeBtn.textContent = 'Копировать';
-                        // copyCodeBtn.classList.remove('copied');
                     }, 2000); // Вернуть через 2 секунды
                 } catch (err) {
-                    console.error('Failed to copy text: ', err);
+                    console.error('Не удалось скопировать текст: ', err);
                     alert('Ошибка при копировании кода. Пожалуйста, скопируйте вручную.');
                 }
             });
