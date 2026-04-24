@@ -292,23 +292,9 @@
             transition: height 0.5s ease-out; /* Smooth fill animation */
         }
         
-        .ready-button {
-            background-color: var(--accent-purple);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: var(--border-radius-lg);
-            font-size: 1.8em;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.5);
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-            pointer-events: none; /* Make non-interactive in editor preview */
+        /* Кнопка READY в предпросмотре редактора всегда скрыта */
+        .ready-button { 
+            display: none; 
         }
 
         .footer {
@@ -357,13 +343,6 @@
             .liquid-beaker-container {
                 width: 50px;
                 height: 100px;
-            }
-            .ready-button {
-                font-size: 1.2em;
-                padding: 10px 20px;
-            }
-            .footer {
-                position: static; /* Footer below content on small screens */
             }
         }
     </style>
@@ -424,7 +403,8 @@
         </div>
 
         <div class="preview" id="gamePreview" style="background-image: url('https://images.unsplash.com/photo-1518770660431-40435d06488c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzI5MzF8MHwxfHNlYXJjaHwxfHNsYWJ8ZW58MHx8fHwxNzA4NjQ1MTIxfDA&ixlib=rb-4.0.3&q=80&w=1080');">
-            <button class="ready-button" id="previewReadyBtn">READY</button>
+            <!-- Кнопка READY в предпросмотре редактора не нужна, поэтому она скрыта через CSS -->
+            <button class="ready-button" id="previewReadyBtn">READY</button> 
             <div class="preview-players" id="previewPlayersContainer">
                 <!-- Players will be rendered here -->
             </div>
@@ -516,14 +496,15 @@
             });
 
             playersSettingsDiv.querySelectorAll('.player-card input').forEach(input => {
-                input.addEventListener('change', (e) => {
+                // Изменено с 'change' на 'input' для живого обновления
+                input.addEventListener('input', (e) => { 
                     const id = parseInt(e.target.dataset.id);
                     const field = e.target.dataset.field;
                     const value = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
                     const playerIndex = gameState.players.findIndex(p => p.id === id);
                     if (playerIndex > -1) {
                         gameState.players[playerIndex][field] = value;
-                        // Update avatar preview if URL changed
+                        // Обновление предпросмотра аватара при изменении URL
                         if (field === 'avatarURL') {
                             e.target.closest('.player-card').querySelector('.avatar-preview').src = value;
                         }
@@ -670,12 +651,14 @@
             gamePreview.style.fontFamily = gameState.uiFont; // Apply UI font to preview container
             previewPlayersContainer.innerHTML = '';
 
+            // Кнопка READY в предпросмотре редактора всегда скрыта
+            previewReadyBtn.style.display = 'none'; 
+
             if (gameState.players.length === 0) {
                 previewPlayersContainer.innerHTML = '<p style="color: grey; text-align: center; width: 100%;">Добавьте игроков, чтобы увидеть предпросмотр.</p>';
-                previewReadyBtn.style.display = 'none';
                 return;
             }
-            previewReadyBtn.style.display = 'block';
+            // Убрана строка previewReadyBtn.style.display = 'block';
 
             gameState.players.forEach(player => {
                 const playerItem = document.createElement('div');
@@ -697,6 +680,7 @@
         titleFontSelect.addEventListener('change', (e) => { gameState.titleFont = e.target.value; renderPreview(); });
         uiFontSelect.addEventListener('change', (e) => { gameState.uiFont = e.target.value; renderPreview(); });
         
+        // Используем 'input' для живого обновления фона
         bgImageURLInput.addEventListener('input', (e) => { 
             gameState.bgImageURL = e.target.value; 
             bgImagePreview.src = e.target.value; // Update preview image
@@ -845,10 +829,10 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
+            justify-content: center; /* Центрируем содержимое по вертикали */
             align-items: center;
             position: relative;
-            padding-bottom: 5vh; /* Space from bottom */
+            /* padding-bottom: 5vh; Убрано, так как justify-content: center управляет расположением */
             box-sizing: border-box;
         }
 
@@ -858,7 +842,7 @@
             gap: 3vw; /* Responsive gap */
             width: 90%;
             max-width: 1200px; /* Max width for player area */
-            margin-bottom: 2vh;
+            /* margin-bottom: 2vh; Может быть скорректировано или убрано, если gameContainer управляет отступами */
         }
 
         .player-item {
@@ -939,16 +923,14 @@
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(138, 43, 226, 0.5);
             transition: background-color 0.2s ease, transform 0.1s ease;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            /* Убраны абсолютное позиционирование, кнопка теперь находится в потоке */
             z-index: 5;
+            margin-bottom: 5vh; /* Отступ между кнопкой и игроками */
         }
 
         #startButton:hover {
             background-color: var(--accent-purple-dark);
-            transform: translate(-50%, -50%) scale(1.05);
+            transform: scale(1.05); /* Только масштабирование, без смещения */
         }
 
         /* Question Modal */
@@ -1072,7 +1054,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <button id="startButton">READY</button>
+        <button id="startButton">READY</button> <!-- Кнопка перемещена сюда -->
         <div id="playersDisplay">
             <!-- Player items will be dynamically inserted here by JS -->
         </div>
