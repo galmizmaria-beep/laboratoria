@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genially Game Widget Creator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Стили для редактора --- */
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #1A1A2E; /* Dark purple background */
+            color: #E0E0E0; /* Light grey text */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #2D2D44; /* Slightly lighter dark purple for container */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            max-width: 900px;
+            width: 100%;
+            margin: 20px auto;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: #BB86FC; /* Purple accent */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            border-bottom: 2px solid #BB86FC;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-top: 30px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #BB86FC44;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #3A3A5A; /* Even lighter purple for sections */
+            border-radius: 10px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #BB86FC;
+        }
+
+        .input-field, .code-output {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 1px solid #BB86FC66;
+            border-radius: 8px;
+            background-color: #4A4A6A;
+            color: #E0E0E0;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus, .code-output:focus {
+            outline: none;
+            border-color: #BB86FC;
+            box-shadow: 0 0 8px rgba(187, 134, 252, 0.7);
+        }
+
+        input[type="color"] {
+            height: 40px;
+            width: 60px;
+            padding: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .file-input {
+            padding: 8px;
+        }
+
+        .image-note {
+            font-size: 0.85em;
+            color: #BB86FCaa;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .image-preview {
+            margin-top: 15px;
+            border: 1px dashed #BB86FC66;
+            border-radius: 8px;
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #4A4A6A;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 5px;
+            object-fit: contain;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        .primary-btn {
+            background-color: #BB86FC; /* Purple */
+            color: #1A1A2E;
+        }
+
+        .primary-btn:hover {
+            background-color: #D0A7FF;
+            transform: translateY(-2px);
+        }
+
+        .secondary-btn {
+            background-color: #555577; /* Darker grey-purple */
+            color: #E0E0E0;
+        }
+
+        .secondary-btn:hover {
+            background-color: #6A6A88;
+            transform: translateY(-2px);
+        }
+
+        .danger-btn {
+            background-color: #CF6679; /* Reddish for delete */
+            color: #1A1A2E;
+        }
+
+        .danger-btn:hover {
+            background-color: #E07A8B;
+            transform: translateY(-2px);
+        }
+
+        .icon-btn {
+            padding: 8px 12px;
+            font-size: 0.9em;
+            margin: 0;
+            float: right; /* Align to top right of its parent */
+        }
+
+        .card {
+            background-color: #4A4A6A;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #BB86FC33;
+            position: relative; /* For absolutely positioned remove button */
+        }
+
+        .player-config h3 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: none;
+            text-align: left;
+        }
+
+        .player-config h4 {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: #BB86FC;
+            border-bottom: 1px dotted #BB86FC22;
+            padding-bottom: 5px;
+            text-align: left;
+        }
+
+        .questions-container {
+            margin-bottom: 15px;
+        }
+
+        .question-item {
+            background-color: #5A5A7A;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            border: 1px solid #BB86FC22;
+        }
+
+        .question-item label {
+            font-size: 0.9em;
+            color: #BB86FC;
+        }
+
+        .question-item .remove-question-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 9px;
+            font-size: 0.8em;
+        }
+
+        .mc-options-container {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #4A4A6A;
+            border-radius: 5px;
+            border: 1px dashed #BB86FC44;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .option-group input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.2); /* Make radio buttons a bit bigger */
+            cursor: pointer;
+        }
+
+        .option-group .input-field {
+            flex-grow: 1;
+            margin-bottom: 0;
+        }
+
+        .code-output {
+            min-height: 250px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-break: break-all;
+            resize: vertical;
+        }
+
+        /* Font select specific styling for readability */
+        .font-select {
+            font-family: 'Open Sans', sans-serif; /* Default for dropdown itself */
+        }
+        #titleFont option[value="Montserrat"] { font-family: 'Montserrat', sans-serif; }
+        #titleFont option[value="Open Sans"] { font-family: 'Open Sans', sans-serif; }
+        #titleFont option[value="Arial"] { font-family: Arial, sans-serif; }
+        #titleFont option[value="Verdana"] { font-family: Verdana, sans-serif; }
+
+        #uiFont option[value="Open Sans"] { font-family: 'Open Sans', sans-serif; }
+        #uiFont option[value="Montserrat"] { font-family: 'Montserrat', sans-serif; }
+        #uiFont option[value="Arial"] { font-family: Arial, sans-serif; }
+        #uiFont option[value="Verdana"] { font-family: Verdana, sans-serif; }
+
+        .preview-container {
+            border: 2px solid #BB86FC;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 0 15px rgba(187, 134, 252, 0.5);
+            background-color: #1A1A2E;
+        }
+
+        #gamePreviewFrame {
+            width: 100%;
+            height: 500px; /* Fixed height for preview */
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Genially Game Widget Creator</h1>
+
+        <section class="section">
+            <h2>Настройки игры</h2>
+            <div class="input-group">
+                <label for="gameLang">Язык игры:</label>
+                <select id="gameLang" class="input-field">
+                    <option value="ru">Русский</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="titleFont">Шрифт заголовков:</label>
+                <select id="titleFont" class="input-field font-select">
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="uiFont">Шрифт интерфейса:</label>
+                <select id="uiFont" class="input-field font-select">
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="avatarSize">Размер аватара (px):</label>
+                <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
+            </div>
+            <div class="input-group">
+                <label for="liquidColor">Цвет жидкости:</label>
+                <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
+            </div>
+            <div class="input-group">
+                <label for="highlightColor">Цвет подсветки активного игрока:</label>
+                <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
+            </div>
+            <div class="input-group">
+                <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
+                <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Фон игры</h2>
+            <div class="input-group">
+                <label for="bgImageUrl">URL фонового изображения:</label>
+                <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
+            </div>
+            <div class="input-group">
+                <label>Или загрузите файл:</label>
+                <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
+                <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
+            </div>
+            <div class="image-preview" id="bgImagePreview">
+                <img src="#" alt="Background Preview" style="display: none;">
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
+            <div id="playersContainer">
+                <!-- Player templates will be inserted here by JS -->
+            </div>
+            <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
+        </section>
+
+        <section class="section">
+            <h2>Предпросмотр игры</h2>
+            <p>Нажмите "Сгенерировать код", чтобы обновить предпросмотр.</p>
+            <div class="preview-container">
+                <iframe id="gamePreviewFrame" sandbox="allow-scripts allow-forms allow-popups" frameborder="0"></iframe>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Сгенерированный код для Genially</h2>
+            <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
+            <textarea id="outputCode" readonly class="code-output"></textarea>
+            <button id="generateCodeBtn" class="btn primary-btn">Сгенерировать код</button>
+            <button id="copyCodeBtn" class="btn secondary-btn" style="display: none;">Копировать</button>
+        </section>
+    </div>
+
+    <!-- Hidden Player Template -->
+    <template id="playerTemplate">
+        <div class="player-config card">
+            <h3>Игрок <span class="player-number"></span> <button class="remove-player-btn btn icon-btn danger-btn">✕</button></h3>
+            <div class="input-group">
+                <label for="playerName">Имя игрока:</label>
+                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie" value="Игрок ">
+            </div>
+            <div class="input-group">
+                <label for="avatarUrl">URL аватара:</label>
+                <input type="text" class="input-field avatar-url" placeholder="https://example.com/avatar.png">
+            </div>
+            <div class="input-group">
+                <label>Или загрузите файл:</label>
+                <input type="file" accept="image/*" class="input-field file-input avatar-upload">
+                <small class="image-note">Изображения будут автоматически сжаты.</small>
+            </div>
+            <div class="image-preview avatar-preview">
+                <img src="#" alt="Avatar Preview" style="display: none;">
+            </div>
+
+            <h4>Задания для игрока</h4>
+            <div class="questions-container">
+                <!-- Questions will be added here -->
+            </div>
+            <button class="add-question-btn btn secondary-btn">Добавить вопрос</button>
+        </div>
+    </template>
+
+    <!-- Hidden Question Template -->
+    <template id="questionTemplate">
+        <div class="question-item">
+            <label for="questionType">Тип вопроса:</label>
+            <select class="input-field question-type">
+                <option value="open">Без вариантов ответа</option>
+                <option value="mc">С вариантами ответа</option>
+            </select>
+
+            <label for="questionText">Текст вопроса:</label>
+            <textarea class="input-field question-text" rows="2" placeholder="Введите текст задания..."></textarea>
+            
+            <div class="mc-options-container" style="display: none;">
+                <label>Варианты ответа:</label>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 1">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 2">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 3">
+                </div>
+                <div class="option-group">
+                    <input type="radio" name="correct-option" class="correct-option-radio">
+                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 4">
+                </div>
+            </div>
+            <button class="remove-question-btn btn icon-btn danger-btn">✕</button>
+        </div>
+    </template>
+
+    <script>
+        /* --- JavaScript для редактора и генерации кода --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            const playersContainer = document.getElementById('playersContainer');
+            const addPlayerBtn = document.getElementById('addPlayerBtn');
+            const playerCountText = document.getElementById('playerCountText');
+            const playerTemplate = document.getElementById('playerTemplate');
+            const questionTemplate = document.getElementById('questionTemplate');
+            const generateCodeBtn = document.getElementById('generateCodeBtn');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            const outputCode = document.getElementById('outputCode');
+            const bgImageUpload = document.getElementById('bgImageUpload');
+            const bgImageUrl = document.getElementById('bgImageUrl');
+            const bgImagePreview = document.getElementById('bgImagePreview').querySelector('img');
+            const gamePreviewFrame = document.getElementById('gamePreviewFrame');
+
+            let playersData = []; // Array to store configuration for each player
+
+            // --- Utility Functions ---
+
+            // Function to compress image using canvas
+            async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Calculate new dimensions
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert canvas to JPEG data URL
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+
+                    img.onerror = () => {
+                        console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
+                        resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); // Fallback to original URL or empty
+                    };
+                    
+                    if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
+                        img.src = fileOrUrl; // Already a data URL, process it
+                    } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
+                         // For external URLs, CORS might be an issue. If it fails, just use the original URL.
+                        img.crossOrigin = "anonymous"; // Attempt to load cross-origin
+                        img.src = fileOrUrl;
+                    } else if (fileOrUrl instanceof File) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { img.src = e.target.result; };
+                        reader.readAsDataURL(fileOrUrl);
+                    } else {
+                        resolve(''); // No valid input
+                    }
+                });
+            }
+
+            function updatePlayerCount() {
+                playerCountText.textContent = playersData.length;
+                addPlayerBtn.disabled = playersData.length >= 4;
+            }
+
+            async function updateImagePreview(fileInput, urlInput, previewImgElement) {
+                let imageData = '';
+                if (fileInput.files && fileInput.files[0]) {
+                    imageData = await compressImage(fileInput.files[0]);
+                    urlInput.value = ''; // Clear URL if file is uploaded
+                } else if (urlInput.value) {
+                    imageData = await compressImage(urlInput.value); // Attempt to compress/process URL
+                    // If compression failed or returned original URL (due to CORS or other error), use original URL
+                    if (!imageData || (imageData === urlInput.value && !imageData.startsWith('data:'))) {
+                        imageData = urlInput.value; // Use original URL
+                    }
+                    fileInput.value = ''; // Clear file input if URL is entered
+                }
+
+                if (imageData) {
+                    previewImgElement.src = imageData;
+                    previewImgElement.style.display = 'block';
+                    fileInput.dataset.imageData = imageData; // Store for generation
+                    urlInput.dataset.imageData = imageData; // Store for generation
+                } else {
+                    previewImgElement.src = '#';
+                    previewImgElement.style.display = 'none';
+                    delete fileInput.dataset.imageData;
+                    delete urlInput.dataset.imageData;
+                }
+                return imageData; // Return processed image data for direct use
+            }
+
+            // --- Player Management ---
+            addPlayerBtn.addEventListener('click', () => {
+                if (playersData.length < 4) {
+                    const playerIndex = playersData.length;
+                    const playerConfig = {
+                        id: Date.now(), // Unique ID for keying
+                        name: `Игрок ${playerIndex + 1}`,
+                        avatar: '', // data URL or external URL
+                        questions: []
+                    };
+                    playersData.push(playerConfig);
+                    renderPlayer(playerConfig, playerIndex);
+                    updatePlayerCount();
+                }
+            });
+
+            function renderPlayer(playerConfig, playerIndex) {
+                const clone = playerTemplate.content.cloneNode(true);
+                const playerDiv = clone.querySelector('.player-config');
+                playerDiv.dataset.playerId = playerConfig.id;
+                playerDiv.querySelector('.player-number').textContent = playerIndex + 1;
+
+                const playerNameInput = playerDiv.querySelector('.player-name');
+                playerNameInput.value = playerConfig.name;
+                playerNameInput.addEventListener('input', (e) => {
+                    playerConfig.name = e.target.value;
+                });
+
+                const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+
+                avatarUrlInput.value = playerConfig.avatar; // Set initial URL if any
+
+                avatarUrlInput.addEventListener('input', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                avatarUploadInput.addEventListener('change', async () => {
+                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                });
+
+                // Initial preview if avatar already exists
+                if (playerConfig.avatar) {
+                    avatarPreviewImg.src = playerConfig.avatar;
+                    avatarPreviewImg.style.display = 'block';
+                }
+
+                const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
+                removePlayerBtn.addEventListener('click', () => {
+                    playersData = playersData.filter(p => p.id !== playerConfig.id);
+                    playersContainer.innerHTML = ''; // Clear and re-render all to update numbers
+                    playersData.forEach((p, idx) => renderPlayer(p, idx));
+                    updatePlayerCount();
+                });
+
+                const questionsContainer = playerDiv.querySelector('.questions-container');
+                const addQuestionBtn = playerDiv.querySelector('.add-question-btn');
+                addQuestionBtn.addEventListener('click', () => {
+                    const newQuestion = {
+                        type: 'open',
+                        text: '',
+                        options: ['', '', '', ''],
+                        correctAnswerIndex: -1 // -1 means no correct answer selected for MC
+                    };
+                    playerConfig.questions.push(newQuestion);
+                    renderQuestion(newQuestion, playerConfig, questionsContainer, playerConfig.questions.length - 1);
+                });
+
+                // Render existing questions
+                playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+
+                // Append to container or re-insert if re-rendering
+                const existingPlayerDiv = playersContainer.querySelector(`[data-player-id="${playerConfig.id}"]`);
+                if (existingPlayerDiv) {
+                    existingPlayerDiv.replaceWith(playerDiv);
+                } else {
+                    playersContainer.appendChild(clone);
+                }
+            }
+
+            function renderQuestion(questionObj, playerConfig, questionsContainer, questionIndex) {
+                const clone = questionTemplate.content.cloneNode(true);
+                const questionItemDiv = clone.querySelector('.question-item');
+                
+                const questionTypeSelect = questionItemDiv.querySelector('.question-type');
+                const questionTextInput = questionItemDiv.querySelector('.question-text');
+                const mcOptionsContainer = questionItemDiv.querySelector('.mc-options-container');
+                const optionInputs = questionItemDiv.querySelectorAll('.option-text');
+                const correctOptionRadios = questionItemDiv.querySelectorAll('.correct-option-radio');
+
+                // Set initial values
+                questionTypeSelect.value = questionObj.type;
+                questionTextInput.value = questionObj.text;
+                if (questionObj.type === 'mc') {
+                    mcOptionsContainer.style.display = 'block';
+                    questionObj.options.forEach((opt, idx) => {
+                        if (optionInputs[idx]) optionInputs[idx].value = opt;
+                    });
+                    if (questionObj.correctAnswerIndex !== -1 && correctOptionRadios[questionObj.correctAnswerIndex]) {
+                        correctOptionRadios[questionObj.correctAnswerIndex].checked = true;
+                    }
+                } else {
+                    mcOptionsContainer.style.display = 'none';
+                }
+
+                // Event Listeners
+                questionTypeSelect.addEventListener('change', (e) => {
+                    questionObj.type = e.target.value;
+                    mcOptionsContainer.style.display = (e.target.value === 'mc') ? 'block' : 'none';
+                    // Reset MC specific data if changing to open-ended
+                    if (e.target.value === 'open') {
+                        questionObj.options = ['', '', '', ''];
+                        questionObj.correctAnswerIndex = -1;
+                        optionInputs.forEach(input => input.value = '');
+                        correctOptionRadios.forEach(radio => radio.checked = false);
+                    }
+                });
+
+                questionTextInput.addEventListener('input', (e) => {
+                    questionObj.text = e.target.value;
+                });
+
+                optionInputs.forEach((input, idx) => {
+                    input.addEventListener('input', (e) => {
+                        questionObj.options[idx] = e.target.value;
+                    });
+                });
+
+                correctOptionRadios.forEach((radio, idx) => {
+                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`; // Unique name per question
+                    radio.addEventListener('change', () => {
+                        if (radio.checked) {
+                            questionObj.correctAnswerIndex = idx;
+                        }
+                    });
+                });
+
+                const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
+                removeQuestionBtn.addEventListener('click', () => {
+                    playerConfig.questions.splice(questionIndex, 1);
+                    questionsContainer.innerHTML = ''; // Clear and re-render all questions for this player
+                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                });
+
+                questionsContainer.appendChild(clone);
+            }
+
+            // --- Global Image Preview for Background ---
+            let bgImageFinalData = '';
+            bgImageUpload.addEventListener('change', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+            bgImageUrl.addEventListener('input', async () => {
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            });
+
+
+            // --- Code Generation ---
+            generateCodeBtn.addEventListener('click', async () => {
+                const gameLang = document.getElementById('gameLang').value;
+                const titleFont = document.getElementById('titleFont').value;
+                const uiFont = document.getElementById('uiFont').value;
+                const avatarSize = document.getElementById('avatarSize').value;
+                const liquidColor = document.getElementById('liquidColor').value;
+                const highlightColor = document.getElementById('highlightColor').value;
+                const pointsToWin = parseInt(document.getElementById('pointsToWin').value);
+
+                // Ensure background image data is up-to-date before final generation
+                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+
+
+                // Finalize players data, ensuring avatars are processed
+                const finalPlayersData = [];
+                for (const player of playersData) {
+                    const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
+                    const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                    const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                    
+                    // Update and get final avatar data
+                    const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, playerDiv.querySelector('.avatar-preview img'));
+
+                    finalPlayersData.push({
+                        name: player.name,
+                        avatar: finalAvatar,
+                        questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
+                    });
+                }
+                
+                // Basic validation
+                if (finalPlayersData.length === 0) {
+                    alert('Пожалуйста, добавьте хотя бы одного игрока.');
+                    return;
+                }
+                for (const player of finalPlayersData) {
+                    if (!player.avatar) {
+                        alert(`Игрок "${player.name}" не имеет аватара.`);
+                        return;
+                    }
+                    if (player.questions.length < pointsToWin) {
+                        alert(`Игрок "${player.name}" имеет меньше вопросов (${player.questions.length}) чем "Очков для победы" (${pointsToWin}).`);
+                        return;
+                    }
+                    if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
+                        alert(`Игрок "${player.name}" имеет вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов.`);
+                        return;
+                    }
+                }
+
+
+                // --- START OF GENIALLY WIDGET CODE GENERATION ---
+                const generatedHtml = `
+<!DOCTYPE html>
+<html lang="${gameLang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genially Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=${titleFont.replace(/ /g, '+')}:wght@700&family=${uiFont.replace(/ /g, '+')}:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align players to the bottom */
+            height: 100vh;
+            background-image: url('${bgImageFinalData}');
+            background-size: cover;
+            background-position: center;
+            font-family: '${uiFont}', sans-serif;
+            color: #fff;
+            position: relative;
+            background-color: #1A1A2E; /* Fallback if image fails */
+        }
+        .game-title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-family: '${titleFont}', sans-serif;
+            font-size: 2.5em;
+            color: #BB86FC; /* Fixed color for title, can be customizable */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        .players-container {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 50px; /* Space from bottom */
+            z-index: 5;
+            flex-wrap: wrap; /* Allow wrapping for more players */
+            justify-content: center;
+        }
+        .player-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            border: 2px solid transparent;
+        }
+        .player-card.active {
+            border-color: ${highlightColor};
+            box-shadow: 0 0 20px ${highlightColor}, 0 0 40px rgba(255, 255, 0, 0.3);
+            transform: translateY(-10px) scale(1.05);
+        }
+        .avatar-frame {
+            width: ${avatarSize}px;
+            height: ${avatarSize}px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #BB86FC; /* Avatar frame color */
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .avatar-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .player-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .flask-container {
+            width: 80px; /* Width of the flask area */
+            height: 180px; /* Height of the flask area */
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" fill="none" stroke="%23BB86FC" stroke-width="4"><path d="M20 0 L80 0 Q90 0 90 10 L90 180 Q90 200 70 200 L30 200 Q10 200 10 180 L10 10 Q10 0 20 0 Z" fill="rgba(0,0,0,0.3)"/></svg>') no-repeat center bottom;
+            background-size: contain;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 0%;
+            background-color: ${liquidColor};
+            border-radius: 0 0 10px 10px;
+            transition: height 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.5);
+        }
+        .fill-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: -20px; /* Position above the flask */
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+        }
+        .player-card.active .fill-button {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        .fill-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        /* Question Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .question-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #BB86FC;
+        }
+        .question-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #BB86FC;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        .question-modal p {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .modal-options-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+        .modal-option {
+            display: flex;
+            align-items: center;
+            background: #4A4A6A;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #BB86FC66;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+        .modal-option:hover {
+            background-color: #5A5A7A;
+            border-color: #BB86FC;
+        }
+        .modal-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.5);
+            cursor: inherit;
+        }
+        .modal-option.selected {
+            border-color: ${highlightColor};
+            background-color: #5A5A7A;
+            box-shadow: 0 0 10px rgba(255,255,0,0.5);
+        }
+        .modal-feedback {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+        }
+        .modal-feedback.correct {
+            color: #7FFF00; /* Lime green */
+        }
+        .modal-feedback.incorrect {
+            color: #FF4500; /* Orange-red */
+        }
+
+        .modal-button {
+            background-color: #BB86FC;
+            color: #1A1A2E;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            margin-top: 30px;
+        }
+        .modal-button:hover {
+            background-color: #D0A7FF;
+        }
+
+        .game-over-modal {
+            background: #2D2D44;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.7);
+            border: 2px solid #CF6679; /* Red accent for game over */
+            color: #E0E0E0;
+        }
+        .game-over-modal h2 {
+            font-family: '${titleFont}', sans-serif;
+            color: #CF6679;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+        }
+        .game-over-modal p {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+        .game-over-modal .modal-button {
+             background-color: #CF6679;
+             color: #1A1A2E;
+        }
+        .game-over-modal .modal-button:hover {
+            background-color: #E07A8B;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-title"></div>
+    <div class="players-container" id="playersContainer">
+        <!-- Player cards will be injected here by JS -->
+    </div>
+
+    <div class="overlay" id="questionOverlay">
+        <div class="question-modal">
+            <h2 id="modalQuestionTitle"></h2>
+            <p id="modalQuestionText"></p>
+            <div id="modalOptionsContainer" class="modal-options-container"></div>
+            <div id="modalFeedback" class="modal-feedback"></div>
+            <button class="modal-button" id="modalActionButton"></button>
+        </div>
+    </div>
+
+    <div class="overlay" id="gameOverOverlay">
+        <div class="game-over-modal">
+            <h2 id="gameOverTitle"></h2>
+            <p id="gameOverMessage"></p>
+            <button class="modal-button" id="restartGameButton"></button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = ${JSON.stringify(finalPlayersData, null, 2)}; // null, 2 for pretty print in generated code
+        const POINTS_TO_WIN = ${pointsToWin};
+        const LANGUAGE = '${gameLang}';
+
+        const texts = {
+            ru: {
+                gameTitle: 'Викторина "Лабораторные исследования"',
+                questionTitle: 'Задание для',
+                takeTurn: 'Начать ход',
+                checkAnswer: 'Проверить ответ',
+                correctAnswer: 'Верно!',
+                incorrectAnswer: 'Неверно. Попробуйте ещё раз.',
+                nextTurn: 'Следующий ход',
+                gameOverTitle: 'Игра окончена!',
+                gameOverMessage: 'Победил(а): ',
+                restartGame: 'Играть снова',
+                selectOption: 'Выберите вариант ответа'
+            },
+            en: {
+                gameTitle: 'Laboratory Research Quiz',
+                questionTitle: 'Task for',
+                takeTurn: 'Take Turn',
+                checkAnswer: 'Check Answer',
+                correctAnswer: 'Correct!',
+                incorrectAnswer: 'Incorrect. Try again.',
+                nextTurn: 'Next Turn',
+                gameOverTitle: 'Game Over!',
+                gameOverMessage: 'Winner: ',
+                restartGame: 'Play Again',
+                selectOption: 'Select an answer option'
+            }
+        };
+
+        const playerContainer = document.getElementById('playersContainer');
+        const questionOverlay = document.getElementById('questionOverlay');
+        const modalQuestionTitle = document.getElementById('modalQuestionTitle');
+        const modalQuestionText = document.getElementById('modalQuestionText');
+        const modalOptionsContainer = document.getElementById('modalOptionsContainer');
+        const modalFeedback = document.getElementById('modalFeedback');
+        const modalActionButton = document.getElementById('modalActionButton');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const gameOverTitle = document.getElementById('gameOverTitle');
+        const gameOverMessage = document.getElementById('gameOverMessage');
+        const restartGameButton = document.getElementById('restartGameButton');
+        const gameTitleElement = document.querySelector('.game-title');
+
+        let currentPlayerIndex = 0;
+        let playerScores = Array(gameData.length).fill(0);
+        let playerQuestionIndexes = Array(gameData.length).fill(0); // Track which question is next for each player
+        let gameActive = true;
+        let selectedOption = -1; // For multiple choice questions
+
+        gameTitleElement.textContent = texts[LANGUAGE].gameTitle;
+
+        function initializeGame() {
+            playerContainer.innerHTML = '';
+            playerScores = Array(gameData.length).fill(0);
+            playerQuestionIndexes = Array(gameData.length).fill(0);
+            currentPlayerIndex = 0;
+            gameActive = true;
+            modalFeedback.style.display = 'none';
+
+            gameData.forEach((player, index) => {
+                const playerCard = document.createElement('div');
+                playerCard.classList.add('player-card');
+                playerCard.dataset.playerIndex = index;
+
+                const avatarFrame = document.createElement('div');
+                avatarFrame.classList.add('avatar-frame');
+                const avatarImg = document.createElement('img');
+                avatarImg.src = player.avatar;
+                avatarImg.alt = player.name;
+                avatarFrame.appendChild(avatarImg);
+
+                const playerName = document.createElement('div');
+                playerName.classList.add('player-name');
+                playerName.textContent = player.name;
+
+                const flaskContainer = document.createElement('div');
+                flaskContainer.classList.add('flask-container');
+                const liquid = document.createElement('div');
+                liquid.classList.add('liquid');
+                liquid.style.height = '0%';
+                flaskContainer.appendChild(liquid);
+
+                const fillButton = document.createElement('button');
+                fillButton.classList.add('fill-button');
+                fillButton.textContent = texts[LANGUAGE].takeTurn;
+                fillButton.addEventListener('click', () => handlePlayerTurn(index));
+
+                playerCard.append(avatarFrame, playerName, flaskContainer, fillButton);
+                playerContainer.appendChild(playerCard);
+            });
+            updateActivePlayerHighlight();
+            gameOverOverlay.classList.remove('active');
+        }
+
+        function updateActivePlayerHighlight() {
+            document.querySelectorAll('.player-card').forEach((card, index) => {
+                if (index === currentPlayerIndex) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+        }
+
+        function handlePlayerTurn(playerIdx) {
+            if (!gameActive || playerIdx !== currentPlayerIndex) return;
+
+            const player = gameData[playerIdx];
+            const currentQuestionIdx = playerQuestionIndexes[playerIdx];
+
+            if (currentQuestionIdx >= player.questions.length) {
+                // This scenario should be caught by editor validation, but a fallback is good
+                alert(LANGUAGE === 'ru' ? 'У этого игрока больше нет вопросов!' : 'This player has no more questions!');
+                return;
+            }
+
+            const question = player.questions[currentQuestionIdx];
+            modalQuestionTitle.textContent = \`\${texts[LANGUAGE].questionTitle} \${player.name}\`;
+            modalQuestionText.textContent = question.text;
+            modalFeedback.style.display = 'none';
+            selectedOption = -1; // Reset selected option
+
+            modalOptionsContainer.innerHTML = ''; // Clear previous options
+            modalOptionsContainer.style.display = 'none'; // Hide by default
+
+            if (question.type === 'mc') {
+                modalOptionsContainer.style.display = 'flex';
+                question.options.forEach((optionText, idx) => {
+                    if (optionText.trim() === '') return; // Skip empty options
+                    const optionDiv = document.createElement('label');
+                    optionDiv.classList.add('modal-option');
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'mc-option';
+                    radio.value = idx;
+                    radio.addEventListener('change', () => {
+                        selectedOption = parseInt(radio.value);
+                        document.querySelectorAll('.modal-option').forEach(opt => opt.classList.remove('selected'));
+                        optionDiv.classList.add('selected');
+                    });
+                    optionDiv.append(radio, document.createTextNode(optionText));
+                    modalOptionsContainer.appendChild(optionDiv);
+                });
+                modalActionButton.textContent = texts[LANGUAGE].checkAnswer;
+                modalActionButton.onclick = () => checkAnswer(playerIdx, question);
+            } else { // 'open' type
+                modalActionButton.textContent = texts[LANGUAGE].nextTurn; // "Ответ верный!" as before
+                modalActionButton.onclick = () => {
+                    fillFlask(playerIdx);
+                    questionOverlay.classList.remove('active');
+                    moveToNextPlayer();
+                };
+            }
+            questionOverlay.classList.add('active');
+        }
+
+        function checkAnswer(playerIdx, question) {
+            if (selectedOption === -1) {
+                modalFeedback.textContent = texts[LANGUAGE].selectOption;
+                modalFeedback.classList.remove('correct', 'incorrect');
+                modalFeedback.style.display = 'block';
+                return;
+            }
+
+            modalFeedback.style.display = 'block';
+            if (selectedOption === question.correctAnswerIndex) {
+                modalFeedback.textContent = texts[LANGUAGE].correctAnswer;
+                modalFeedback.classList.remove('incorrect');
+                modalFeedback.classList.add('correct');
+                modalActionButton.textContent = texts[LANGUAGE].nextTurn; // Change button to "Next Turn"
+                modalActionButton.onclick = () => {
+                    fillFlask(playerIdx);
+                    questionOverlay.classList.remove('active');
+                    moveToNextPlayer();
+                };
+            } else {
+                modalFeedback.textContent = texts[LANGUAGE].incorrectAnswer;
+                modalFeedback.classList.remove('correct');
+                modalFeedback.classList.add('incorrect');
+                // For incorrect answer, don't fill flask, just move to next player
+                modalActionButton.textContent = texts[LANGUAGE].nextTurn; // Change button to "Next Turn"
+                modalActionButton.onclick = () => {
+                    questionOverlay.classList.remove('active');
+                    moveToNextPlayer(); // Move turn to next player even if incorrect
+                };
+            }
+        }
+
+        function fillFlask(playerIdx) {
+            if (!gameActive) return;
+
+            playerScores[playerIdx]++;
+            playerQuestionIndexes[playerIdx]++;
+
+            const playerCard = document.querySelector(\`.player-card[data-player-index="${playerIdx}"]\`);
+            const liquid = playerCard.querySelector('.liquid');
+            const newHeight = (playerScores[playerIdx] / POINTS_TO_WIN) * 100;
+            liquid.style.height = \`\${newHeight}%\`;
+
+            if (playerScores[playerIdx] >= POINTS_TO_WIN) {
+                endGame(playerIdx);
+            }
+        }
+
+        function moveToNextPlayer() {
+            if (!gameActive) return;
+            currentPlayerIndex = (currentPlayerIndex + 1) % gameData.length;
+            updateActivePlayerHighlight();
+            modalFeedback.style.display = 'none'; // Hide feedback for next turn
+        }
+
+        function endGame(winnerIndex) {
+            gameActive = false;
+            const winnerName = gameData[winnerIndex].name;
+            gameOverTitle.textContent = texts[LANGUAGE].gameOverTitle;
+            gameOverMessage.textContent = \`\${texts[LANGUAGE].gameOverMessage}\${winnerName}!\`;
+            restartGameButton.textContent = texts[LANGUAGE].restartGame;
+            restartGameButton.onclick = initializeGame;
+            gameOverOverlay.classList.add('active');
+        }
+
+        initializeGame(); // Start the game on load
+    </script>
+</body>
+</html>
