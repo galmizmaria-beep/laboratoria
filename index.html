@@ -4,31 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактор игры: Лаборатория (Genially)</title>
-    <!-- Подключаем шрифты в стиле картинки-референса -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Montserrat:wght@400;700;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Цветовая палитра из картинки */
-            --bg-page: #0a0510;
-            --bg-panel: rgba(26, 15, 46, 0.85);
-            --bg-card: #1f1235;
-            --neon-purple: #a855f7;
-            --neon-purple-hover: #c084fc;
-            --text-light: #e2d8f0;
-            --text-muted: #9ca3af;
-            --border-color: #4c2882;
+            /* Палитра в стиле Cthulhu Spacclurn (со 2-й картинки) */
+            --bg-deep-space: #0b0616;
+            --bg-panel: rgba(26, 15, 46, 0.9);
+            --bg-card: #1d1033;
+            --neon-purple: #9d4edd;
+            --neon-purple-hover: #b975f8;
+            --neon-blue: #00f5ff;
+            --text-light: #eaddf8;
+            --text-muted: #9f8bb3;
+            --border-color: #3b2266;
             --success: #10b981;
-            --glow: 0 0 15px rgba(168, 85, 247, 0.4);
+            --danger: #ef4444;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: var(--bg-page);
-            /* Фон как на картинке */
-            background: radial-gradient(circle at 50% 0%, #301758 0%, #0a0510 80%);
-            color: var(--text-light);
             font-family: 'DM Sans', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #29124f 0%, var(--bg-deep-space) 80%);
+            color: var(--text-light);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -36,31 +34,27 @@
             overflow: hidden;
         }
 
-        /* КОНТЕЙНЕР 16:9 */
-        .app-container {
-            display: flex;
+        /* Контейнер редактора с жестким форматом 16:9 */
+        #app-container {
             width: 100vw;
-            max-width: 177.78vh; /* 16:9 ratio */
-            aspect-ratio: 16 / 9;
-            background: rgba(10, 5, 16, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(168, 85, 247, 0.2);
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
-            border-radius: 16px;
+            max-width: calc(100vh * (16 / 9));
+            height: 100vh;
+            max-height: calc(100vw * (9 / 16));
+            display: flex;
+            background: var(--bg-panel);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 50px rgba(157, 78, 221, 0.15);
             overflow: hidden;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            /* Если хотите скругленные углы у самого редактора, раскомментируйте строку ниже: */
+            /* border-radius: 16px; */
         }
-
-        /* Стилизация скроллбара */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-card); }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
 
         /* Sidebar Settings */
         .sidebar {
-            width: 30%;
-            min-width: 350px;
-            background-color: var(--bg-panel);
+            width: 35%;
+            max-width: 450px;
+            background-color: transparent;
             border-right: 1px solid var(--border-color);
             padding: 25px;
             overflow-y: auto;
@@ -69,16 +63,23 @@
             gap: 20px;
         }
 
-        /* Заголовки в стиле Cthulhu */
-        h2 {
+        /* Стилизация скроллбара под космос */
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: var(--bg-deep-space); }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+
+        .sidebar h2 {
             margin: 0 0 10px 0;
-            font-size: 1.5rem;
-            font-family: 'Playfair Display', serif;
-            letter-spacing: 1px;
+            font-size: 1.3rem;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
             color: #fff;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--neon-purple);
+            padding-bottom: 8px;
+            box-shadow: 0 5px 15px -10px var(--neon-purple);
         }
 
         .form-group {
@@ -90,29 +91,32 @@
 
         .form-group label {
             font-size: 0.85rem;
+            font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         input, select, button {
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: var(--bg-card);
             color: var(--text-light);
             border: 1px solid var(--border-color);
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: 12px 15px;
+            border-radius: 12px;
             font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
             outline: none;
-            transition: all 0.3s;
         }
 
         input:focus, select:focus {
             border-color: var(--neon-purple);
-            box-shadow: var(--glow);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+            background-color: rgba(29, 16, 51, 0.8);
         }
 
         input[type="color"] {
-            padding: 2px;
+            padding: 2px 5px;
             height: 45px;
             width: 100%;
             cursor: pointer;
@@ -120,55 +124,57 @@
 
         input[type="range"] {
             padding: 0;
-            background: transparent;
-            border: none;
+            accent-color: var(--neon-purple);
         }
 
         button {
-            background-color: var(--bg-card);
+            background-color: rgba(157, 78, 221, 0.1);
+            color: var(--neon-purple);
+            border: 1px solid var(--neon-purple);
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
             text-transform: uppercase;
-            font-size: 0.8rem;
             letter-spacing: 1px;
-            border: 1px solid var(--border-color);
+            border-radius: 30px; /* Круглые кнопки как на картинке */
         }
 
         button:hover {
-            background-color: var(--border-color);
-            box-shadow: var(--glow);
-        }
-
-        .btn-add {
-            background: transparent;
-            border: 1px dashed var(--neon-purple);
-            color: var(--neon-purple);
-            padding: 12px;
-        }
-        .btn-add:hover {
-            background: rgba(168, 85, 247, 0.1);
+            background-color: var(--neon-purple);
             color: #fff;
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
         }
 
-        .btn-delete {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border-color: rgba(239, 68, 68, 0.3);
-            margin-top: 10px;
-        }
-        .btn-delete:hover {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        /* Player & Task Cards (Стиль карточек с монстрами) */
+        /* Player & Task Cards */
         .card {
-            background: linear-gradient(145deg, var(--bg-card), #140b24);
+            background-color: var(--bg-card);
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 16px;
             margin-bottom: 15px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Уменьшенные кнопки удаления в карточках */
+        .card button {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-color: var(--danger);
+            font-size: 0.8rem;
+            padding: 8px 12px;
+            margin-top: 10px;
+        }
+        
+        .card button:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+
+        .card input[type="radio"] {
+            accent-color: var(--neon-blue);
+            width: 20px;
+            height: 20px;
+            margin-top: 10px;
         }
 
         /* Main Preview Area */
@@ -187,16 +193,22 @@
             margin-bottom: 20px;
         }
 
-        .header h2 { border: none; margin: 0; padding: 0; }
+        .header h2 {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 1.8rem;
+            color: #fff;
+        }
 
         .preview-container {
             flex: 1;
             background-color: #000;
             border: 2px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 20px;
             overflow: hidden;
             position: relative;
-            box-shadow: var(--glow);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         iframe {
@@ -206,89 +218,93 @@
         }
 
         .generate-btn {
-            padding: 12px 25px;
-            font-size: 0.9rem;
-            border-radius: 8px;
-            border: none;
-            background: linear-gradient(90deg, var(--neon-purple), #6b21a8);
+            padding: 12px 30px;
+            font-size: 1rem;
+            background-color: var(--neon-purple);
             color: white;
-            box-shadow: var(--glow);
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.4);
         }
+        
         .generate-btn:hover {
-            background: linear-gradient(90deg, var(--neon-purple-hover), var(--neon-purple));
+            background-color: var(--neon-purple-hover);
+            box-shadow: 0 0 25px rgba(157, 78, 221, 0.6);
             transform: translateY(-2px);
         }
+
         .generate-btn.success {
-            background: var(--success);
-            box-shadow: 0 0 15px var(--success);
+            background-color: var(--success);
+            border-color: var(--success);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+            color: white;
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <!-- SIDEBAR WITH SETTINGS -->
-    <div class="sidebar">
-        <h2>Общие настройки</h2>
-        
-        <div class="form-group">
-            <label>Язык игры</label>
-            <select id="lang" onchange="updatePreview()">
-                <option value="ru">Русский</option>
-                <option value="en">English</option>
-            </select>
+    <div id="app-container">
+        <!-- SIDEBAR WITH SETTINGS -->
+        <div class="sidebar">
+            <h2>Общие настройки</h2>
+            
+            <div class="form-group">
+                <label>Язык игры</label>
+                <select id="lang" onchange="updatePreview()">
+                    <option value="ru">Русский</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Шрифт</label>
+                <select id="fontFamily" onchange="updatePreview()">
+                    <option value="DM Sans">DM Sans</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Roboto">Roboto</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Очки для победы (полная колба)</label>
+                <input type="number" id="maxScore" value="5" min="1" onchange="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label>Цвет жидкости</label>
+                <input type="color" id="liquidColor" value="#00ffcc" onchange="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label>Фон игры (URL или Файл)</label>
+                <input type="text" id="bgUrl" placeholder="Ссылка на картинку" onchange="updatePreview()">
+                <input type="file" accept="image/*" onchange="handleFileUpload(event, 'bgUrl')" style="padding: 5px; font-size: 0.8rem;">
+            </div>
+
+            <div class="form-group">
+                <label>Размер аватаров (%)</label>
+                <input type="range" id="avatarSize" min="50" max="150" value="100" onchange="updatePreview()">
+            </div>
+
+            <h2>Игроки (Аватары)</h2>
+            <div id="playersList"></div>
+            <button onclick="addPlayer()">+ Добавить игрока (до 4)</button>
+
+            <h2 style="margin-top: 10px;">Задания (Вопросы)</h2>
+            <div id="tasksList"></div>
+            <button onclick="addTask()">+ Добавить вопрос</button>
         </div>
 
-        <div class="form-group">
-            <label>Шрифт заголовков игры</label>
-            <select id="fontFamily" onchange="updatePreview()">
-                <option value="Playfair Display">Playfair Display (Мистика)</option>
-                <option value="DM Sans">DM Sans (Современный)</option>
-                <option value="Montserrat">Montserrat</option>
-            </select>
+        <!-- MAIN AREA -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Предпросмотр</h2>
+                <button id="generateBtn" class="generate-btn" onclick="generateCode()">Сгенерировать код</button>
+            </div>
+            <div class="preview-container">
+                <iframe id="previewFrame"></iframe>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label>Очки для победы (полная колба)</label>
-            <input type="number" id="maxScore" value="5" min="1" onchange="updatePreview()">
-        </div>
-
-        <div class="form-group">
-            <label>Цвет жидкости</label>
-            <input type="color" id="liquidColor" value="#00ffcc" onchange="updatePreview()">
-        </div>
-
-        <div class="form-group">
-            <label>Фон игры (URL или Файл)</label>
-            <input type="text" id="bgUrl" placeholder="Ссылка на картинку" onchange="updatePreview()">
-            <input type="file" accept="image/*" onchange="handleFileUpload(event, 'bgUrl')" style="padding: 5px;">
-        </div>
-
-        <div class="form-group">
-            <label>Размер аватаров (%)</label>
-            <input type="range" id="avatarSize" min="50" max="150" value="100" onchange="updatePreview()">
-        </div>
-
-        <h2>Игроки (Аватары)</h2>
-        <div id="playersList"></div>
-        <button class="btn-add" onclick="addPlayer()">+ Добавить игрока (до 4)</button>
-
-        <h2 style="margin-top:20px;">Задания (Вопросы)</h2>
-        <div id="tasksList"></div>
-        <button class="btn-add" onclick="addTask()">+ Добавить вопрос</button>
     </div>
-
-    <!-- MAIN AREA -->
-    <div class="main-content">
-        <div class="header">
-            <h2>Предпросмотр игры</h2>
-            <button id="generateBtn" class="generate-btn" onclick="generateCode()">Сгенерировать код</button>
-        </div>
-        <div class="preview-container">
-            <iframe id="previewFrame"></iframe>
-        </div>
-    </div>
-</div>
 
     <script>
         // State
@@ -299,10 +315,9 @@
 
         // Initialize default
         window.onload = () => {
-            // Дефолтные мистические аватарки для примера
-            addPlayer('Calaor', 'https://cdn-icons-png.flaticon.com/512/8154/8154699.png');
-            addPlayer('Toectio', 'https://cdn-icons-png.flaticon.com/512/8154/8154687.png');
-            addTask('В каком созвездии спит Ктулху?', ['Орион', 'Октант', 'Р'льех (не созвездие)'], 2);
+            addPlayer('Игрок 1', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png');
+            addPlayer('Игрок 2', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png');
+            addTask('Сколько будет 2+2?', ['3', '4', '5'], 1);
             updatePreview();
         };
 
@@ -338,6 +353,7 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
+                    // Convert to base64
                     document.getElementById(targetId).value = e.target.result;
                     if(targetId.startsWith('p_url_')) {
                         let pid = parseInt(targetId.split('_')[2]);
@@ -357,10 +373,10 @@
                 container.innerHTML += `
                     <div class="card">
                         <div class="form-group">
-                            <input type="text" placeholder="Имя игрока" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
+                            <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
                             <input type="text" id="p_url_${p.id}" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
-                            <input type="file" accept="image/*" onchange="handleFileUpload(event, 'p_url_${p.id}')" style="padding: 5px;">
-                            <button class="btn-delete" onclick="removePlayer(${p.id})">Удалить</button>
+                            <input type="file" accept="image/*" style="padding: 5px; font-size: 0.8rem;" onchange="handleFileUpload(event, 'p_url_${p.id}')">
+                            <button onclick="removePlayer(${p.id})">Удалить</button>
                         </div>
                     </div>`;
             });
@@ -371,34 +387,34 @@
             container.innerHTML = '';
             config.tasks.forEach((t, idx) => {
                 let optionsHTML = t.options.map((opt, oIdx) => `
-                    <div style="display:flex; gap:10px; margin-top:8px; align-items:center;">
-                        <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()" style="width:20px; height:20px;">
+                    <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                        <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
                         <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
                     </div>
                 `).join('');
 
                 container.innerHTML += `
                     <div class="card">
-                        <input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px); margin-bottom: 10px;">
+                        <input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px);">
                         ${optionsHTML}
-                        <button class="btn-delete" onclick="removeTask(${t.id})" style="width:100%;">Удалить вопрос</button>
+                        <button onclick="removeTask(${t.id})">Удалить</button>
                     </div>`;
             });
         }
 
-        // --- GAME ENGINE TEMPLATE (Исправлено для Genially) ---
+        // --- GAME ENGINE TEMPLATE ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
-            // Дефолтный фон в стиле космоса/мистики
-            const bgUrl = document.getElementById('bgUrl').value || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=1920';
+            const bgUrl = document.getElementById('bgUrl').value || 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=1000';
             const liquidColor = document.getElementById('liquidColor').value;
             const maxScore = document.getElementById('maxScore').value;
             const fontFamily = document.getElementById('fontFamily').value;
             const avatarSize = document.getElementById('avatarSize').value;
             
-            const txt = lang === 'ru' ? { ready: 'ХОДИТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
-                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
+            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
+                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
 
+            // Inject state into the game
             const gameState = {
                 players: config.players,
                 tasks: config.tasks,
@@ -412,124 +428,104 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Playfair+Display:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        * { box-sizing: border-box; }
-        
-        /* ИСПРАВЛЕНИЕ ДЛЯ GENIALLY: 100% вместо vw/vh, absolute позиционирование */
-        html, body {
-            margin: 0; padding: 0; 
-            width: 100%; height: 100%; 
-            position: absolute; top: 0; left: 0;
-            overflow: hidden;
-            font-family: 'DM Sans', sans-serif;
+        * { box-sizing: border-box; font-family: '${fontFamily}', sans-serif; }
+        body { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
             background: url('${bgUrl}') no-repeat center center/cover;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
-
-        h1, h2, .question { font-family: '${fontFamily}', serif; }
-
-        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(10,5,20,0.3)); pointer-events: none; z-index: 1;}
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
         
         .players-container {
-            display: flex; gap: 5vw; margin-bottom: 5vh; z-index: 2; position: relative;
+            display: flex; gap: 40px; margin-bottom: 50px; z-index: 2; position: relative;
         }
         
         .player-wrap {
             display: flex; flex-direction: column; align-items: center; position: relative;
-            transition: 0.5s; opacity: 0.4; filter: grayscale(50%);
+            transition: 0.3s; opacity: 0.5;
         }
         
         .player-wrap.active {
-            opacity: 1; filter: grayscale(0%);
-            animation: pulse 2s infinite;
+            opacity: 1;
+            animation: pulse 1.5s infinite;
         }
         
         @keyframes pulse {
-            0% { transform: translateY(0); filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.5)); }
-            50% { transform: translateY(-10px); filter: drop-shadow(0 0 25px rgba(168, 85, 247, 1)); }
-            100% { transform: translateY(0); filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.5)); }
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(139, 92, 246, 1)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5)); }
         }
 
         .ready-btn {
-            position: absolute; top: -160px;
-            background: linear-gradient(45deg, #8b5cf6, #a855f7); color: white; border: none; padding: 12px 25px;
+            position: absolute; top: -180px;
+            background: #8b5cf6; color: white; border: none; padding: 10px 20px;
             border-radius: 8px; font-weight: bold; cursor: pointer;
             box-shadow: 0 0 15px #8b5cf6; display: none; z-index: 5;
-            font-family: 'DM Sans', sans-serif; letter-spacing: 1px;
         }
         
-        .player-wrap.active .ready-btn { display: block; animation: floatBtn 2s infinite ease-in-out; }
-        .ready-btn:hover { filter: brightness(1.2); }
-
-        @keyframes floatBtn { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .player-wrap.active .ready-btn { display: block; }
+        .ready-btn:hover { background: #7c3aed; }
 
         .flask {
-            width: 40px; height: 120px; border: 3px solid rgba(168, 85, 247, 0.5);
+            width: 40px; height: 120px; border: 3px solid rgba(255,255,255,0.7);
             border-radius: 0 0 20px 20px; position: absolute; top: -140px;
-            overflow: hidden; background: rgba(0,0,0,0.6);
+            overflow: hidden; background: rgba(0,0,0,0.5);
             display: flex; align-items: flex-end;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
         
         .liquid {
-            width: 100%; background: ${liquidColor}; transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 -5px 15px ${liquidColor};
+            width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
+            box-shadow: 0 0 10px ${liquidColor};
         }
 
         .avatar {
             width: calc(100px * ${avatarSize/100}); 
             height: calc(100px * ${avatarSize/100}); 
-            border-radius: 20%; object-fit: cover;
-            border: 2px solid var(--border-color); background: #140b24;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border-radius: 16px; object-fit: cover;
+            border: 2px solid white; background: #2a2a35;
         }
 
-        .name { color: white; margin-top: 15px; font-weight: bold; background: rgba(20, 11, 36, 0.8); padding: 5px 15px; border-radius: 5px; border: 1px solid rgba(168,85,247,0.3);}
+        .name { color: white; margin-top: 10px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px;}
 
         /* Modal Task */
         .modal-bg {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(10, 5, 20, 0.85); backdrop-filter: blur(5px);
-            z-index: 10; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
         }
         
         .modal {
-            background: linear-gradient(145deg, #1f1235, #0a0510);
-            border: 1px solid #a855f7; border-radius: 20px;
-            padding: 50px; width: 85%; max-width: 700px; text-align: center;
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); color: white;
-            position: relative;
+            background: #121212; border: 2px solid #8b5cf6; border-radius: 20px;
+            padding: 40px; width: 80%; max-width: 600px; text-align: center;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); color: white;
         }
 
-        .question { font-size: 2rem; margin-bottom: 40px; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
+        .question { font-size: 1.5rem; margin-bottom: 30px; }
         
-        .options { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .options { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
         
         .option-btn {
-            background: rgba(0,0,0,0.4); color: white; border: 1px solid #4c2882;
-            padding: 15px 20px; border-radius: 10px; cursor: pointer;
-            transition: 0.3s; font-size: 1.1rem; width: 80%; text-align: center;
+            background: transparent; color: white; border: 2px solid #374151;
+            padding: 15px 30px; border-radius: 10px; cursor: pointer;
+            transition: 0.2s; font-size: 1.1rem; width: 45%;
         }
         
-        .option-btn:hover { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
-        .option-btn.selected { background: rgba(168, 85, 247, 0.3); border-color: #a855f7; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+        .option-btn:hover { border-color: #8b5cf6; }
+        .option-btn.selected { background: rgba(139, 92, 246, 0.3); border-color: #8b5cf6; }
         
         .check-btn {
-            margin-top: 40px; background: linear-gradient(90deg, #8b5cf6, #a855f7); color: white; border: none;
-            padding: 15px 50px; font-size: 1.2rem; border-radius: 10px; cursor: pointer; letter-spacing: 2px;
-            text-transform: uppercase; font-weight: bold;
+            margin-top: 30px; background: #8b5cf6; color: white; border: none;
+            padding: 15px 40px; font-size: 1.2rem; border-radius: 10px; cursor: pointer;
         }
 
         /* Winner Screen */
         .winner-screen {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: radial-gradient(circle, rgba(20,10,40,0.95) 0%, rgba(0,0,0,1) 100%);
-            z-index: 20; flex-direction: column;
+            background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
             justify-content: center; align-items: center; color: white;
         }
-        .winner-screen h1 { font-size: 5rem; margin-bottom: 20px; color: ${liquidColor}; text-shadow: 0 0 30px ${liquidColor}; }
-        .winner-screen img { box-shadow: 0 0 40px ${liquidColor}; }
+        .winner-screen h1 { font-size: 4rem; color: ${liquidColor}; text-shadow: 0 0 20px ${liquidColor}; }
     </style>
 </head>
 <body>
@@ -548,8 +544,8 @@
     <!-- Winner -->
     <div class="winner-screen" id="winnerScreen">
         <h1>${txt.win}</h1>
-        <img id="winnerAvatar" style="width:250px; border-radius:20px; border: 4px solid ${liquidColor};">
-        <h2 id="winnerName" style="font-size: 2.5rem; margin-top: 20px;"></h2>
+        <img id="winnerAvatar" style="width:200px; border-radius:20px; border: 4px solid ${liquidColor};">
+        <h2 id="winnerName"></h2>
     </div>
 
     <script>
@@ -577,6 +573,7 @@
         function openTask() {
             if(state.tasks.length === 0) return alert("Нет заданий!");
             
+            // Randomize or sequence task
             currentTaskIdx = Math.floor(Math.random() * state.tasks.length);
             const task = state.tasks[currentTaskIdx];
             
@@ -606,8 +603,7 @@
                 document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
                 
                 if(scores[currentPlayer] >= state.maxScore) {
-                    setTimeout(showWinner, 800); // Небольшая задержка, чтобы увидеть как заполняется колба
-                    document.getElementById('modalBg').style.display = 'none';
+                    showWinner();
                     return;
                 }
             }
@@ -623,6 +619,7 @@
         }
 
         function showWinner() {
+            document.getElementById('modalBg').style.display = 'none';
             document.getElementById('winnerScreen').style.display = 'flex';
             document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
@@ -645,13 +642,13 @@
             const btn = document.getElementById('generateBtn');
             
             navigator.clipboard.writeText(html).then(() => {
-                btn.textContent = "Скопировано для Genially!";
+                btn.textContent = "Скопировано!";
                 btn.classList.add('success');
                 
                 setTimeout(() => {
                     btn.textContent = "Сгенерировать код";
                     btn.classList.remove('success');
-                }, 2500);
+                }, 2000);
             }).catch(err => {
                 alert("Ошибка копирования. Скопируйте код вручную из консоли.");
                 console.log(html);
