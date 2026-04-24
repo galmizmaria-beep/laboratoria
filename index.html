@@ -1,852 +1,346 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genially Game Widget Creator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* --- Стили для редактора --- */
-        body {
-            font-family: 'Open Sans', sans-serif;
-            background-color: #1A1A2E; /* Dark purple background */
-            color: #E0E0E0; /* Light grey text */
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+<script>
+    /* --- JavaScript для редактора и генерации кода --- */
+    document.addEventListener('DOMContentLoaded', () => {
+        const playersContainer = document.getElementById('playersContainer');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const playerCountText = document.getElementById('playerCountText');
+        const playerTemplate = document.getElementById('playerTemplate');
+        const questionTemplate = document.getElementById('questionTemplate');
+        const generateCodeBtn = document.getElementById('generateCodeBtn');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const outputCode = document.getElementById('outputCode');
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgImageUrl = document.getElementById('bgImageUrl');
+        const bgImagePreview = document.getElementById('bgImagePreview').querySelector('img');
+        const gamePreviewFrame = document.getElementById('gamePreviewFrame');
+
+        let playersData = []; // Array to store configuration for each player
+        let previewObjectURL = null; // Для отзыва URL объекта предпросмотра и предотвращения утечек памяти
+
+        // --- Utility Functions ---
+
+        // Функция для экранирования HTML-специальных символов (для HTML, не CSS url())
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
-        /* Новый основной контейнер для двух колонок */
-        .main-wrapper {
-            display: flex;
-            gap: 30px; /* Промежуток между колонками */
-            max-width: 1600px; /* Максимальная ширина всего интерфейса */
-            width: 100%;
-            margin: 20px auto;
-            background-color: #2D2D44; /* Фон для всего интерфейса */
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-            min-height: calc(100vh - 40px); /* Чтобы занимал почти всю высоту экрана */
-            flex-wrap: wrap; /* Позволяет переноситься на новую строку на маленьких экранах */
+        // НОВАЯ вспомогательная функция для экранирования строки для встраивания в шаблонный литерал JS
+        function escapeForTemplateLiteral(str) {
+            if (typeof str !== 'string') return str;
+            // Экранируем обратные кавычки обратным слэшем
+            return str.replace(/`/g, '\\`');
         }
 
-        /* Левая колонка для секций редактора */
-        .editor-column {
-            flex: 1; /* Занимает доступное пространство */
-            min-width: 450px; /* Минимальная ширина для колонки редактора */
-            overflow-y: auto; /* Прокрутка, если контент не помещается */
-            padding-right: 15px; /* Небольшой отступ, если появляется скроллбар */
-            box-sizing: border-box;
-        }
+        // Function to compress image using canvas
+        async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
 
-        /* Правая колонка для предпросмотра */
-        .preview-column {
-            flex: 1; /* Занимает доступное пространство */
-            display: flex;
-            flex-direction: column;
-            min-width: 450px; /* Минимальная ширина для колонки предпросмотра */
-            max-width: 700px; /* Ограничение ширины для предпросмотра, чтобы 16:9 выглядело адекватно */
-            box-sizing: border-box;
-            align-items: center; /* Центрирование элементов внутри колонки */
-        }
-
-        /* Стили для h1, h2 в колонке редактора */
-        .editor-column h1, .editor-column h2, .editor-column h3, .editor-column h4 {
-            font-family: 'Montserrat', sans-serif;
-            color: #BB86FC; /* Purple accent */
-            margin-bottom: 20px;
-            text-align: left; /* Изменил на выравнивание по левому краю */
-        }
-
-        .editor-column h1 {
-            font-size: 2.5em;
-            border-bottom: 2px solid #BB86FC;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            text-align: center; /* Главный заголовок можно оставить по центру */
-        }
-
-        .editor-column h2 {
-            font-size: 1.8em;
-            margin-top: 30px;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed #BB86FC44;
-        }
-
-        .section {
-            margin-bottom: 40px;
-            padding: 20px;
-            background-color: #3A3A5A; /* Even lighter purple for sections */
-            border-radius: 10px;
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #BB86FC;
-        }
-
-        .input-field, .code-output {
-            width: calc(100% - 20px);
-            padding: 12px;
-            border: 1px solid #BB86FC66;
-            border-radius: 8px;
-            background-color: #4A4A6A;
-            color: #E0E0E0;
-            font-size: 1em;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-        }
-
-        .input-field:focus, .code-output:focus {
-            outline: none;
-            border-color: #BB86FC;
-            box-shadow: 0 0 8px rgba(187, 134, 252, 0.7);
-        }
-
-        input[type="color"] {
-            height: 40px;
-            width: 60px;
-            padding: 2px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .file-input {
-            padding: 8px;
-        }
-
-        .image-note {
-            font-size: 0.85em;
-            color: #BB86FCaa;
-            margin-top: 5px;
-            display: block;
-        }
-
-        .image-preview {
-            margin-top: 15px;
-            border: 1px dashed #BB86FC66;
-            border-radius: 8px;
-            min-height: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #4A4A6A;
-            overflow: hidden; /* Чтобы изображение не вылезало */
-        }
-
-        .image-preview img {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 5px;
-            object-fit: contain;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            margin-right: 10px;
-            margin-top: 10px;
-            white-space: nowrap; /* Не переносить текст кнопки */
-        }
-
-        .primary-btn {
-            background-color: #BB86FC; /* Purple */
-            color: #1A1A2E;
-        }
-
-        .primary-btn:hover {
-            background-color: #D0A7FF;
-            transform: translateY(-2px);
-        }
-
-        .secondary-btn {
-            background-color: #555577; /* Darker grey-purple */
-            color: #E0E0E0;
-        }
-
-        .secondary-btn:hover {
-            background-color: #6A6A88;
-            transform: translateY(-2px);
-        }
-
-        .danger-btn {
-            background-color: #CF6679; /* Reddish for delete */
-            color: #1A1A2E;
-        }
-
-        .danger-btn:hover {
-            background-color: #E07A8B;
-            transform: translateY(-2px);
-        }
-
-        .icon-btn {
-            padding: 8px 12px;
-            font-size: 0.9em;
-            margin: 0;
-        }
-
-        .card {
-            background-color: #4A4A6A;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #BB86FC33;
-            position: relative; /* For absolutely positioned remove button */
-        }
-
-        .player-config h3 {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-bottom: none;
-            text-align: left;
-        }
-
-        .player-config h4 {
-            margin-top: 25px;
-            margin-bottom: 15px;
-            color: #BB86FC;
-            border-bottom: 1px dotted #BB86FC22;
-            padding-bottom: 5px;
-            text-align: left;
-        }
-
-        .questions-container {
-            margin-bottom: 15px;
-        }
-
-        .question-item {
-            background-color: #5A5A7A;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            position: relative;
-            border: 1px solid #BB86FC22;
-        }
-
-        .question-item label {
-            font-size: 0.9em;
-            color: #BB86FC;
-        }
-
-        .question-item .remove-question-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 9px;
-            font-size: 0.8em;
-        }
-
-        .mc-options-container {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #4A4A6A;
-            border-radius: 5px;
-            border: 1px dashed #BB86FC44;
-        }
-
-        .option-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .option-group input[type="radio"] {
-            margin-right: 10px;
-            transform: scale(1.2); /* Make radio buttons a bit bigger */
-            cursor: pointer;
-        }
-
-        .option-group .input-field {
-            flex-grow: 1;
-            margin-bottom: 0;
-        }
-
-        .code-output {
-            min-height: 250px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9em;
-            white-space: pre-wrap;
-            word-break: break-all;
-            resize: vertical;
-        }
-
-        /* Font select specific styling for readability */
-        .font-select {
-            font-family: 'Open Sans', sans-serif; /* Default for dropdown itself */
-        }
-        #titleFont option[value="Montserrat"] { font-family: 'Montserrat', sans-serif; }
-        #titleFont option[value="Open Sans"] { font-family: 'Open Sans', sans-serif; }
-        #titleFont option[value="Arial"] { font-family: Arial, sans-serif; }
-        #titleFont option[value="Verdana"] { font-family: Verdana, sans-serif; }
-
-        #uiFont option[value="Open Sans"] { font-family: 'Open Sans', sans-serif; }
-        #uiFont option[value="Montserrat"] { font-family: 'Montserrat', sans-serif; }
-        #uiFont option[value="Arial"] { font-family: Arial, sans-serif; }
-        #uiFont option[value="Verdana"] { font-family: Verdana, sans-serif; }
-
-        /* Контейнер для iframe предпросмотра с сохранением пропорций 16:9 */
-        .preview-wrapper {
-            width: 100%;
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) */
-            height: 0;
-            overflow: hidden;
-            border: 2px solid #BB86FC;
-            border-radius: 10px;
-            margin-top: 20px;
-            box-shadow: 0 0 15px rgba(187, 134, 252, 0.5);
-            background-color: #1A1A2E;
-            flex-grow: 1; /* Растягивает контейнер предпросмотра */
-        }
-
-        #gamePreviewFrame {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 1000px) {
-            .main-wrapper {
-                flex-direction: column;
-                padding: 15px;
-                gap: 20px;
-            }
-            .editor-column, .preview-column {
-                min-width: unset; /* Отменить минимальную ширину на мобильных */
-                width: 100%;
-            }
-            .editor-column h1 {
-                font-size: 2em;
-            }
-            .editor-column h2 {
-                font-size: 1.5em;
-            }
-            body {
-                padding: 10px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="main-wrapper">
-        <div class="editor-column">
-            <h1>Genially Game Widget Creator</h1>
-
-            <section class="section">
-                <h2>Настройки игры</h2>
-                <div class="input-group">
-                    <label for="gameLang">Язык игры:</label>
-                    <select id="gameLang" class="input-field">
-                        <option value="ru">Русский</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="titleFont">Шрифт заголовков:</label>
-                    <select id="titleFont" class="input-field font-select">
-                        <option value="Montserrat">Montserrat</option>
-                        <option value="Open Sans">Open Sans</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Verdana">Verdana</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="uiFont">Шрифт интерфейса:</label>
-                    <select id="uiFont" class="input-field font-select">
-                        <option value="Open Sans">Open Sans</option>
-                        <option value="Montserrat">Montserrat</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Verdana">Verdana</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="avatarSize">Размер аватара (px):</label>
-                    <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
-                </div>
-                <div class="input-group">
-                    <label for="liquidColor">Цвет жидкости:</label>
-                    <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
-                </div>
-                <div class="input-group">
-                    <label for="highlightColor">Цвет подсветки активного игрока:</label>
-                    <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
-                </div>
-                <div class="input-group">
-                    <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
-                    <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
-                </div>
-            </section>
-
-            <section class="section">
-                <h2>Фон игры</h2>
-                <div class="input-group">
-                    <label for="bgImageUrl">URL фонового изображения:</label>
-                    <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
-                </div>
-                <div class="input-group">
-                    <label>Или загрузите файл:</label>
-                    <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
-                    <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
-                </div>
-                <div class="image-preview" id="bgImagePreview">
-                    <img src="#" alt="Background Preview" style="display: none;">
-                </div>
-            </section>
-
-            <section class="section">
-                <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
-                <div id="playersContainer">
-                    <!-- Player templates will be inserted here by JS -->
-                </div>
-                <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
-            </section>
-
-            <section class="section">
-                <h2>Сгенерированный код для Genially</h2>
-                <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
-                <textarea id="outputCode" readonly class="code-output"></textarea>
-                <div class="btn-group">
-                    <button id="generateCodeBtn" class="btn primary-btn">Сгенерировать код</button>
-                    <button id="copyCodeBtn" class="btn secondary-btn" style="display: none;">Копировать</button>
-                </div>
-            </section>
-        </div>
-
-        <div class="preview-column">
-            <h2>Предпросмотр игры</h2>
-            <p>Нажмите "Сгенерировать код", чтобы обновить предпросмотр.</p>
-            <div class="preview-wrapper">
-                <iframe id="gamePreviewFrame" sandbox="allow-scripts allow-forms allow-popups" frameborder="0"></iframe>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hidden Player Template -->
-    <template id="playerTemplate">
-        <div class="player-config card">
-            <h3>Игрок <span class="player-number"></span> <button class="remove-player-btn btn icon-btn danger-btn">✕</button></h3>
-            <div class="input-group">
-                <label for="playerName">Имя игрока:</label>
-                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie">
-            </div>
-            <div class="input-group">
-                <label for="avatarUrl">URL аватара:</label>
-                <input type="text" class="input-field avatar-url" placeholder="https://example.com/avatar.png">
-            </div>
-            <div class="input-group">
-                <label>Или загрузите файл:</label>
-                <input type="file" accept="image/*" class="input-field file-input avatar-upload">
-                <small class="image-note">Изображения будут автоматически сжаты.</small>
-            </div>
-            <div class="image-preview avatar-preview">
-                <img src="#" alt="Avatar Preview" style="display: none;">
-            </div>
-
-            <h4>Задания для игрока</h4>
-            <div class="questions-container">
-                <!-- Questions will be added here -->
-            </div>
-            <button class="add-question-btn btn secondary-btn">Добавить вопрос</button>
-        </div>
-    </template>
-
-    <!-- Hidden Question Template -->
-    <template id="questionTemplate">
-        <div class="question-item">
-            <label for="questionType">Тип вопроса:</label>
-            <select class="input-field question-type">
-                <option value="open">Без вариантов ответа</option>
-                <option value="mc">С вариантами ответа</option>
-            </select>
-
-            <label for="questionText">Текст вопроса:</label>
-            <textarea class="input-field question-text" rows="2" placeholder="Введите текст задания..."></textarea>
-            
-            <div class="mc-options-container" style="display: none;">
-                <label>Варианты ответа:</label>
-                <div class="option-group">
-                    <input type="radio" name="correct-option" class="correct-option-radio">
-                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 1">
-                </div>
-                <div class="option-group">
-                    <input type="radio" name="correct-option" class="correct-option-radio">
-                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 2">
-                </div>
-                <div class="option-group">
-                    <input type="radio" name="correct-option" class="correct-option-radio">
-                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 3">
-                </div>
-                <div class="option-group">
-                    <input type="radio" name="correct-option" class="correct-option-radio">
-                    <input type="text" class="input-field option-text" placeholder="Вариант ответа 4">
-                </div>
-            </div>
-            <button class="remove-question-btn btn icon-btn danger-btn">✕</button>
-        </div>
-    </template>
-
-    <script>
-        /* --- JavaScript для редактора и генерации кода --- */
-        document.addEventListener('DOMContentLoaded', () => {
-            const playersContainer = document.getElementById('playersContainer');
-            const addPlayerBtn = document.getElementById('addPlayerBtn');
-            const playerCountText = document.getElementById('playerCountText');
-            const playerTemplate = document.getElementById('playerTemplate');
-            const questionTemplate = document.getElementById('questionTemplate');
-            const generateCodeBtn = document.getElementById('generateCodeBtn');
-            const copyCodeBtn = document.getElementById('copyCodeBtn');
-            const outputCode = document.getElementById('outputCode');
-            const bgImageUpload = document.getElementById('bgImageUpload');
-            const bgImageUrl = document.getElementById('bgImageUrl');
-            const bgImagePreview = document.getElementById('bgImagePreview').querySelector('img');
-            const gamePreviewFrame = document.getElementById('gamePreviewFrame');
-
-            let playersData = []; // Array to store configuration for each player
-            let previewObjectURL = null; // Для отзыва URL объекта предпросмотра и предотвращения утечек памяти
-
-            // --- Utility Functions ---
-
-            // Функция для экранирования HTML-специальных символов
-            function escapeHtml(unsafe) {
-                return unsafe
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
-            }
-
-            // Function to compress image using canvas
-            async function compressImage(fileOrUrl, maxWidth = 800, maxHeight = 800, quality = 0.8) {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-
-                        // Calculate new dimensions
-                        if (width > height) {
-                            if (width > maxWidth) {
-                                height *= maxWidth / width;
-                                width = maxWidth;
-                            }
-                        } else {
-                            if (height > maxHeight) {
-                                width *= maxHeight / height;
-                                height = maxHeight;
-                            }
+                    // Calculate new dimensions
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
                         }
-                        canvas.width = width;
-                        canvas.height = height;
-
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        // Convert canvas to JPEG data URL
-                        resolve(canvas.toDataURL('image/jpeg', quality));
-                    };
-
-                    img.onerror = () => {
-                        console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
-                        // Fallback to original URL or empty. Important for external URLs without CORS.
-                        resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); 
-                    };
-                    
-                    if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
-                        img.src = fileOrUrl; // Already a data URL, process it
-                    } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
-                         img.crossOrigin = "anonymous"; // Attempt to load cross-origin for external images
-                         img.src = fileOrUrl;
-                    } else if (fileOrUrl instanceof File) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => { img.src = e.target.result; };
-                        reader.readAsDataURL(fileOrUrl);
                     } else {
-                        resolve(''); // No valid input
-                    }
-                });
-            }
-
-            function updatePlayerCount() {
-                playerCountText.textContent = playersData.length;
-                addPlayerBtn.disabled = playersData.length >= 4;
-            }
-
-            // Функция для обновления предварительного просмотра изображений (аватар и фон)
-            async function updateImagePreview(fileInput, urlInput, previewImgElement) {
-                let imageData = '';
-                if (fileInput && fileInput.files && fileInput.files[0]) {
-                    imageData = await compressImage(fileInput.files[0]);
-                    if (urlInput) urlInput.value = ''; // Clear URL if file is uploaded
-                } else if (urlInput && urlInput.value) {
-                    imageData = await compressImage(urlInput.value); 
-                    // Если сжатие не удалось или вернулся оригинальный URL, используем оригинальный URL
-                    if (!imageData || (imageData === urlInput.value && !imageData.startsWith('data:'))) {
-                        imageData = urlInput.value; 
-                    }
-                    if (fileInput) fileInput.value = ''; // Clear file input if URL is entered
-                }
-
-                if (imageData) {
-                    previewImgElement.src = imageData;
-                    previewImgElement.style.display = 'block';
-                } else {
-                    previewImgElement.src = '#';
-                    previewImgElement.style.display = 'none';
-                }
-                return imageData; // Возвращаем обработанные данные изображения
-            }
-
-            // --- Player Management ---
-            addPlayerBtn.addEventListener('click', () => {
-                if (playersData.length < 4) {
-                    const playerIndex = playersData.length;
-                    const playerConfig = {
-                        id: Date.now(), // Unique ID for keying
-                        name: `Игрок ${playerIndex + 1}`, // Исправлено: Начальное имя с номером
-                        avatar: '', // data URL or external URL
-                        questions: []
-                    };
-                    playersData.push(playerConfig);
-                    renderPlayer(playerConfig, playerIndex);
-                    updatePlayerCount();
-                }
-            });
-
-            function renderPlayer(playerConfig, playerIndex) {
-                const clone = playerTemplate.content.cloneNode(true);
-                const playerDiv = clone.querySelector('.player-config');
-                playerDiv.dataset.playerId = playerConfig.id;
-                playerDiv.querySelector('.player-number').textContent = playerIndex + 1;
-
-                const playerNameInput = playerDiv.querySelector('.player-name');
-                playerNameInput.value = playerConfig.name;
-                playerNameInput.addEventListener('input', (e) => {
-                    playerConfig.name = e.target.value;
-                });
-
-                const avatarUrlInput = playerDiv.querySelector('.avatar-url');
-                const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
-                const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
-
-                // Устанавливаем начальное значение URL аватара
-                avatarUrlInput.value = playerConfig.avatar; 
-                // Обновляем предпросмотр, если уже есть аватар
-                if (playerConfig.avatar) {
-                    avatarPreviewImg.src = playerConfig.avatar;
-                    avatarPreviewImg.style.display = 'block';
-                }
-
-                avatarUrlInput.addEventListener('input', async () => {
-                    playerConfig.avatar = await updateImagePreview(null, avatarUrlInput, avatarPreviewImg); // Передаем null для fileInput
-                });
-
-                avatarUploadInput.addEventListener('change', async () => {
-                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
-                });
-
-                const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
-                removePlayerBtn.addEventListener('click', () => {
-                    playersData = playersData.filter(p => p.id !== playerConfig.id);
-                    // Перерисовываем всех игроков, чтобы обновить номера и привязки событий
-                    playersContainer.innerHTML = ''; 
-                    playersData.forEach((p, idx) => renderPlayer(p, idx));
-                    updatePlayerCount();
-                });
-
-                const questionsContainer = playerDiv.querySelector('.questions-container');
-                const addQuestionBtn = playerDiv.querySelector('.add-question-btn');
-                addQuestionBtn.addEventListener('click', () => {
-                    const newQuestion = {
-                        type: 'open',
-                        text: '',
-                        options: ['', '', '', ''],
-                        correctAnswerIndex: -1 // -1 means no correct answer selected for MC
-                    };
-                    playerConfig.questions.push(newQuestion);
-                    renderQuestion(newQuestion, playerConfig, questionsContainer, playerConfig.questions.length - 1);
-                });
-
-                // Render existing questions
-                questionsContainer.innerHTML = ''; // Очищаем перед рендерингом, чтобы избежать дублирования
-                playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
-
-                // Append to container or re-insert if re-rendering
-                const existingPlayerDiv = playersContainer.querySelector(`[data-player-id="${playerConfig.id}"]`);
-                if (existingPlayerDiv) {
-                    existingPlayerDiv.replaceWith(playerDiv);
-                } else {
-                    playersContainer.appendChild(clone);
-                }
-            }
-
-            function renderQuestion(questionObj, playerConfig, questionsContainer, questionIndex) {
-                const clone = questionTemplate.content.cloneNode(true);
-                const questionItemDiv = clone.querySelector('.question-item');
-                
-                const questionTypeSelect = questionItemDiv.querySelector('.question-type');
-                const questionTextInput = questionItemDiv.querySelector('.question-text');
-                const mcOptionsContainer = questionItemDiv.querySelector('.mc-options-container');
-                const optionInputs = questionItemDiv.querySelectorAll('.option-text');
-                const correctOptionRadios = questionItemDiv.querySelectorAll('.correct-option-radio');
-
-                // Set initial values
-                questionTypeSelect.value = questionObj.type;
-                questionTextInput.value = questionObj.text;
-                if (questionObj.type === 'mc') {
-                    mcOptionsContainer.style.display = 'block';
-                    questionObj.options.forEach((opt, idx) => {
-                        if (optionInputs[idx]) optionInputs[idx].value = opt;
-                    });
-                    if (questionObj.correctAnswerIndex !== -1 && correctOptionRadios[questionObj.correctAnswerIndex]) {
-                        correctOptionRadios[questionObj.correctAnswerIndex].checked = true;
-                    }
-                } else {
-                    mcOptionsContainer.style.display = 'none';
-                }
-
-                // Event Listeners
-                questionTypeSelect.addEventListener('change', (e) => {
-                    questionObj.type = e.target.value;
-                    mcOptionsContainer.style.display = (e.target.value === 'mc') ? 'block' : 'none';
-                    // Reset MC specific data if changing to open-ended
-                    if (e.target.value === 'open') {
-                        questionObj.options = ['', '', '', ''];
-                        questionObj.correctAnswerIndex = -1;
-                        optionInputs.forEach(input => input.value = '');
-                        correctOptionRadios.forEach(radio => radio.checked = false);
-                    }
-                });
-
-                questionTextInput.addEventListener('input', (e) => {
-                    questionObj.text = e.target.value;
-                });
-
-                optionInputs.forEach((input, idx) => {
-                    input.addEventListener('input', (e) => {
-                        questionObj.options[idx] = e.target.value;
-                    });
-                });
-
-                correctOptionRadios.forEach((radio, idx) => {
-                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`; // Unique name per question
-                    radio.addEventListener('change', () => {
-                        if (radio.checked) {
-                            questionObj.correctAnswerIndex = idx;
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
                         }
-                    });
-                });
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
 
-                const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
-                removeQuestionBtn.addEventListener('click', () => {
-                    // Удаляем вопрос из массива игрока
-                    playerConfig.questions.splice(questionIndex, 1);
-                    // Очищаем и перерисовываем все вопросы для этого игрока, чтобы обновить индексы и радио-кнопки
-                    questionsContainer.innerHTML = ''; 
-                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
-                });
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
 
-                questionsContainer.appendChild(clone);
+                    // Convert canvas to JPEG data URL
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+
+                img.onerror = () => {
+                    console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
+                    // Fallback to original URL or empty. Important for external URLs without CORS.
+                    resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); 
+                };
+                
+                if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
+                    img.src = fileOrUrl; // Already a data URL, process it
+                } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
+                     img.crossOrigin = "anonymous"; // Attempt to load cross-origin for external images
+                     img.src = fileOrUrl;
+                } else if (fileOrUrl instanceof File) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => { img.src = e.target.result; };
+                    reader.readAsDataURL(fileOrUrl);
+                } else {
+                    resolve(''); // No valid input
+                }
+            });
+        }
+
+        function updatePlayerCount() {
+            playerCountText.textContent = playersData.length;
+            addPlayerBtn.disabled = playersData.length >= 4;
+        }
+
+        // Функция для обновления предварительного просмотра изображений (аватар и фон)
+        async function updateImagePreview(fileInput, urlInput, previewImgElement) {
+            let imageData = '';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                imageData = await compressImage(fileInput.files[0]);
+                if (urlInput) urlInput.value = ''; // Clear URL if file is uploaded
+            } else if (urlInput && urlInput.value) {
+                imageData = await compressImage(urlInput.value); 
+                // Если сжатие не удалось или вернулся оригинальный URL, используем оригинальный URL
+                if (!imageData || (imageData === urlInput.value && !imageData.startsWith('data:'))) {
+                    imageData = urlInput.value; 
+                }
+                if (fileInput) fileInput.value = ''; // Clear file input if URL is entered
             }
 
-            // --- Global Image Preview for Background ---
-            let bgImageFinalData = ''; // Переменная для хранения окончательных данных фонового изображения
-            bgImageUpload.addEventListener('change', async () => {
-                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            if (imageData) {
+                previewImgElement.src = imageData;
+                previewImgElement.style.display = 'block';
+            } else {
+                previewImgElement.src = '#';
+                previewImgElement.style.display = 'none';
+            }
+            return imageData; // Возвращаем обработанные данные изображения
+        }
+
+        // --- Player Management ---
+        addPlayerBtn.addEventListener('click', () => {
+            if (playersData.length < 4) {
+                const playerIndex = playersData.length;
+                const playerConfig = {
+                    id: Date.now(), // Unique ID for keying
+                    name: `Игрок ${playerIndex + 1}`, // Исправлено: Начальное имя с номером
+                    avatar: '', // data URL или внешний URL
+                    questions: []
+                };
+                playersData.push(playerConfig);
+                renderPlayer(playerConfig, playerIndex);
+                updatePlayerCount();
+            }
+        });
+
+        function renderPlayer(playerConfig, playerIndex) {
+            const clone = playerTemplate.content.cloneNode(true);
+            const playerDiv = clone.querySelector('.player-config');
+            playerDiv.dataset.playerId = playerConfig.id;
+            playerDiv.querySelector('.player-number').textContent = playerIndex + 1;
+
+            const playerNameInput = playerDiv.querySelector('.player-name');
+            playerNameInput.value = playerConfig.name;
+            playerNameInput.addEventListener('input', (e) => {
+                playerConfig.name = e.target.value;
             });
-            bgImageUrl.addEventListener('input', async () => {
-                bgImageFinalData = await updateImagePreview(null, bgImageUrl, bgImagePreview); // Передаем null для fileInput
+
+            const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+            const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+            const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
+
+            // Устанавливаем начальное значение URL аватара
+            avatarUrlInput.value = playerConfig.avatar; 
+            // Обновляем предпросмотр, если уже есть аватар
+            if (playerConfig.avatar) {
+                avatarPreviewImg.src = playerConfig.avatar;
+                avatarPreviewImg.style.display = 'block';
+            }
+
+            avatarUrlInput.addEventListener('input', async () => {
+                playerConfig.avatar = await updateImagePreview(null, avatarUrlInput, avatarPreviewImg); // Передаем null для fileInput
             });
 
+            avatarUploadInput.addEventListener('change', async () => {
+                playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+            });
 
-            // --- Code Generation ---
-            generateCodeBtn.addEventListener('click', async () => {
-                const gameLang = document.getElementById('gameLang').value;
-                const titleFont = document.getElementById('titleFont').value;
-                const uiFont = document.getElementById('uiFont').value;
-                const avatarSize = document.getElementById('avatarSize').value;
-                const liquidColor = document.getElementById('liquidColor').value;
-                const highlightColor = document.getElementById('highlightColor').value;
-                const pointsToWin = parseInt(document.getElementById('pointsToWin').value);
+            const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
+            removePlayerBtn.addEventListener('click', () => {
+                playersData = playersData.filter(p => p.id !== playerConfig.id);
+                // Перерисовываем всех игроков, чтобы обновить номера и привязки событий
+                playersContainer.innerHTML = ''; 
+                playersData.forEach((p, idx) => renderPlayer(p, idx));
+                updatePlayerCount();
+            });
 
-                // Ensure background image data is up-to-date before final generation
-                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+            const questionsContainer = playerDiv.querySelector('.questions-container');
+            const addQuestionBtn = playerDiv.querySelector('.add-question-btn');
+            addQuestionBtn.addEventListener('click', () => {
+                const newQuestion = {
+                    type: 'open',
+                    text: '',
+                    options: ['', '', '', ''],
+                    correctAnswerIndex: -1 // -1 means no correct answer selected for MC
+                };
+                playerConfig.questions.push(newQuestion);
+                renderQuestion(newQuestion, playerConfig, questionsContainer, playerConfig.questions.length - 1);
+            });
 
+            // Render existing questions
+            questionsContainer.innerHTML = ''; // Очищаем перед рендерингом, чтобы избежать дублирования
+            playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
 
-                // Finalize players data, ensuring avatars are processed
-                const finalPlayersData = [];
-                for (const player of playersData) {
-                    const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
-                    const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
-                    const avatarUrlInput = playerDiv.querySelector('.avatar-url');
-                    const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
-                    
-                    // Обновляем и получаем окончательные данные аватара
-                    const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+            // Append to container or re-insert if re-rendering
+            const existingPlayerDiv = playersContainer.querySelector(`[data-player-id="${playerConfig.id}"]`);
+            if (existingPlayerDiv) {
+                existingPlayerDiv.replaceWith(playerDiv);
+            } else {
+                playersContainer.appendChild(clone);
+            }
+        }
 
-                    finalPlayersData.push({
-                        name: player.name,
-                        avatar: finalAvatar,
-                        questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
-                    });
+        function renderQuestion(questionObj, playerConfig, questionsContainer, questionIndex) {
+            const clone = questionTemplate.content.cloneNode(true);
+            const questionItemDiv = clone.querySelector('.question-item');
+            
+            const questionTypeSelect = questionItemDiv.querySelector('.question-type');
+            const questionTextInput = questionItemDiv.querySelector('.question-text');
+            const mcOptionsContainer = questionItemDiv.querySelector('.mc-options-container');
+            const optionInputs = questionItemDiv.querySelectorAll('.option-text');
+            const correctOptionRadios = questionItemDiv.querySelectorAll('.correct-option-radio');
+
+            // Set initial values
+            questionTypeSelect.value = questionObj.type;
+            questionTextInput.value = questionObj.text;
+            if (questionObj.type === 'mc') {
+                mcOptionsContainer.style.display = 'block';
+                questionObj.options.forEach((opt, idx) => {
+                    if (optionInputs[idx]) optionInputs[idx].value = opt;
+                });
+                if (questionObj.correctAnswerIndex !== -1 && correctOptionRadios[questionObj.correctAnswerIndex]) {
+                    correctOptionRadios[questionObj.correctAnswerIndex].checked = true;
                 }
+            } else {
+                mcOptionsContainer.style.display = 'none';
+            }
+
+            // Event Listeners
+            questionTypeSelect.addEventListener('change', (e) => {
+                questionObj.type = e.target.value;
+                mcOptionsContainer.style.display = (e.target.value === 'mc') ? 'block' : 'none';
+                // Reset MC specific data if changing to open-ended
+                if (e.target.value === 'open') {
+                    questionObj.options = ['', '', '', ''];
+                    questionObj.correctAnswerIndex = -1;
+                    optionInputs.forEach(input => input.value = '');
+                    correctOptionRadios.forEach(radio => radio.checked = false);
+                }
+            });
+
+            questionTextInput.addEventListener('input', (e) => {
+                questionObj.text = e.target.value;
+            });
+
+            optionInputs.forEach((input, idx) => {
+                input.addEventListener('input', (e) => {
+                    questionObj.options[idx] = e.target.value;
+                });
+            });
+
+            correctOptionRadios.forEach((radio, idx) => {
+                radio.name = `correct-option-${playerConfig.id}-${questionIndex}`; // Unique name per question
+                radio.addEventListener('change', () => {
+                    if (radio.checked) {
+                        questionObj.correctAnswerIndex = idx;
+                    }
+                });
+            });
+
+            const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
+            removeQuestionBtn.addEventListener('click', () => {
+                // Удаляем вопрос из массива игрока
+                playerConfig.questions.splice(questionIndex, 1);
+                // Очищаем и перерисовываем все вопросы для этого игрока, чтобы обновить индексы и радио-кнопки
+                questionsContainer.innerHTML = ''; 
+                playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+            });
+
+            questionsContainer.appendChild(clone);
+        }
+
+        // --- Global Image Preview for Background ---
+        let bgImageFinalData = ''; // Переменная для хранения окончательных данных фонового изображения
+        bgImageUpload.addEventListener('change', async () => {
+            bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+        });
+        bgImageUrl.addEventListener('input', async () => {
+            bgImageFinalData = await updateImagePreview(null, bgImageUrl, bgImagePreview); // Передаем null для fileInput
+        });
+
+
+        // --- Code Generation ---
+        generateCodeBtn.addEventListener('click', async () => {
+            const gameLang = document.getElementById('gameLang').value;
+            const titleFont = document.getElementById('titleFont').value;
+            const uiFont = document.getElementById('uiFont').value;
+            const avatarSize = document.getElementById('avatarSize').value;
+            const liquidColor = document.getElementById('liquidColor').value;
+            const highlightColor = document.getElementById('highlightColor').value;
+            const pointsToWin = parseInt(document.getElementById('pointsToWin').value);
+
+            // Ensure background image data is up-to-date before final generation
+            bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+
+
+            // Finalize players data, ensuring avatars are processed
+            const finalPlayersData = [];
+            for (const player of playersData) {
+                const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
+                const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
+                const avatarUrlInput = playerDiv.querySelector('.avatar-url');
+                const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
                 
-                // Basic validation
-                if (finalPlayersData.length === 0) {
-                    alert('Пожалуйста, добавьте хотя бы одного игрока.');
+                // Обновляем и получаем окончательные данные аватара
+                const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+
+                finalPlayersData.push({
+                    name: player.name,
+                    avatar: finalAvatar,
+                    questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
+                });
+            }
+            
+            // Basic validation
+            if (finalPlayersData.length === 0) {
+                alert('Пожалуйста, добавьте хотя бы одного игрока.');
+                return;
+            }
+            for (const player of finalPlayersData) {
+                if (!player.avatar) {
+                    alert(`Игрок "${player.name}" не имеет аватара. Пожалуйста, укажите URL или загрузите файл.`);
                     return;
                 }
-                for (const player of finalPlayersData) {
-                    if (!player.avatar) {
-                        alert(`Игрок "${player.name}" не имеет аватара. Пожалуйста, укажите URL или загрузите файл.`);
-                        return;
-                    }
-                    if (player.questions.length < pointsToWin) {
-                        alert(`Игрок "${player.name}" имеет меньше вопросов (${player.questions.length}) чем "Очков для победы" (${pointsToWin}). Добавьте больше вопросов.`);
-                        return;
-                    }
-                    if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
-                        alert(`Игрок "${player.name}" имеет вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Проверьте все вопросы.`);
-                        return;
-                    }
+                if (player.questions.length < pointsToWin) {
+                    alert(`Игрок "${player.name}" имеет меньше вопросов (${player.questions.length}) чем "Очков для победы" (${pointsToWin}). Добавьте больше вопросов.`);
+                    return;
                 }
+                if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
+                    alert(`Игрок "${player.name}" имеет вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Проверьте все вопросы.`);
+                    return;
+                }
+            }
 
-                // Экранируем URL для CSS, чтобы избежать проблем со специальными символами
-                const escapedBgImageUrl = escapeHtml(bgImageFinalData);
+            // Экранируем URL для CSS, чтобы избежать проблем со специальными символами
+            const escapedBgImageUrl = escapeHtml(bgImageFinalData);
 
-                // --- START OF GENIALLY WIDGET CODE GENERATION ---
-                const generatedHtmlContent = `
+            // Экранируем обратные кавычки в JSON-строке, прежде чем встраивать ее в шаблонный литерал
+            const rawGameDataString = JSON.stringify(finalPlayersData, null, 2);
+            const safeGameData = escapeForTemplateLiteral(rawGameDataString);
+
+            // --- START OF GENIALLY WIDGET CODE GENERATION ---
+            const generatedHtmlContent = `
 <!DOCTYPE html>
 <html lang="${gameLang}">
 <head>
@@ -1130,7 +624,7 @@
     </div>
 
     <script>
-        const gameData = ${JSON.stringify(finalPlayersData, null, 2)}; // null, 2 for pretty print in generated code
+        const gameData = ${safeGameData}; // Используем безопасно экранированную строку здесь
         const POINTS_TO_WIN = ${pointsToWin};
         const LANGUAGE = '${gameLang}';
 
@@ -1252,7 +746,7 @@
             }
 
             const question = player.questions[currentQuestionIdx];
-            modalQuestionTitle.textContent = \`\${texts[LANGUAGE].questionTitle} \${player.name}\`;
+            modalQuestionTitle.textContent = `${texts[LANGUAGE].questionTitle} ${player.name}`;
             modalQuestionText.textContent = question.text;
             modalFeedback.style.display = 'none';
             selectedOption = -1; // Reset selected option
@@ -1329,10 +823,10 @@
             playerScores[playerIdx]++;
             playerQuestionIndexes[playerIdx]++;
 
-            const playerCard = document.querySelector(\`.player-card[data-player-index="\${playerIdx}"]\`);
+            const playerCard = document.querySelector(`.player-card[data-player-index="${playerIdx}"]`);
             const liquid = playerCard.querySelector('.liquid');
             const newHeight = (playerScores[playerIdx] / POINTS_TO_WIN) * 100;
-            liquid.style.height = \`\${newHeight}%\`;
+            liquid.style.height = `${newHeight}%`;
 
             if (playerScores[playerIdx] >= POINTS_TO_WIN) {
                 endGame(playerIdx);
@@ -1350,63 +844,13 @@
             gameActive = false;
             const winnerName = gameData[winnerIndex].name;
             gameOverTitle.textContent = texts[LANGUAGE].gameOverTitle;
-            gameOverMessage.textContent = \`\${texts[LANGUAGE].gameOverMessage}\${winnerName}!\`;
+            gameOverMessage.textContent = `${texts[LANGUAGE].gameOverMessage}${winnerName}!`;
             restartGameButton.textContent = texts[LANGUAGE].restartGame;
             restartGameButton.onclick = initializeGame;
             gameOverOverlay.classList.add('active');
         }
 
         initializeGame(); // Start the game on load
-    </script>
-</body>
-</html>
-`;
-                // Выводим сгенерированный HTML в консоль для отладки
-                console.log("--- Сгенерированный HTML для предпросмотра ---");
-                console.log(generatedHtmlContent);
-                console.log("------------------------------------------");
-
-                outputCode.value = generatedHtmlContent; // Update textarea
-
-                // --- Update Preview Frame ---
-                if (previewObjectURL) {
-                    URL.revokeObjectURL(previewObjectURL); // Revoke previous URL to prevent memory leaks
-                }
-                const blob = new Blob([generatedHtmlContent], { type: 'text/html' });
-                previewObjectURL = URL.createObjectURL(blob);
-                
-                if (previewObjectURL) {
-                    gamePreviewFrame.src = previewObjectURL; // ИСПОЛЬЗУЕМ SRC, НЕ SRCDOC!
-                } else {
-                    console.error("Ошибка: Не удалось создать URL объекта для предпросмотра.");
-                    alert("Ошибка при создании предпросмотра. Проверьте консоль разработчика.");
-                }
-
-
-                // --- Handle Copy Button ---
-                copyCodeBtn.style.display = 'inline-block';
-                copyCodeBtn.textContent = 'Копировать';
-                // Сброс состояния, если было "Скопировано!"
-                copyCodeBtn.classList.remove('copied'); 
-            });
-
-            copyCodeBtn.addEventListener('click', async () => {
-                try {
-                    await navigator.clipboard.writeText(outputCode.value);
-                    copyCodeBtn.textContent = 'Скопировано!';
-                    setTimeout(() => {
-                        copyCodeBtn.textContent = 'Копировать';
-                    }, 2000); // Вернуть через 2 секунды
-                } catch (err) {
-                    console.error('Не удалось скопировать текст: ', err);
-                    alert('Ошибка при копировании кода. Пожалуйста, скопируйте вручную.');
-                }
-            });
-
-            // Initial rendering of players if any exist (e.g., loaded from local storage)
-            // Currently, no loading from local storage, so playersData is empty by default.
-            updatePlayerCount();
-        });
     </script>
 </body>
 </html>
