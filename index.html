@@ -431,11 +431,38 @@
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
         * { box-sizing: border-box; font-family: '${fontFamily}', sans-serif; }
-        body { 
-            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            background: url('${bgUrl}') no-repeat center center/cover;
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+        
+        /* Убедимся, что html и body полностью заполняют iframe Genially */
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: transparent; /* Пусть фон game-wrapper будет виден */
         }
+
+        /* Body будет просто центрирующим контейнером для game-wrapper */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Главный контейнер игры с фиксированным соотношением сторон */
+        #game-wrapper {
+            position: relative; /* Все абсолютно позиционированные дочерние элементы будут относительно него */
+            width: 100%; /* Займет всю доступную ширину родителя (body) до max-width */
+            height: 100%; /* Займет всю доступную высоту родителя (body) до max-height */
+            max-width: calc(100vh * (16 / 9)); /* Максимальная ширина, поддерживающая соотношение 16:9 от высоты viewport */
+            max-height: calc(100vw * (9 / 16)); /* Максимальная высота, поддерживающая соотношение 9:16 от ширины viewport */
+            aspect-ratio: 16 / 9; /* Это принудительно устанавливает соотношение сторон как основное ограничение */
+            background: url('${bgUrl}') no-repeat center center/cover; /* Фон игры здесь */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Выравнивание содержимого по низу */
+            align-items: center;
+        }
+
+        /* Теперь все абсолютно позиционированные элементы внутри #game-wrapper ссылаются на его размеры */
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
         
         .players-container {
@@ -491,7 +518,7 @@
 
         /* Modal Task */
         .modal-bg {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
         }
         
@@ -521,7 +548,7 @@
 
         /* Winner Screen */
         .winner-screen {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
             justify-content: center; align-items: center; color: white;
         }
@@ -529,23 +556,340 @@
     </style>
 </head>
 <body>
-    <div class="overlay"></div>
-    <div class="players-container" id="pc"></div>
+    <div id="app-container">
+        <!-- SIDEBAR WITH SETTINGS -->
+        <div class="sidebar">
+            <h2>Общие настройки</h2>
+            
+            <div class="form-group">
+                <label>Язык игры</label>
+                <select id="lang" onchange="updatePreview()">
+                    <option value="ru">Русский</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
 
-    <!-- Modal -->
-    <div class="modal-bg" id="modalBg">
-        <div class="modal">
-            <div class="question" id="qText"></div>
-            <div class="options" id="optsDiv"></div>
-            <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+            <div class="form-group">
+                <label>Шрифт</label>
+                <select id="fontFamily" onchange="updatePreview()">
+                    <option value="DM Sans">DM Sans</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Roboto">Roboto</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Очки для победы (полная колба)</label>
+                <input type="number" id="maxScore" value="5" min="1" onchange="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label>Цвет жидкости</label>
+                <input type="color" id="liquidColor" value="#00ffcc" onchange="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label>Фон игры (URL или Файл)</label>
+                <input type="text" id="bgUrl" placeholder="Ссылка на картинку" onchange="updatePreview()">
+                <input type="file" accept="image/*" onchange="handleFileUpload(event, 'bgUrl')" style="padding: 5px; font-size: 0.8rem;">
+            </div>
+
+            <div class="form-group">
+                <label>Размер аватаров (%)</label>
+                <input type="range" id="avatarSize" min="50" max="150" value="100" onchange="updatePreview()">
+            </div>
+
+            <h2>Игроки (Аватары)</h2>
+            <div id="playersList"></div>
+            <button onclick="addPlayer()">+ Добавить игрока (до 4)</button>
+
+            <h2 style="margin-top: 10px;">Задания (Вопросы)</h2>
+            <div id="tasksList"></div>
+            <button onclick="addTask()">+ Добавить вопрос</button>
+        </div>
+
+        <!-- MAIN AREA -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Предпросмотр</h2>
+                <button id="generateBtn" class="generate-btn" onclick="generateCode()">Сгенерировать код</button>
+            </div>
+            <div class="preview-container">
+                <iframe id="previewFrame"></iframe>
+            </div>
         </div>
     </div>
 
-    <!-- Winner -->
-    <div class="winner-screen" id="winnerScreen">
-        <h1>${txt.win}</h1>
-        <img id="winnerAvatar" style="width:200px; border-radius:20px; border: 4px solid ${liquidColor};">
-        <h2 id="winnerName"></h2>
+    <script>
+        // State
+        let config = {
+            players: [],
+            tasks: []
+        };
+
+        // Initialize default
+        window.onload = () => {
+            addPlayer('Игрок 1', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png');
+            addPlayer('Игрок 2', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png');
+            addTask('Сколько будет 2+2?', ['3', '4', '5'], 1);
+            updatePreview();
+        };
+
+        function addPlayer(name = '', url = '') {
+            if (config.players.length >= 4) return alert("Максимум 4 игрока!");
+            let id = Date.now();
+            config.players.push({ id, name, url });
+            renderPlayers();
+            updatePreview();
+        }
+
+        function removePlayer(id) {
+            config.players = config.players.filter(p => p.id !== id);
+            renderPlayers();
+            updatePreview();
+        }
+
+        function addTask(q = '', options = ['', '', ''], correctIdx = 0) {
+            let id = Date.now();
+            config.tasks.push({ id, question: q, options, correctIdx });
+            renderTasks();
+            updatePreview();
+        }
+
+        function removeTask(id) {
+            config.tasks = config.tasks.filter(t => t.id !== id);
+            renderTasks();
+            updatePreview();
+        }
+
+        function handleFileUpload(event, targetId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Convert to base64
+                    document.getElementById(targetId).value = e.target.result;
+                    if(targetId.startsWith('p_url_')) {
+                        let pid = parseInt(targetId.split('_')[2]);
+                        let player = config.players.find(p => p.id === pid);
+                        if(player) player.url = e.target.result;
+                    }
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderPlayers() {
+            const container = document.getElementById('playersList');
+            container.innerHTML = '';
+            config.players.forEach((p, idx) => {
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="form-group">
+                            <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
+                            <input type="text" id="p_url_${p.id}" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
+                            <input type="file" accept="image/*" style="padding: 5px; font-size: 0.8rem;" onchange="handleFileUpload(event, 'p_url_${p.id}')">
+                            <button onclick="removePlayer(${p.id})">Удалить</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('tasksList');
+            container.innerHTML = '';
+            config.tasks.forEach((t, idx) => {
+                let optionsHTML = t.options.map((opt, oIdx) => `
+                    <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                        <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
+                        <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
+                    </div>
+                `).join('');
+
+                container.innerHTML += `
+                    <div class="card">
+                        <input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px);">
+                        ${optionsHTML}
+                        <button onclick="removeTask(${t.id})">Удалить</button>
+                    </div>`;
+            });
+        }
+
+        // --- GAME ENGINE TEMPLATE ---
+        function getGameHTML() {
+            const lang = document.getElementById('lang').value;
+            const bgUrl = document.getElementById('bgUrl').value || 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=1000';
+            const liquidColor = document.getElementById('liquidColor').value;
+            const maxScore = document.getElementById('maxScore').value;
+            const fontFamily = document.getElementById('fontFamily').value;
+            const avatarSize = document.getElementById('avatarSize').value;
+            
+            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
+                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
+
+            // Inject state into the game
+            const gameState = {
+                players: config.players,
+                tasks: config.tasks,
+                maxScore: parseInt(maxScore),
+                txt: txt
+            };
+
+            return `
+<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
+        
+        * { box-sizing: border-box; font-family: '${fontFamily}', sans-serif; }
+        
+        /* Убедимся, что html и body полностью заполняют iframe Genially */
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: transparent; /* Пусть фон game-wrapper будет виден */
+        }
+
+        /* Body будет просто центрирующим контейнером для game-wrapper */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Главный контейнер игры с фиксированным соотношением сторон */
+        #game-wrapper {
+            position: relative; /* Все абсолютно позиционированные дочерние элементы будут относительно него */
+            width: 100%; /* Займет всю доступную ширину родителя (body) до max-width */
+            height: 100%; /* Займет всю доступную высоту родителя (body) до max-height */
+            max-width: calc(100vh * (16 / 9)); /* Максимальная ширина, поддерживающая соотношение 16:9 от высоты viewport */
+            max-height: calc(100vw * (9 / 16)); /* Максимальная высота, поддерживающая соотношение 9:16 от ширины viewport */
+            aspect-ratio: 16 / 9; /* Это принудительно устанавливает соотношение сторон как основное ограничение */
+            background: url('${bgUrl}') no-repeat center center/cover; /* Фон игры здесь */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Выравнивание содержимого по низу */
+            align-items: center;
+        }
+
+        /* Теперь все абсолютно позиционированные элементы внутри #game-wrapper ссылаются на его размеры */
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
+        
+        .players-container {
+            display: flex; gap: 40px; margin-bottom: 50px; z-index: 2; position: relative;
+        }
+        
+        .player-wrap {
+            display: flex; flex-direction: column; align-items: center; position: relative;
+            transition: 0.3s; opacity: 0.5;
+        }
+        
+        .player-wrap.active {
+            opacity: 1;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(139, 92, 246, 1)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5)); }
+        }
+
+        .ready-btn {
+            position: absolute; top: -180px;
+            background: #8b5cf6; color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px #8b5cf6; display: none; z-index: 5;
+        }
+        
+        .player-wrap.active .ready-btn { display: block; }
+        .ready-btn:hover { background: #7c3aed; }
+
+        .flask {
+            width: 40px; height: 120px; border: 3px solid rgba(255,255,255,0.7);
+            border-radius: 0 0 20px 20px; position: absolute; top: -140px;
+            overflow: hidden; background: rgba(0,0,0,0.5);
+            display: flex; align-items: flex-end;
+        }
+        
+        .liquid {
+            width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
+            box-shadow: 0 0 10px ${liquidColor};
+        }
+
+        .avatar {
+            width: calc(100px * ${avatarSize/100}); 
+            height: calc(100px * ${avatarSize/100}); 
+            border-radius: 16px; object-fit: cover;
+            border: 2px solid white; background: #2a2a35;
+        }
+
+        .name { color: white; margin-top: 10px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px;}
+
+        /* Modal Task */
+        .modal-bg {
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
+        }
+        
+        .modal {
+            background: #121212; border: 2px solid #8b5cf6; border-radius: 20px;
+            padding: 40px; width: 80%; max-width: 600px; text-align: center;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); color: white;
+        }
+
+        .question { font-size: 1.5rem; margin-bottom: 30px; }
+        
+        .options { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+        
+        .option-btn {
+            background: transparent; color: white; border: 2px solid #374151;
+            padding: 15px 30px; border-radius: 10px; cursor: pointer;
+            transition: 0.2s; font-size: 1.1rem; width: 45%;
+        }
+        
+        .option-btn:hover { border-color: #8b5cf6; }
+        .option-btn.selected { background: rgba(139, 92, 246, 0.3); border-color: #8b5cf6; }
+        
+        .check-btn {
+            margin-top: 30px; background: #8b5cf6; color: white; border: none;
+            padding: 15px 40px; font-size: 1.2rem; border-radius: 10px; cursor: pointer;
+        }
+
+        /* Winner Screen */
+        .winner-screen {
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
+            justify-content: center; align-items: center; color: white;
+        }
+        .winner-screen h1 { font-size: 4rem; color: ${liquidColor}; text-shadow: 0 0 20px ${liquidColor}; }
+    </style>
+</head>
+<body>
+    <!-- Все содержимое игры теперь обернуто в #game-wrapper -->
+    <div id="game-wrapper">
+        <div class="overlay"></div>
+        <div class="players-container" id="pc"></div>
+
+        <!-- Modal -->
+        <div class="modal-bg" id="modalBg">
+            <div class="modal">
+                <div class="question" id="qText"></div>
+                <div class="options" id="optsDiv"></div>
+                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+            </div>
+        </div>
+
+        <!-- Winner -->
+        <div class="winner-screen" id="winnerScreen">
+            <h1>${txt.win}</h1>
+            <img id="winnerAvatar" style="width:200px; border-radius:20px; border: 4px solid ${liquidColor};">
+            <h2 id="winnerName"></h2>
+        </div>
     </div>
 
     <script>
