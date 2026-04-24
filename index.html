@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактор "Сумасшедшие Ученые"</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Impact&display=swap" rel="stylesheet">
-    <!-- Для "Безграничный" можно использовать похожие шрифты, например Orbitron или Bungee Shade, но они требуют подключения. Для простоты используем Impact как яркий акцент. -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Для "Impact" можно добавить: <link href="https://fonts.googleapis.com/css2?family=Impact&display=swap" rel="stylesheet"> если он нужен -->
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -53,6 +53,7 @@
             box-sizing: border-box;
             position: relative;
             z-index: 10;
+            flex-shrink: 0; /* Prevents sidebar from shrinking */
         }
 
         .sidebar h2 {
@@ -115,41 +116,51 @@
         button:hover {
             background-color: var(--accent-purple-dark);
         }
+        button:disabled {
+            background-color: #6a6a80;
+            cursor: not-allowed;
+        }
 
         .player-card {
             display: flex;
-            align-items: center;
+            flex-direction: column; /* Changed to column for better layout on smaller screens */
+            align-items: center; /* Center items horizontally */
             padding: 10px;
             margin-bottom: 10px;
             background-color: var(--sidebar-bg-color);
             border-radius: var(--border-radius-md);
             border: 1px solid var(--border-color);
+            position: relative;
         }
 
         .player-card input[type="text"],
         .player-card input[type="number"],
         .player-card input[type="url"] {
             margin-bottom: 5px;
+            width: calc(100% - 10px); /* Adjust width for inner padding */
         }
 
         .player-card .avatar-preview {
-            width: 60px;
-            height: 60px;
+            width: 80px; /* Larger preview in editor */
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            margin-right: 15px;
+            margin-bottom: 10px;
             border: 2px solid var(--accent-purple);
-            flex-shrink: 0;
         }
 
         .player-card .player-controls {
-            flex-grow: 1;
+            width: 100%; /* Take full width */
+            text-align: left; /* Align text within controls */
         }
         
         .player-card .delete-player-btn {
             background-color: #dc3545;
-            margin-left: 10px;
-            flex-shrink: 0;
+            position: absolute; /* Position delete button */
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            font-size: 0.7em;
         }
         .player-card .delete-player-btn:hover {
             background-color: #c82333;
@@ -161,8 +172,16 @@
             background-color: var(--sidebar-bg-color);
             border-radius: var(--border-radius-md);
             border: 1px solid var(--border-color);
+            position: relative;
         }
-
+        .question-block .delete-question-btn {
+            background-color: #dc3545;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            font-size: 0.7em;
+        }
         .question-block .options {
             margin-top: 10px;
             padding-left: 15px;
@@ -178,24 +197,23 @@
             margin-right: 8px;
             cursor: pointer;
             transform: scale(1.2);
+            flex-shrink: 0;
         }
 
         .question-block .option-item input[type="text"] {
             flex-grow: 1;
             margin-bottom: 0;
+            width: auto; /* Allow input to fill space */
         }
         .question-block .delete-option-btn {
             background-color: #6c757d;
             margin-left: 5px;
             padding: 5px 10px;
             font-size: 0.8em;
+            flex-shrink: 0;
         }
         .question-block .delete-option-btn:hover {
             background-color: #5a6268;
-        }
-        .question-block .delete-question-btn {
-            background-color: #dc3545;
-            margin-top: 10px;
         }
 
         /* Preview - Правая панель предпросмотра */
@@ -221,6 +239,7 @@
             position: absolute;
             bottom: 100px; /* Adjust as needed */
             width: 100%;
+            pointer-events: none; /* Make players non-interactive in editor preview */
         }
 
         .preview-player-item {
@@ -228,7 +247,7 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-            width: 150px; /* Fixed width for player item */
+            /* width will be set by avatarSize directly */
         }
 
         .preview-player-avatar {
@@ -248,6 +267,9 @@
             margin-top: 5px;
             text-align: center;
             white-space: nowrap;
+            max-width: 100%; /* Prevent overflow */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .liquid-beaker-container {
@@ -286,11 +308,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 5;
-        }
-
-        .ready-button:hover {
-            background-color: var(--accent-purple-dark);
-            transform: translate(-50%, -50%) scale(1.05);
+            pointer-events: none; /* Make non-interactive in editor preview */
         }
 
         .footer {
@@ -334,11 +352,7 @@
                 gap: 15px;
             }
             .preview-player-item {
-                width: 100px;
-            }
-            .preview-player-avatar {
-                width: 80px;
-                height: 80px;
+                /* width depends on avatarSize, not fixed */
             }
             .liquid-beaker-container {
                 width: 50px;
@@ -479,11 +493,13 @@
 
         function renderPlayersSettings() {
             playersSettingsDiv.innerHTML = '';
+            addPlayerBtn.disabled = gameState.players.length >= 4; // Disable if max players reached
+
             gameState.players.forEach(player => {
                 const playerDiv = document.createElement('div');
                 playerDiv.className = 'setting-group player-card';
                 playerDiv.innerHTML = `
-                    <img src="${player.avatarURL}" alt="${player.name}" class="avatar-preview">
+                    <img src="${player.avatarURL}" alt="${player.name}" class="avatar-preview" onerror="this.src='https://via.placeholder.com/80?text=Error'">
                     <div class="player-controls">
                         <label>Имя:</label>
                         <input type="text" value="${player.name}" data-id="${player.id}" data-field="name">
@@ -507,6 +523,10 @@
                     const playerIndex = gameState.players.findIndex(p => p.id === id);
                     if (playerIndex > -1) {
                         gameState.players[playerIndex][field] = value;
+                        // Update avatar preview if URL changed
+                        if (field === 'avatarURL') {
+                            e.target.closest('.player-card').querySelector('.avatar-preview').src = value;
+                        }
                         renderPreview();
                     }
                 });
@@ -515,9 +535,14 @@
             playersSettingsDiv.querySelectorAll('.delete-player-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = parseInt(e.target.dataset.id);
-                    gameState.players = gameState.players.filter(p => p.id !== id);
-                    renderPlayersSettings();
-                    renderPreview();
+                    // Ensure at least one player remains
+                    if (gameState.players.length > 1) {
+                        gameState.players = gameState.players.filter(p => p.id !== id);
+                        renderPlayersSettings();
+                        renderPreview();
+                    } else {
+                        alert('Должен быть хотя бы один игрок!');
+                    }
                 });
             });
         }
@@ -534,7 +559,7 @@
                     <label>Тип ответа:</label>
                     <div style="display: flex; gap: 15px; margin-bottom: 10px;">
                         <label><input type="radio" name="qType_${question.id}" value="multiple_choice" ${question.type === 'multiple_choice' ? 'checked' : ''} data-id="${question.id}"> Выбор из вариантов</label>
-                        <!-- <label><input type="radio" name="qType_${question.id}" value="free_text" ${question.type === 'free_text' ? 'checked' : ''} data-id="${question.id}"> Свободный ответ (Упрощено)</label> -->
+                        <!-- For future: <label><input type="radio" name="qType_${question.id}" value="free_text" ${question.type === 'free_text' ? 'checked' : ''} data-id="${question.id}"> Свободный ответ</label> -->
                     </div>
                     
                     <div class="options">
@@ -542,12 +567,12 @@
                             <div class="option-item">
                                 <input type="radio" name="correctOption_${question.id}" ${option.isCorrect ? 'checked' : ''} data-q-id="${question.id}" data-opt-index="${index}">
                                 <input type="text" value="${option.text}" data-q-id="${question.id}" data-opt-index="${index}" data-field="optionText">
-                                <button class="delete-option-btn" data-q-id="${question.id}" data-opt-index="${index}">X</button>
+                                <button class="delete-option-btn" data-q-id="${question.id}" data-opt-index="${index}" ${question.options.length <= 1 ? 'disabled' : ''}>X</button>
                             </div>
                         `).join('')}
                         <button class="add-option-btn" data-q-id="${question.id}">+ Добавить вариант</button>
                     </div>
-                    <button class="delete-question-btn" data-id="${question.id}">Удалить задание</button>
+                    <button class="delete-question-btn" data-id="${question.id}" ${gameState.questions.length <= 1 ? 'disabled' : ''}>Удалить задание</button>
                 `;
                 questionsSettingsDiv.appendChild(questionDiv);
             });
@@ -568,8 +593,6 @@
                     const qIndex = gameState.questions.findIndex(q => q.id === id);
                     if (qIndex > -1) {
                         gameState.questions[qIndex].type = e.target.value;
-                        // For simplicity, we only allow multiple_choice now.
-                        // If free_text was enabled, this would switch UI for options.
                     }
                 });
             });
@@ -594,7 +617,8 @@
                         gameState.questions[qIndex].options.forEach((opt, idx) => {
                             opt.isCorrect = (idx === optIndex);
                         });
-                        renderQuestionsSettings(); // Re-render to update radio states
+                        // No need to re-render all questions settings, radio state updates naturally
+                        // renderQuestionsSettings();
                     }
                 });
             });
@@ -605,7 +629,7 @@
                     const qIndex = gameState.questions.findIndex(q => q.id === qId);
                     if (qIndex > -1) {
                         gameState.questions[qIndex].options.push({ text: 'Новый вариант', isCorrect: false });
-                        renderQuestionsSettings();
+                        renderQuestionsSettings(); // Re-render to show new option
                     }
                 });
             });
@@ -615,16 +639,13 @@
                     const qId = parseInt(e.target.dataset.qId);
                     const optIndex = parseInt(e.target.dataset.optIndex);
                     const qIndex = gameState.questions.findIndex(q => q.id === qId);
-                    if (qIndex > -1 && gameState.questions[qIndex].options.length > 1) {
+                    if (qIndex > -1 && gameState.questions[qIndex].options.length > 1) { // Must have at least one option
                         gameState.questions[qIndex].options.splice(optIndex, 1);
-                        // If deleted option was correct, and only one left, make it correct
-                        if (gameState.questions[qIndex].options.length === 1 && !gameState.questions[qIndex].options[0].isCorrect) {
-                             gameState.questions[qIndex].options[0].isCorrect = true;
-                        } else if (!gameState.questions[qIndex].options.some(opt => opt.isCorrect) && gameState.questions[qIndex].options.length > 0) {
-                            // If no correct option after deletion, set the first one as correct
+                        // Ensure there's always a correct option if any options remain
+                        if (!gameState.questions[qIndex].options.some(opt => opt.isCorrect) && gameState.questions[qIndex].options.length > 0) {
                             gameState.questions[qIndex].options[0].isCorrect = true;
                         }
-                        renderQuestionsSettings();
+                        renderQuestionsSettings(); // Re-render to update options and disabled states
                     }
                 });
             });
@@ -632,8 +653,12 @@
             questionsSettingsDiv.querySelectorAll('.delete-question-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = parseInt(e.target.dataset.id);
-                    gameState.questions = gameState.questions.filter(q => q.id !== id);
-                    renderQuestionsSettings();
+                    if (gameState.questions.length > 1) { // Must have at least one question
+                        gameState.questions = gameState.questions.filter(q => q.id !== id);
+                        renderQuestionsSettings();
+                    } else {
+                        alert('Должен быть хотя бы один вопрос!');
+                    }
                 });
             });
         }
@@ -642,7 +667,7 @@
 
         function renderPreview() {
             gamePreview.style.backgroundImage = `url('${gameState.bgImageURL}')`;
-            gamePreview.style.fontFamily = gameState.uiFont;
+            gamePreview.style.fontFamily = gameState.uiFont; // Apply UI font to preview container
             previewPlayersContainer.innerHTML = '';
 
             if (gameState.players.length === 0) {
@@ -684,20 +709,22 @@
         pointsToWinInput.addEventListener('change', (e) => { gameState.pointsToWin = parseInt(e.target.value); });
 
         addPlayerBtn.addEventListener('click', () => {
-            const newId = Math.max(0, ...gameState.players.map(p => p.id)) + 1;
-            gameState.players.push({
-                id: newId,
-                name: `Игрок ${newId}`,
-                avatarURL: 'https://via.placeholder.com/150?text=Avatar',
-                liquidColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-                avatarSize: 150
-            });
-            renderPlayersSettings();
-            renderPreview();
+            if (gameState.players.length < 4) { // Max 4 players
+                const newId = gameState.players.length > 0 ? Math.max(...gameState.players.map(p => p.id)) + 1 : 1;
+                gameState.players.push({
+                    id: newId,
+                    name: `Игрок ${newId}`,
+                    avatarURL: 'https://via.placeholder.com/150?text=Avatar',
+                    liquidColor: '#' + Math.floor(Math.random()*16777215).toString(16), // Random color
+                    avatarSize: 150
+                });
+                renderPlayersSettings();
+                renderPreview();
+            }
         });
 
         addQuestionBtn.addEventListener('click', () => {
-            const newId = Math.max(0, ...gameState.questions.map(q => q.id)) + 1;
+            const newId = gameState.questions.length > 0 ? Math.max(...gameState.questions.map(q => q.id)) + 1 : 1;
             gameState.questions.push({
                 id: newId,
                 text: `Новый вопрос ${newId}?`,
@@ -717,20 +744,34 @@
 
         // --- Generate Genially Code ---
         generateCodeBtn.addEventListener('click', () => {
+            // Basic validation
+            if (gameState.players.length === 0) {
+                alert('Добавьте хотя бы одного игрока!');
+                return;
+            }
+            if (gameState.questions.length === 0) {
+                alert('Добавьте хотя бы один вопрос!');
+                return;
+            }
+            if (!gameState.questions.every(q => q.options.some(opt => opt.isCorrect))) {
+                alert('Каждый вопрос должен иметь хотя бы один правильный вариант ответа!');
+                return;
+            }
+
             const generatedCode = generateGeniallyGameCode(gameState);
             navigator.clipboard.writeText(generatedCode).then(() => {
                 generateCodeBtn.textContent = 'Скопировано!';
                 setTimeout(() => { generateCodeBtn.textContent = 'Сгенерировать код для Genially'; }, 2000);
             }).catch(err => {
                 console.error('Не удалось скопировать код: ', err);
-                alert('Не удалось скопировать код. Пожалуйста, скопируйте его вручную из консоли.');
-                console.log(generatedCode); // Fallback
+                alert('Не удалось скопировать код. Пожалуйста, скопируйте его вручную из консоли разработчика.');
+                console.log(generatedCode); // Fallback to console
             });
         });
 
 
         function generateGeniallyGameCode(config) {
-            // Helper to escape HTML for string literals
+            // Helper to escape HTML for string literals (prevents XSS and issues with quotes)
             const escapeHtml = (unsafe) => {
                 return unsafe
                     .replace(/&/g, "&amp;")
@@ -745,6 +786,7 @@
                 name: escapeHtml(p.name),
                 avatarURL: escapeHtml(p.avatarURL),
                 liquidColor: escapeHtml(p.liquidColor),
+                avatarSize: p.avatarSize, // IMPORTANT: Now included in playersData
                 score: 0 // Initial score for the game
             })));
 
@@ -766,6 +808,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сумасшедшие Ученые - Игра</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Если вы используете Impact, его тоже нужно подключить, если его нет в Orbitron -->
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -775,8 +818,9 @@
             --border-color: #5a5a70;
             --border-radius-lg: 15px;
             --border-radius-md: 10px;
-            --font-title: ${config.titleFont};
-            --font-ui: ${config.uiFont};
+            /* Fonts are directly injected as they are dynamic */
+            --font-title-dynamic: ${config.titleFont};
+            --font-ui-dynamic: ${config.uiFont};
         }
 
         body {
@@ -784,7 +828,7 @@
             padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: var(--font-ui);
+            font-family: var(--font-ui-dynamic); /* Use dynamic UI font */
             overflow: hidden;
             display: flex;
             justify-content: center;
@@ -822,9 +866,8 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-            width: 15vw; /* Responsive width */
-            max-width: 180px; /* Max width for each player card */
-            min-width: 100px;
+            /* Width/height for avatar set inline via JS for each player */
+            flex-shrink: 0; /* Prevent players from shrinking too much */
         }
         
         .player-item.current-player .player-avatar {
@@ -843,8 +886,6 @@
             box-shadow: 0 0 15px rgba(138, 43, 226, 0.7);
             object-fit: cover;
             margin-bottom: 1.5vh;
-            width: ${config.players[0] ? config.players[0].avatarSize : 150}px; /* Use first player's size as default, or set a responsive size */
-            height: ${config.players[0] ? config.players[0].avatarSize : 150}px;
             transition: all 0.3s ease;
         }
 
@@ -857,7 +898,7 @@
             margin-top: 1vh;
             text-align: center;
             white-space: nowrap;
-            font-family: var(--font-title);
+            font-family: var(--font-title-dynamic); /* Use dynamic title font */
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -938,7 +979,7 @@
         }
 
         .modal-content h3 {
-            font-family: var(--font-title);
+            font-family: var(--font-title-dynamic); /* Use dynamic title font */
             font-size: 3.5vh;
             color: var(--text-color);
             margin-bottom: 3vh;
@@ -1004,7 +1045,7 @@
             flex-direction: column;
         }
         #gameOverModal h2 {
-            font-family: var(--font-title);
+            font-family: var(--font-title-dynamic); /* Use dynamic title font */
             font-size: 5vh;
             color: gold;
             text-shadow: 0 0 10px gold, 0 0 20px orange;
@@ -1104,13 +1145,14 @@
             playersDisplay.innerHTML = '';
             currentPlayers.forEach((player, index) => {
                 const playerItem = document.createElement('div');
+                // Use player.avatarSize for inline width/height
                 playerItem.className = \`player-item \${index === currentPlayerIndex && gameActive ? 'current-player' : ''}\`;
                 playerItem.dataset.playerId = player.id;
                 playerItem.innerHTML = \`
                     <div class="liquid-beaker-container">
                         <div class="liquid-fill" style="background-color: \${player.liquidColor}; height: \${(player.score / gameConfig.pointsToWin) * 100}%;"></div>
                     </div>
-                    <img src="\${player.avatarURL}" alt="\${player.name}" class="player-avatar" style="width: ${config.players[index].avatarSize}px; height: ${config.players[index].avatarSize}px;">
+                    <img src="\${player.avatarURL}" alt="\${player.name}" class="player-avatar" style="width: \${player.avatarSize}px; height: \${player.avatarSize}px;">
                     <div class="player-name">\${player.name}</div>
                 \`;
                 playersDisplay.appendChild(playerItem);
@@ -1118,10 +1160,17 @@
         }
 
         function showQuestion() {
-            if (currentQuestionIndex >= currentQuestions.length) {
-                // All questions asked, or no questions configured
-                endGame(null); // No winner if questions run out
+            if (currentQuestions.length === 0) {
+                // No questions configured, immediately end game
+                endGame(null);
                 return;
+            }
+
+            if (currentQuestionIndex >= currentQuestions.length) {
+                // If all questions are asked, reshuffle and reset index or end game
+                currentQuestions = shuffleArray(JSON.parse(JSON.stringify(gameConfig.questions))); // Reshuffle for next round
+                currentQuestionIndex = 0; // Start questions from beginning
+                // Or you could simply endGame(null) here if you don't want to loop questions.
             }
 
             const question = currentQuestions[currentQuestionIndex];
@@ -1173,11 +1222,13 @@
                 const playerElement = playersDisplay.querySelector(\`[data-player-id="\${currentPlayer.id}"]\`);
                 if (playerElement) {
                     const liquidFill = playerElement.querySelector('.liquid-fill');
-                    liquidFill.style.height = \`${(currentPlayer.score / gameConfig.pointsToWin) * 100}%\`;
+                    // Calculate new height, ensuring it doesn't exceed 100%
+                    const newHeight = Math.min(100, (currentPlayer.score / gameConfig.pointsToWin) * 100);
+                    liquidFill.style.height = \`\${newHeight}%\`;
                 }
 
                 if (currentPlayer.score >= gameConfig.pointsToWin) {
-                    setTimeout(() => endGame(currentPlayer), 1000); // Delay game end to show fill
+                    setTimeout(() => endGame(currentPlayer), 1500); // Delay game end to show fill animation
                     return;
                 }
             }
@@ -1199,7 +1250,7 @@
             if (winner) {
                 gameOverText.innerHTML = \`Победил ученый <span style="color: \${winner.liquidColor};">\${winner.name}</span>!\`;
             } else {
-                gameOverText.textContent = \`Вопросы закончились. Победитель не определен!\`;
+                gameOverText.textContent = \`Вопросы закончились или не были заданы. Победитель не определен!\`;
             }
         }
 
