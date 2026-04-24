@@ -396,8 +396,8 @@
                 </select>
 
                 <label for="bgImageURL">URL фона игрового поля:</label>
-                <input type="url" id="bgImageURL" placeholder="https://example.com/background.jpg" value="https://i.imgur.com/Kz3ZpQy.jpeg">
-                <img id="bgImagePreview" src="https://i.imgur.com/Kz3ZpQy.jpeg" alt="Background Preview" style="width: 100%; max-height: 100px; object-fit: cover; border-radius: 5px; margin-top: 10px; display: block;">
+                <input type="url" id="bgImageURL" placeholder="https://example.com/background.jpg" value="https://images.unsplash.com/photo-1518770660431-40435d06488c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzI5MzF8MHwxfHNlYXJjaHwxfHNsYWJ8ZW58MHx8fHwxNzA4NjQ1MTIxfDA&ixlib=rb-4.0.3&q=80&w=1080">
+                <img id="bgImagePreview" src="https://images.unsplash.com/photo-1518770660431-40435d06488c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzI5MzF8MHwxfHNlYXJjaHwxfHNsYWJ8ZW58MHx8fHwxNzA4NjQ1MTIxfDA&ixlib=rb-4.0.3&q=80&w=1080" alt="Background Preview" style="width: 100%; max-height: 100px; object-fit: cover; border-radius: 5px; margin-top: 10px; display: block;">
             </div>
 
             <div class="setting-group">
@@ -423,7 +423,7 @@
             </div>
         </div>
 
-        <div class="preview" id="gamePreview" style="background-image: url('https://i.imgur.com/Kz3ZpQy.jpeg');">
+        <div class="preview" id="gamePreview" style="background-image: url('https://images.unsplash.com/photo-1518770660431-40435d06488c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzI5MzF8MHwxfHNlYXJjaHwxfHNsYWJ8ZW58MHx8fHwxNzA4NjQ1MTIxfDA&ixlib=rb-4.0.3&q=80&w=1080');">
             <button class="ready-button" id="previewReadyBtn">READY</button>
             <div class="preview-players" id="previewPlayersContainer">
                 <!-- Players will be rendered here -->
@@ -441,7 +441,7 @@
             lang: 'ru',
             titleFont: "'Orbitron', sans-serif",
             uiFont: "'DM Sans', sans-serif",
-            bgImageURL: 'https://i.imgur.com/Kz3ZpQy.jpeg',
+            bgImageURL: 'https://images.unsplash.com/photo-1518770660431-40435d06488c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzI5MzF8MHwxfHNlYXJjaHwxfHNsYWJ8ZW58MHx8fHwxNzA4NjQ1MTIxfDA&ixlib=rb-4.0.3&q=80&w=1080', // Updated URL
             pointsToWin: 20,
             players: [
                 { id: 1, name: 'Genius Marie', avatarURL: 'https://i.imgur.com/dK5rZfS.png', liquidColor: '#8a2be2', avatarSize: 150 },
@@ -786,8 +786,8 @@
                 name: escapeHtml(p.name),
                 avatarURL: escapeHtml(p.avatarURL),
                 liquidColor: escapeHtml(p.liquidColor),
-                avatarSize: p.avatarSize, // IMPORTANT: Now included in playersData
-                score: 0 // Initial score for the game
+                avatarSize: p.avatarSize, 
+                score: 0 
             })));
 
             const questionsData = JSON.stringify(config.questions.map(q => ({
