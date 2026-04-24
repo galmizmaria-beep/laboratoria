@@ -15,74 +15,67 @@
             padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align content to top */
             min-height: 100vh;
             box-sizing: border-box;
         }
 
+        /* Новый основной контейнер для двух колонок */
         .main-wrapper {
             display: flex;
-            gap: 20px; /* Space between editor and preview */
+            gap: 30px; /* Промежуток между колонками */
+            max-width: 1600px; /* Максимальная ширина всего интерфейса */
             width: 100%;
-            max-width: 1600px; /* Max width for the entire setup */
-            height: calc(100vh - 40px); /* Adjust for body padding */
-            box-sizing: border-box;
-        }
-
-        .editor-panel {
-            flex: 1; /* Takes available space */
-            min-width: 500px; /* Minimum width for editor to avoid squishing */
-            overflow-y: auto; /* Scroll for editor content */
-            background-color: #2D2D44; /* Match container background */
-            padding: 20px;
+            margin: 20px auto;
+            background-color: #2D2D44; /* Фон для всего интерфейса */
+            padding: 30px;
             border-radius: 15px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            min-height: calc(100vh - 40px); /* Чтобы занимал почти всю высоту экрана */
+            flex-wrap: wrap; /* Позволяет переноситься на новую строку на маленьких экранах */
+        }
+
+        /* Левая колонка для секций редактора */
+        .editor-column {
+            flex: 1; /* Занимает доступное пространство */
+            min-width: 450px; /* Минимальная ширина для колонки редактора */
+            overflow-y: auto; /* Прокрутка, если контент не помещается */
+            padding-right: 15px; /* Небольшой отступ, если появляется скроллбар */
             box-sizing: border-box;
         }
 
-        /* Remove redundant padding/margin from original container for editor-panel */
-        .editor-panel .container {
-            padding: 0;
-            margin: 0;
-            box-shadow: none;
-            background-color: transparent;
-            max-width: none;
-            width: auto; /* Allow it to fill the editor-panel */
-        }
-
-        .preview-panel {
-            flex-shrink: 0; /* Don't shrink */
-            width: 60%; /* Or set a fixed width if preferred, e.g., 800px */
-            max-width: 800px; /* Limit max width for a cleaner look */
+        /* Правая колонка для предпросмотра */
+        .preview-column {
+            flex: 1; /* Занимает доступное пространство */
             display: flex;
             flex-direction: column;
-            background-color: #2D2D44;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            min-width: 450px; /* Минимальная ширина для колонки предпросмотра */
+            max-width: 700px; /* Ограничение ширины для предпросмотра, чтобы 16:9 выглядело адекватно */
             box-sizing: border-box;
+            align-items: center; /* Центрирование элементов внутри колонки */
         }
 
-        /* Adjustments for h1/h2 in the new panel structure */
-        h1 {
+        /* Стили для h1, h2 в колонке редактора */
+        .editor-column h1, .editor-column h2, .editor-column h3, .editor-column h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: #BB86FC; /* Purple accent */
+            margin-bottom: 20px;
+            text-align: left; /* Изменил на выравнивание по левому краю */
+        }
+
+        .editor-column h1 {
             font-size: 2.5em;
             border-bottom: 2px solid #BB86FC;
             padding-bottom: 10px;
             margin-bottom: 30px;
-            text-align: center;
+            text-align: center; /* Главный заголовок можно оставить по центру */
         }
 
-        h2 {
+        .editor-column h2 {
             font-size: 1.8em;
             margin-top: 30px;
             padding-bottom: 5px;
             border-bottom: 1px dashed #BB86FC44;
-            text-align: left; /* Align h2 to left within sections */
         }
-        .preview-panel h2 { /* Specific adjustment for h2 in preview panel */
-            margin-top: 0;
-        }
-
 
         .section {
             margin-bottom: 40px;
@@ -149,6 +142,7 @@
             justify-content: center;
             align-items: center;
             background-color: #4A4A6A;
+            overflow: hidden; /* Чтобы изображение не вылезало */
         }
 
         .image-preview img {
@@ -168,6 +162,7 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
             margin-right: 10px;
             margin-top: 10px;
+            white-space: nowrap; /* Не переносить текст кнопки */
         }
 
         .primary-btn {
@@ -204,7 +199,6 @@
             padding: 8px 12px;
             font-size: 0.9em;
             margin: 0;
-            float: right; /* Align to top right of its parent */
         }
 
         .card {
@@ -309,18 +303,19 @@
         #uiFont option[value="Arial"] { font-family: Arial, sans-serif; }
         #uiFont option[value="Verdana"] { font-family: Verdana, sans-serif; }
 
-        /* Preview container for 16:9 aspect ratio */
-        .preview-container {
-            position: relative;
+        /* Контейнер для iframe предпросмотра с сохранением пропорций 16:9 */
+        .preview-wrapper {
             width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100%) */
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) */
             height: 0;
             overflow: hidden;
-            margin-top: 20px;
             border: 2px solid #BB86FC;
             border-radius: 10px;
+            margin-top: 20px;
             box-shadow: 0 0 15px rgba(187, 134, 252, 0.5);
             background-color: #1A1A2E;
+            flex-grow: 1; /* Растягивает контейнер предпросмотра */
         }
 
         #gamePreviewFrame {
@@ -331,97 +326,126 @@
             height: 100%;
             display: block;
         }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1000px) {
+            .main-wrapper {
+                flex-direction: column;
+                padding: 15px;
+                gap: 20px;
+            }
+            .editor-column, .preview-column {
+                min-width: unset; /* Отменить минимальную ширину на мобильных */
+                width: 100%;
+            }
+            .editor-column h1 {
+                font-size: 2em;
+            }
+            .editor-column h2 {
+                font-size: 1.5em;
+            }
+            body {
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="main-wrapper">
-        <div class="editor-panel">
-            <div class="container">
-                <h1>Genially Game Widget Creator</h1>
+        <div class="editor-column">
+            <h1>Genially Game Widget Creator</h1>
 
-                <section class="section">
-                    <h2>Настройки игры</h2>
-                    <div class="input-group">
-                        <label for="gameLang">Язык игры:</label>
-                        <select id="gameLang" class="input-field">
-                            <option value="ru">Русский</option>
-                            <option value="en">English</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="titleFont">Шрифт заголовков:</label>
-                        <select id="titleFont" class="input-field font-select">
-                            <option value="Montserrat">Montserrat</option>
-                            <option value="Open Sans">Open Sans</option>
-                            <option value="Arial">Arial</option>
-                            <option value="Verdana">Verdana</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="uiFont">Шрифт интерфейса:</label>
-                        <select id="uiFont" class="input-field font-select">
-                            <option value="Open Sans">Open Sans</option>
-                            <option value="Montserrat">Montserrat</option>
-                            <option value="Arial">Arial</option>
-                            <option value="Verdana">Verdana</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="avatarSize">Размер аватара (px):</label>
-                        <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
-                    </div>
-                    <div class="input-group">
-                        <label for="liquidColor">Цвет жидкости:</label>
-                        <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
-                    </div>
-                    <div class="input-group">
-                        <label for="highlightColor">Цвет подсветки активного игрока:</label>
-                        <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
-                    </div>
-                    <div class="input-group">
-                        <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
-                        <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
-                    </div>
-                </section>
+            <section class="section">
+                <h2>Настройки игры</h2>
+                <div class="input-group">
+                    <label for="gameLang">Язык игры:</label>
+                    <select id="gameLang" class="input-field">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="titleFont">Шрифт заголовков:</label>
+                    <select id="titleFont" class="input-field font-select">
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="uiFont">Шрифт интерфейса:</label>
+                    <select id="uiFont" class="input-field font-select">
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="avatarSize">Размер аватара (px):</label>
+                    <input type="number" id="avatarSize" class="input-field" value="100" min="50" max="200">
+                </div>
+                <div class="input-group">
+                    <label for="liquidColor">Цвет жидкости:</label>
+                    <input type="color" id="liquidColor" class="input-field" value="#8A2BE2">
+                </div>
+                <div class="input-group">
+                    <label for="highlightColor">Цвет подсветки активного игрока:</label>
+                    <input type="color" id="highlightColor" class="input-field" value="#FFFF00">
+                </div>
+                <div class="input-group">
+                    <label for="pointsToWin">Очков для победы (количество заполнений колбы):</label>
+                    <input type="number" id="pointsToWin" class="input-field" value="5" min="1" max="20">
+                </div>
+            </section>
 
-                <section class="section">
-                    <h2>Фон игры</h2>
-                    <div class="input-group">
-                        <label for="bgImageUrl">URL фонового изображения:</label>
-                        <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
-                    </div>
-                    <div class="input-group">
-                        <label>Или загрузите файл:</label>
-                        <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
-                        <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
-                    </div>
-                    <div class="image-preview" id="bgImagePreview">
-                        <img src="#" alt="Background Preview" style="display: none;">
-                    </div>
-                </section>
+            <section class="section">
+                <h2>Фон игры</h2>
+                <div class="input-group">
+                    <label for="bgImageUrl">URL фонового изображения:</label>
+                    <input type="text" id="bgImageUrl" class="input-field" placeholder="https://example.com/background.jpg">
+                </div>
+                <div class="input-group">
+                    <label>Или загрузите файл:</label>
+                    <input type="file" id="bgImageUpload" accept="image/*" class="input-field file-input">
+                    <small class="image-note">Изображения будут автоматически сжаты (до 800px по большей стороне, JPEG 80%).</small>
+                </div>
+                <div class="image-preview" id="bgImagePreview">
+                    <img src="#" alt="Background Preview" style="display: none;">
+                </div>
+            </section>
 
-                <section class="section">
-                    <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
-                    <div id="playersContainer">
-                        <!-- Player templates will be inserted here by JS -->
-                    </div>
-                    <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
-                </section>
+            <section class="section">
+                <h2>Игроки (<span id="playerCountText">0</span>/4)</h2>
+                <div id="playersContainer">
+                    <!-- Player templates will be inserted here by JS -->
+                </div>
+                <button id="addPlayerBtn" class="btn primary-btn">Добавить игрока</button>
+            </section>
 
-                <section class="section">
-                    <h2>Сгенерированный код для Genially</h2>
-                    <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
-                    <textarea id="outputCode" readonly class="code-output"></textarea>
+            <section class="section">
+                <h2>Сгенерированный код для Genially</h2>
+                <p>Скопируйте этот код и вставьте его в Genially (опция "Вставить HTML" или "Other").</p>
+                <textarea id="outputCode" readonly class="code-output"></textarea>
+                <div class="btn-group">
                     <button id="generateCodeBtn" class="btn primary-btn">Сгенерировать код</button>
                     <button id="copyCodeBtn" class="btn secondary-btn" style="display: none;">Копировать</button>
-                </section>
-            </div>
+                </div>
+            </section>
         </div>
 
-        <div class="preview-panel">
+        <div class="preview-column">
             <h2>Предпросмотр игры</h2>
             <p>Нажмите "Сгенерировать код", чтобы обновить предпросмотр.</p>
-            <div class="preview-container">
+            <div class="preview-wrapper">
                 <iframe id="gamePreviewFrame" sandbox="allow-scripts allow-forms allow-popups" frameborder="0"></iframe>
             </div>
         </div>
@@ -433,7 +457,7 @@
             <h3>Игрок <span class="player-number"></span> <button class="remove-player-btn btn icon-btn danger-btn">✕</button></h3>
             <div class="input-group">
                 <label for="playerName">Имя игрока:</label>
-                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie" value="Игрок ">
+                <input type="text" class="input-field player-name" placeholder="Например, Genious Marie">
             </div>
             <div class="input-group">
                 <label for="avatarUrl">URL аватара:</label>
@@ -508,6 +532,7 @@
             const gamePreviewFrame = document.getElementById('gamePreviewFrame');
 
             let playersData = []; // Array to store configuration for each player
+            let previewObjectURL = null; // Для отзыва URL объекта предпросмотра и предотвращения утечек памяти
 
             // --- Utility Functions ---
 
@@ -544,15 +569,15 @@
 
                     img.onerror = () => {
                         console.warn('Failed to load image for compression, using original URL/empty string.', fileOrUrl);
-                        // Fallback to original URL or empty string if it's an HTTP/HTTPS URL
-                        resolve(typeof fileOrUrl === 'string' && (fileOrUrl.startsWith('http') || fileOrUrl.startsWith('data:')) ? fileOrUrl : ''); 
+                        // Fallback to original URL or empty. Important for external URLs without CORS.
+                        resolve(typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http') ? fileOrUrl : ''); 
                     };
                     
-                    if (typeof fileOrUrl === 'string' && (fileOrUrl.startsWith('data:') || fileOrUrl.startsWith('http'))) {
-                        // For external URLs, CORS might be an issue. Attempt to load cross-origin.
-                        // If it fails, onerror will be called and resolve to original URL or empty string.
-                        img.crossOrigin = "anonymous"; 
-                        img.src = fileOrUrl;
+                    if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:')) {
+                        img.src = fileOrUrl; // Already a data URL, process it
+                    } else if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
+                         img.crossOrigin = "anonymous"; // Attempt to load cross-origin for external images
+                         img.src = fileOrUrl;
                     } else if (fileOrUrl instanceof File) {
                         const reader = new FileReader();
                         reader.onload = (e) => { img.src = e.target.result; };
@@ -568,24 +593,19 @@
                 addPlayerBtn.disabled = playersData.length >= 4;
             }
 
+            // Функция для обновления предварительного просмотра изображений (аватар и фон)
             async function updateImagePreview(fileInput, urlInput, previewImgElement) {
                 let imageData = '';
-                let currentUrl = urlInput.value.trim(); // Get current URL input value
-
-                if (fileInput.files && fileInput.files[0]) {
-                    // Prioritize file upload
+                if (fileInput && fileInput.files && fileInput.files[0]) {
                     imageData = await compressImage(fileInput.files[0]);
-                    urlInput.value = ''; // Clear URL input visually if file is uploaded
-                } else if (currentUrl) {
-                    // If no file, use URL
-                    imageData = await compressImage(currentUrl);
-                    // If compression failed or returned original URL (due to CORS or other error) AND it's not a data URL, use the original URL
-                    if (!imageData || (imageData === currentUrl && !imageData.startsWith('data:'))) {
-                        imageData = currentUrl; // Use original URL directly
+                    if (urlInput) urlInput.value = ''; // Clear URL if file is uploaded
+                } else if (urlInput && urlInput.value) {
+                    imageData = await compressImage(urlInput.value); 
+                    // Если сжатие не удалось или вернулся оригинальный URL, используем оригинальный URL
+                    if (!imageData || (imageData === urlInput.value && !imageData.startsWith('data:'))) {
+                        imageData = urlInput.value; 
                     }
-                } else {
-                    // No file and no URL
-                    imageData = '';
+                    if (fileInput) fileInput.value = ''; // Clear file input if URL is entered
                 }
 
                 if (imageData) {
@@ -595,7 +615,7 @@
                     previewImgElement.src = '#';
                     previewImgElement.style.display = 'none';
                 }
-                return imageData; // Return processed image data for direct use
+                return imageData; // Возвращаем обработанные данные изображения
             }
 
             // --- Player Management ---
@@ -630,27 +650,26 @@
                 const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
                 const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
 
-                // Set initial URL if any exists in config
-                avatarUrlInput.value = playerConfig.avatar.startsWith('http') ? playerConfig.avatar : '';
+                // Устанавливаем начальное значение URL аватара
+                avatarUrlInput.value = playerConfig.avatar; 
+                // Обновляем предпросмотр, если уже есть аватар
+                if (playerConfig.avatar) {
+                    avatarPreviewImg.src = playerConfig.avatar;
+                    avatarPreviewImg.style.display = 'block';
+                }
 
                 avatarUrlInput.addEventListener('input', async () => {
-                    playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
+                    playerConfig.avatar = await updateImagePreview(null, avatarUrlInput, avatarPreviewImg); // Передаем null для fileInput
                 });
 
                 avatarUploadInput.addEventListener('change', async () => {
                     playerConfig.avatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
                 });
 
-                // Initial preview if avatar already exists in config
-                if (playerConfig.avatar) {
-                    avatarPreviewImg.src = playerConfig.avatar;
-                    avatarPreviewImg.style.display = 'block';
-                }
-
                 const removePlayerBtn = playerDiv.querySelector('.remove-player-btn');
                 removePlayerBtn.addEventListener('click', () => {
                     playersData = playersData.filter(p => p.id !== playerConfig.id);
-                    // Re-render all players to update their numbers correctly
+                    // Перерисовываем всех игроков, чтобы обновить номера и привязки событий
                     playersContainer.innerHTML = ''; 
                     playersData.forEach((p, idx) => renderPlayer(p, idx));
                     updatePlayerCount();
@@ -666,12 +685,11 @@
                         correctAnswerIndex: -1 // -1 means no correct answer selected for MC
                     };
                     playerConfig.questions.push(newQuestion);
-                    // Rerender all questions for this player to correctly assign radio button names
-                    questionsContainer.innerHTML = '';
-                    playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
+                    renderQuestion(newQuestion, playerConfig, questionsContainer, playerConfig.questions.length - 1);
                 });
 
                 // Render existing questions
+                questionsContainer.innerHTML = ''; // Очищаем перед рендерингом, чтобы избежать дублирования
                 playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
 
                 // Append to container or re-insert if re-rendering
@@ -732,8 +750,7 @@
                 });
 
                 correctOptionRadios.forEach((radio, idx) => {
-                    // Ensure unique name for radio buttons across all questions
-                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`; 
+                    radio.name = `correct-option-${playerConfig.id}-${questionIndex}`; // Unique name per question
                     radio.addEventListener('change', () => {
                         if (radio.checked) {
                             questionObj.correctAnswerIndex = idx;
@@ -743,8 +760,9 @@
 
                 const removeQuestionBtn = questionItemDiv.querySelector('.remove-question-btn');
                 removeQuestionBtn.addEventListener('click', () => {
+                    // Удаляем вопрос из массива игрока
                     playerConfig.questions.splice(questionIndex, 1);
-                    // Rerender all questions for this player to update radio button names
+                    // Очищаем и перерисовываем все вопросы для этого игрока, чтобы обновить индексы и радио-кнопки
                     questionsContainer.innerHTML = ''; 
                     playerConfig.questions.forEach((qObj, qIdx) => renderQuestion(qObj, playerConfig, questionsContainer, qIdx));
                 });
@@ -753,21 +771,17 @@
             }
 
             // --- Global Image Preview for Background ---
-            let bgImageFinalData = '';
+            let bgImageFinalData = ''; // Переменная для хранения окончательных данных фонового изображения
             bgImageUpload.addEventListener('change', async () => {
                 bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
             });
             bgImageUrl.addEventListener('input', async () => {
-                bgImageFinalData = await updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview);
+                bgImageFinalData = await updateImagePreview(null, bgImageUrl, bgImagePreview); // Передаем null для fileInput
             });
 
 
             // --- Code Generation ---
             generateCodeBtn.addEventListener('click', async () => {
-                // Reset copy button state
-                copyCodeBtn.style.display = 'none';
-                outputCode.value = ''; // Clear previous code
-
                 const gameLang = document.getElementById('gameLang').value;
                 const titleFont = document.getElementById('titleFont').value;
                 const uiFont = document.getElementById('uiFont').value;
@@ -786,15 +800,14 @@
                     const playerDiv = playersContainer.querySelector(`.player-config[data-player-id="${player.id}"]`);
                     const avatarUploadInput = playerDiv.querySelector('.avatar-upload');
                     const avatarUrlInput = playerDiv.querySelector('.avatar-url');
-                    const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img'); 
+                    const avatarPreviewImg = playerDiv.querySelector('.avatar-preview img');
                     
-                    // Update and get final avatar data
+                    // Обновляем и получаем окончательные данные аватара
                     const finalAvatar = await updateImagePreview(avatarUploadInput, avatarUrlInput, avatarPreviewImg);
-                    player.avatar = finalAvatar; // Update the player config with the final avatar data
 
                     finalPlayersData.push({
                         name: player.name,
-                        avatar: player.avatar, 
+                        avatar: finalAvatar,
                         questions: player.questions.filter(q => q.text.trim() !== '') // Filter out questions with empty text
                     });
                 }
@@ -806,22 +819,22 @@
                 }
                 for (const player of finalPlayersData) {
                     if (!player.avatar) {
-                        alert(`Игрок "${player.name}" не имеет аватара.`);
+                        alert(`Игрок "${player.name}" не имеет аватара. Пожалуйста, укажите URL или загрузите файл.`);
                         return;
                     }
                     if (player.questions.length < pointsToWin) {
-                        alert(`Игрок "${player.name}" имеет меньше вопросов (${player.questions.length}) чем "Очков для победы" (${pointsToWin}). Убедитесь, что все вопросы заполнены и их достаточно.`);
+                        alert(`Игрок "${player.name}" имеет меньше вопросов (${player.questions.length}) чем "Очков для победы" (${pointsToWin}). Добавьте больше вопросов.`);
                         return;
                     }
                     if (player.questions.some(q => q.type === 'mc' && (q.correctAnswerIndex === -1 || q.options.filter(o => o.trim() !== '').length < 2))) {
-                        alert(`У игрока "${player.name}" есть вопрос с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Пожалуйста, проверьте.`);
+                        alert(`Игрок "${player.name}" имеет вопросы с вариантами ответа, где не выбран правильный ответ или недостаточно вариантов. Проверьте все вопросы.`);
                         return;
                     }
                 }
 
 
                 // --- START OF GENIALLY WIDGET CODE GENERATION ---
-                const generatedHtml = `
+                const generatedHtmlContent = `
 <!DOCTYPE html>
 <html lang="${gameLang}">
 <head>
@@ -1218,8 +1231,10 @@
             const currentQuestionIdx = playerQuestionIndexes[playerIdx];
 
             if (currentQuestionIdx >= player.questions.length) {
-                alert(LANGUAGE === 'ru' ? 'У этого игрока больше нет вопросов! Переход к следующему игроку.' : 'This player has no more questions! Moving to next player.');
-                moveToNextPlayer(); // Move to next player if questions run out
+                // This scenario should be caught by editor validation, but a fallback is good
+                alert(LANGUAGE === 'ru' ? 'У этого игрока больше нет вопросов!' : 'This player has no more questions!');
+                // Automatically move to next player if no questions left for current
+                moveToNextPlayer();
                 return;
             }
 
@@ -1234,10 +1249,8 @@
 
             if (question.type === 'mc') {
                 modalOptionsContainer.style.display = 'flex';
-                let hasValidOptions = false;
                 question.options.forEach((optionText, idx) => {
                     if (optionText.trim() === '') return; // Skip empty options
-                    hasValidOptions = true;
                     const optionDiv = document.createElement('label');
                     optionDiv.classList.add('modal-option');
                     const radio = document.createElement('input');
@@ -1252,14 +1265,6 @@
                     optionDiv.append(radio, document.createTextNode(optionText));
                     modalOptionsContainer.appendChild(optionDiv);
                 });
-
-                if (!hasValidOptions) {
-                    // Fallback if no valid options were found for MC (should be caught by editor validation)
-                    alert(LANGUAGE === 'ru' ? 'Ошибка: Для этого вопроса нет вариантов ответа. Переход к следующему игроку.' : 'Error: No options found for this question. Moving to next player.');
-                    moveToNextPlayer();
-                    return;
-                }
-
                 modalActionButton.textContent = texts[LANGUAGE].checkAnswer;
                 modalActionButton.onclick = () => checkAnswer(playerIdx, question);
             } else { // 'open' type
@@ -1311,7 +1316,7 @@
             playerScores[playerIdx]++;
             playerQuestionIndexes[playerIdx]++;
 
-            const playerCard = document.querySelector(\`.player-card[data-player-index="${playerIdx}"]\`);
+            const playerCard = document.querySelector(\`.player-card[data-player-index="\${playerIdx}"]\`);
             const liquid = playerCard.querySelector('.liquid');
             const newHeight = (playerScores[playerIdx] / POINTS_TO_WIN) * 100;
             liquid.style.height = \`\${newHeight}%\`;
@@ -1342,27 +1347,46 @@
     </script>
 </body>
 </html>
-`
-                outputCode.value = generatedHtml;
-                gamePreviewFrame.srcdoc = generatedHtml; // Load code into iframe for preview
+`;
+                outputCode.value = generatedHtmlContent; // Update textarea
 
-                copyCodeBtn.style.display = 'inline-block'; // Show copy button
-                copyCodeBtn.textContent = 'Копировать'; // Reset text
+                // --- Update Preview Frame ---
+                if (previewObjectURL) {
+                    URL.revokeObjectURL(previewObjectURL); // Revoke previous URL to prevent memory leaks
+                }
+                const blob = new Blob([generatedHtmlContent], { type: 'text/html' });
+                previewObjectURL = URL.createObjectURL(blob);
+                gamePreviewFrame.src = previewObjectURL;
+
+
+                // --- Handle Copy Button ---
+                copyCodeBtn.style.display = 'inline-block';
+                copyCodeBtn.textContent = 'Копировать';
+                // Сброс состояния, если было "Скопировано!"
+                copyCodeBtn.classList.remove('copied'); 
             });
 
-            copyCodeBtn.addEventListener('click', () => {
-                outputCode.select();
-                document.execCommand('copy');
-                copyCodeBtn.textContent = 'Скопировано!';
-                setTimeout(() => {
-                    copyCodeBtn.textContent = 'Копировать';
-                }, 2000); // Revert after 2 seconds
+            // ... (outside generateCodeBtn.addEventListener, in DOMContentLoaded) ...
+
+            copyCodeBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(outputCode.value);
+                    copyCodeBtn.textContent = 'Скопировано!';
+                    // Опционально добавьте класс для визуальной обратной связи
+                    // copyCodeBtn.classList.add('copied'); // Можно добавить для стилизации
+                    setTimeout(() => {
+                        copyCodeBtn.textContent = 'Копировать';
+                        // copyCodeBtn.classList.remove('copied');
+                    }, 2000); // Вернуть через 2 секунды
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    alert('Ошибка при копировании кода. Пожалуйста, скопируйте вручную.');
+                }
             });
 
-            // Initial render call for players and background image
-            playersData.forEach((p, idx) => renderPlayer(p, idx));
+            // Initial rendering of players if any exist (e.g., loaded from local storage)
+            // Currently, no loading from local storage, so playersData is empty by default.
             updatePlayerCount();
-            updateImagePreview(bgImageUpload, bgImageUrl, bgImagePreview); // Ensure initial background is loaded if any
         });
     </script>
 </body>
