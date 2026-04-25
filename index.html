@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Montserrat:wght@400;700;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            var(--bg-deep-space): #0b0616;
+            --bg-deep-space: #0b0616;
             --bg-panel: rgba(26, 15, 46, 0.9);
             --bg-card: #1d1033;
             --neon-purple: #9d4edd;
@@ -198,7 +198,7 @@
             </div>
 
             <div class="form-group">
-                <label>Очки для победы (полная колба)</label>
+                <label>Очки для победы</label>
                 <input type="number" id="maxScore" value="5" min="1" onchange="updatePreview()">
             </div>
 
@@ -209,8 +209,8 @@
 
             <div class="form-group">
                 <label>Фон игры (URL)</label>
-                <input type="text" id="bgUrl" placeholder="Ссылка на картинку (оставьте пустым)" onchange="updatePreview()">
-                <div class="info-message">Для лучшей производительности используйте оптимизированные изображения.</div>
+                <input type="text" id="bgUrl" placeholder="Ссылка на картинку" onchange="updatePreview()">
+                <div class="info-message">Вставьте ссылку на фоновую картинку.</div>
             </div>
 
             <div class="form-group">
@@ -218,11 +218,11 @@
                 <input type="range" id="avatarSize" min="50" max="150" value="100" onchange="updatePreview()">
             </div>
 
-            <h2>Игроки (Аватары)</h2>
+            <h2>Игроки</h2>
             <div id="playersList"></div>
             <button onclick="addPlayer()">+ Добавить игрока (до 4)</button>
 
-            <h2 style="margin-top: 10px;">Задания (Вопросы)</h2>
+            <h2 style="margin-top: 10px;">Вопросы</h2>
             <div id="tasksList"></div>
             <button onclick="addTask()">+ Добавить вопрос</button>
         </div>
@@ -240,13 +240,8 @@
     </div>
 
     <script>
-        // State
-        let config = {
-            players: [],
-            tasks: []
-        };
+        let config = { players: [], tasks: [] };
 
-        // Initialize default - полностью пустой как просили
         window.onload = () => {
             document.getElementById('bgUrl').value = ''; 
             config.players = [];
@@ -289,7 +284,7 @@
                     <div class="card">
                         <div class="form-group">
                             <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
-                            <input type="text" id="p_url_${p.id}" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
+                            <input type="text" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
                             <button onclick="removePlayer(${p.id})">Удалить</button>
                         </div>
                     </div>`;
@@ -316,92 +311,80 @@
             });
         }
 
-        // --- GAME ENGINE TEMPLATE ---
+        // --- ОБНОВЛЕННЫЙ ДВИЖОК ИГРЫ (МАСШТАБИРУЕМЫЙ) ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
             const liquidColor = document.getElementById('liquidColor').value;
             const maxScore = document.getElementById('maxScore').value;
             const fontFamily = document.getElementById('fontFamily').value;
-            const avatarSize = document.getElementById('avatarSize').value;
             
+            // Расчет размера аватара в пикселях (базовый 280px)
+            const avatarSize = document.getElementById('avatarSize').value;
+            const finalAvatarSize = Math.round(280 * (avatarSize / 100));
+
             const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
-                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
+                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
 
-            const gameState = {
-                players: config.players,
-                tasks: config.tasks,
-                maxScore: parseInt(maxScore),
-                txt: txt
-            };
+            const gameState = { players: config.players, tasks: config.tasks, maxScore: parseInt(maxScore), txt: txt };
+            const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: #0b0616;`;
 
-            const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: transparent;`;
-
-            return `
-<!DOCTYPE html>
+            return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
     <meta charset="UTF-8">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
+        /* Сброс стилей и масштабирующий контейнер */
         html, body { 
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-            font-family: '${fontFamily}', sans-serif;
-            font-size: 1.6vmin;
-            box-sizing: border-box;
-            background: transparent;
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            overflow: hidden; background: transparent; font-family: '${fontFamily}', sans-serif;
         }
-        *, *::before, *::after { box-sizing: inherit; }
+        *, *::before, *::after { box-sizing: border-box; }
 
-        #gameRoot {
+        #windowScaler {
             width: 100%; height: 100%;
-            ${gameBackgroundStyle}
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            box-sizing: border-box; position: relative;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); pointer-events: none; z-index: 1;}
-        
-        /* Измененное позиционирование: игроки распределены равномерно по всей ширине */
-        .players-container {
-            display: flex; 
-            width: 100%;
-            justify-content: space-evenly; /* Равномерное распределение */
-            align-items: flex-end;
-            padding: 0 4vmin 6vmin 4vmin;
-            z-index: 2;
+        /* Игровое поле всегда 1920x1080 (FullHD) */
+        #gameRoot {
+            width: 1920px; height: 1080px;
+            position: relative; flex-shrink: 0;
+            transform-origin: center center;
+            ${gameBackgroundStyle}
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+
+        .overlay { 
+            position: absolute; top:0; left:0; width:100%; height:100%; 
+            background: rgba(0,0,0,0.4); pointer-events: none; z-index: 1;
         }
         
-        /* Карточка отдельного игрока */
+        .players-container {
+            position: absolute; bottom: 80px; left: 0; width: 100%;
+            display: flex; justify-content: space-evenly; align-items: flex-end;
+            z-index: 5;
+        }
+        
         .player-wrap {
             display: flex; flex-direction: column; align-items: center;
-            position: relative; transition: 0.3s; opacity: 0.4;
-            gap: 1.5vmin;
-            width: 22%;
-            max-width: 25vmin;
+            position: relative; transition: opacity 0.3s; opacity: 0.4;
+            width: 350px;
         }
-        
         .player-wrap.active { opacity: 1; }
 
-        /* Кнопка READY как на референсе (парит сверху) */
         .ready-btn {
-            position: absolute;
-            top: -9vmin;
-            background: #8b5cf6; color: white; border: none;
-            padding: 1.2vmin 3.5vmin;
-            border-radius: 2vmin;
-            font-weight: 800; cursor: pointer;
-            box-shadow: 0 0 2vmin rgba(139, 92, 246, 0.8); 
-            display: none; z-index: 5;
-            font-size: 1.2em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            white-space: nowrap;
+            position: absolute; top: -110px;
+            background: #9d4edd; color: white; border: none;
+            padding: 20px 50px; border-radius: 40px; font-family: inherit; font-weight: 800; 
+            cursor: pointer; box-shadow: 0 0 30px rgba(157, 78, 221, 0.8); 
+            display: none; z-index: 10; font-size: 28px; text-transform: uppercase;
+            letter-spacing: 2px; pointer-events: auto;
         }
-        
         .player-wrap.active .ready-btn { display: block; animation: bounceIn 0.5s ease; }
-        .ready-btn:hover { background: #7c3aed; transform: scale(1.05); }
+        .ready-btn:hover { background: #b975f8; transform: scale(1.05); }
 
         @keyframes bounceIn {
             0% { transform: scale(0); opacity: 0; }
@@ -409,137 +392,120 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Вытянутая колба */
         .flask {
-            width: 5.5vmin; height: 22vmin;
-            border: 0.4vmin solid rgba(255,255,255,0.4);
-            border-radius: 3vmin;
-            overflow: hidden; background: rgba(0,0,0,0.3);
-            display: flex; align-items: flex-end;
-            margin-bottom: -4vmin; /* Небольшой нахлест на аватар */
-            z-index: 1;
+            width: 80px; height: 380px; border: 8px solid rgba(255,255,255,0.3);
+            border-radius: 40px; overflow: hidden; background: rgba(0,0,0,0.4);
+            display: flex; align-items: flex-end; margin-bottom: -50px; z-index: 2;
         }
-        
         .liquid {
             width: 100%; background: ${liquidColor}; transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: inset 0 0 1.5vmin rgba(0,0,0,0.5), 0 -1vmin 2vmin ${liquidColor};
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 -10px 40px ${liquidColor};
         }
 
-        /* Квадратный аватар в рамке */
         .avatar-container {
-            width: calc(18vmin * ${avatarSize/100}); 
-            height: calc(18vmin * ${avatarSize/100}); 
-            border-radius: 3vmin;
-            border: 0.4vmin solid rgba(255,255,255,0.2);
-            background: #1d1033;
-            overflow: hidden;
-            z-index: 2;
-            position: relative;
-            transition: all 0.3s;
+            width: ${finalAvatarSize}px; height: ${finalAvatarSize}px; border-radius: 40px;
+            border: 8px solid rgba(255,255,255,0.2); background: #1d1033;
+            overflow: hidden; z-index: 3; position: relative; transition: all 0.3s;
         }
-
-        /* Неоновое свечение для активного игрока */
         .player-wrap.active .avatar-container {
-            border-color: #9d4edd;
-            box-shadow: 0 0 3vmin rgba(157, 78, 221, 0.8), inset 0 0 2vmin rgba(157, 78, 221, 0.4);
+            border-color: #9d4edd; box-shadow: 0 0 50px rgba(157, 78, 221, 0.9), inset 0 0 30px rgba(157, 78, 221, 0.5);
         }
-
         .avatar { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Имя-плашка внизу */
         .name { 
-            background: rgba(15, 10, 25, 0.9); border: 0.2vmin solid rgba(255,255,255,0.15);
-            color: white; padding: 1vmin 2.5vmin; border-radius: 3vmin; 
-            font-size: 1.1em; font-weight: 700; text-transform: uppercase;
-            white-space: nowrap; text-align: center; max-width: 90%;
-            overflow: hidden; text-overflow: ellipsis; z-index: 3;
-            box-shadow: 0 1vmin 1.5vmin rgba(0,0,0,0.5);
+            margin-top: 30px; background: rgba(20, 15, 35, 0.9); border: 4px solid rgba(255,255,255,0.15);
+            color: white; padding: 15px 40px; border-radius: 40px; font-size: 26px; font-weight: 700; 
+            text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%;
+            overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6);
         }
 
-        /* Модальное окно и "Плашки" для ответов */
+        /* Окна (Модалки) */
         .modal-bg {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
-            z-index: 10; justify-content: center; align-items: center;
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            z-index: 20; justify-content: center; align-items: center;
         }
         
         .modal {
-            background: rgba(20, 10, 35, 0.95); border: 0.4vmin solid #9d4edd;
-            border-radius: 3vmin; padding: 5vmin; width: 90%; max-width: 60vmin;
-            text-align: center; box-shadow: 0 0 5vmin rgba(139, 92, 246, 0.4); color: white;
+            background: rgba(25, 15, 45, 0.95); border: 8px solid #9d4edd;
+            border-radius: 50px; padding: 70px; width: 1100px;
+            text-align: center; box-shadow: 0 0 80px rgba(157, 78, 221, 0.5); color: white;
         }
 
-        .question { font-size: 2.2em; font-weight: 800; margin-bottom: 4vmin; }
+        .question { font-size: 48px; font-weight: 800; margin-bottom: 60px; line-height: 1.3;}
+        .options { display: flex; flex-direction: column; gap: 20px; }
         
-        .options { display: flex; flex-direction: column; gap: 1.5vmin; }
-        
-        /* Дизайн плашки для ответа */
         .option-btn {
-            background: rgba(255, 255, 255, 0.05); color: white;
-            border: 0.2vmin solid rgba(255,255,255,0.1);
-            padding: 2.5vmin; border-radius: 1.5vmin;
-            cursor: pointer; transition: all 0.2s; font-size: 1.3em;
+            background: rgba(255, 255, 255, 0.05); color: white; border: 4px solid rgba(255,255,255,0.1);
+            padding: 30px; border-radius: 25px; cursor: pointer; transition: all 0.2s; font-size: 32px;
             text-align: left; font-family: inherit; font-weight: 700;
         }
-        
-        .option-btn:hover { background: rgba(157, 78, 221, 0.2); border-color: #9d4edd; transform: translateX(1vmin); }
+        .option-btn:hover { background: rgba(157, 78, 221, 0.2); border-color: #9d4edd; transform: translateX(15px); }
         .option-btn.selected { 
-            background: rgba(157, 78, 221, 0.5); border-color: #00f5ff; 
-            box-shadow: 0 0 2vmin rgba(0, 245, 255, 0.3); transform: translateX(1vmin);
+            background: rgba(157, 78, 221, 0.6); border-color: #00f5ff; 
+            box-shadow: 0 0 40px rgba(0, 245, 255, 0.4); transform: translateX(15px);
         }
         
         .check-btn {
-            margin-top: 4vmin; background: #00f5ff; color: #000; border: none;
-            padding: 1.5vmin 5vmin; font-size: 1.3em; font-weight: 800;
-            border-radius: 3vmin; cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 0 2vmin rgba(0, 245, 255, 0.5); transition: 0.3s;
+            margin-top: 60px; background: #00f5ff; color: #000; border: none; font-family: inherit;
+            padding: 25px 80px; font-size: 36px; font-weight: 800; border-radius: 50px; cursor: pointer; 
+            text-transform: uppercase; box-shadow: 0 0 40px rgba(0, 245, 255, 0.5); transition: 0.3s;
         }
-        .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 3vmin rgba(0, 245, 255, 0.8); }
+        .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 245, 255, 0.8); }
 
-        /* Winner Screen */
         .winner-screen {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(11, 6, 22, 0.95); z-index: 20; flex-direction: column;
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(11, 6, 22, 0.95); z-index: 30; flex-direction: column;
             justify-content: center; align-items: center; color: white;
         }
-        .winner-screen h1 { font-size: 6em; font-weight: 800; color: ${liquidColor}; text-shadow: 0 0 3vmin ${liquidColor}; margin-bottom: 3vmin;}
+        .winner-screen h1 { font-size: 140px; font-weight: 800; color: ${liquidColor}; text-shadow: 0 0 60px ${liquidColor}; margin: 0 0 50px 0;}
         .winner-screen img {
-            width:35vmin; height:35vmin; border-radius:4vmin;
-            border: 0.8vmin solid ${liquidColor}; object-fit: cover; box-shadow: 0 0 5vmin ${liquidColor};
+            width: 450px; height: 450px; border-radius: 60px;
+            border: 15px solid ${liquidColor}; object-fit: cover; box-shadow: 0 0 100px ${liquidColor};
         }
-        .winner-screen h2 { font-size: 3.5em; margin-top: 3vmin; text-transform: uppercase; font-weight: 800; }
+        .winner-screen h2 { font-size: 70px; margin-top: 50px; text-transform: uppercase; font-weight: 800; }
         
-        /* Сообщение-заглушка */
         .empty-state {
-            color: rgba(255,255,255,0.5); font-size: 2.5em; font-weight: 700;
-            text-align: center; height: 100%; display: flex;
-            align-items: center; justify-content: center; width: 100%;
+            color: rgba(255,255,255,0.5); font-size: 40px; font-weight: 700;
+            text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%;
         }
     </style>
 </head>
 <body>
-    <div id="gameRoot"> 
-        <div class="overlay"></div>
-        <div class="players-container" id="pc"></div>
+    <div id="windowScaler">
+        <div id="gameRoot"> 
+            <div class="overlay"></div>
+            <div class="players-container" id="pc"></div>
 
-        <!-- Modal -->
-        <div class="modal-bg" id="modalBg">
-            <div class="modal">
-                <div class="question" id="qText"></div>
-                <div class="options" id="optsDiv"></div>
-                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+            <div class="modal-bg" id="modalBg">
+                <div class="modal">
+                    <div class="question" id="qText"></div>
+                    <div class="options" id="optsDiv"></div>
+                    <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+                </div>
             </div>
-        </div>
 
-        <!-- Winner -->
-        <div class="winner-screen" id="winnerScreen">
-            <h1>${txt.win}</h1>
-            <img id="winnerAvatar">
-            <h2 id="winnerName"></h2>
+            <div class="winner-screen" id="winnerScreen">
+                <h1>${txt.win}</h1>
+                <img id="winnerAvatar">
+                <h2 id="winnerName"></h2>
+            </div>
         </div>
     </div>
 
     <script>
+        // ДВИЖОК МАСШТАБИРОВАНИЯ
+        function resize() {
+            const gameRoot = document.getElementById('gameRoot');
+            const scaleX = window.innerWidth / 1920;
+            const scaleY = window.innerHeight / 1080;
+            const scale = Math.min(scaleX, scaleY);
+            gameRoot.style.transform = \`scale(\${scale})\`;
+        }
+        window.addEventListener('resize', resize);
+        resize(); // Вызов при старте
+
+        // ЛОГИКА ИГРЫ
         const state = ${JSON.stringify(gameState)};
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
@@ -556,24 +522,17 @@
 
         function init() {
             const gameRoot = document.getElementById('gameRoot');
-
             if(state.players.length === 0 || state.tasks.length === 0) {
                 gameRoot.innerHTML = '<div class="empty-state">Добавьте игроков и задания в редакторе</div>'; 
                 return;
             }
-
             resetTasks();
-
             const pc = document.getElementById('pc');
             pc.innerHTML = state.players.map((p, i) => \`
                 <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
                     <button class="ready-btn" onclick="openTask()">\${state.txt.ready}</button>
-                    <div class="flask">
-                        <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
-                    </div>
-                    <div class="avatar-container">
-                        <img src="\${p.url}" class="avatar">
-                    </div>
+                    <div class="flask"><div class="liquid" id="liq\${i}" style="height: 0%;"></div></div>
+                    <div class="avatar-container"><img src="\${p.url}" class="avatar"></div>
                     <div class="name">\${p.name || 'Игрок ' + (i+1)}</div>
                 </div>
             \`).join('');
@@ -587,7 +546,6 @@
 
         function openTask() {
             if(availableTaskIndices.length === 0) resetTasks();
-            
             const taskIndex = availableTaskIndices.shift();
             usedTaskIndices.push(taskIndex);
             const task = state.tasks[taskIndex];
@@ -610,21 +568,19 @@
 
         function checkAnswer() {
             if(selectedOption === null) return;
-            
             const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
             const task = state.tasks[lastTaskIndex];
             
             if(selectedOption === task.correctIdx) {
                 scores[currentPlayer]++;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
-                document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
+                document.getElementById('liq'+currentPlayer).style.height = Math.min(pcn, 100) + '%';
                 
                 if(scores[currentPlayer] >= state.maxScore) {
                     showWinner();
                     return;
                 }
             }
-            
             document.getElementById('modalBg').style.display = 'none';
             nextTurn();
         }
@@ -661,13 +617,9 @@
             navigator.clipboard.writeText(html).then(() => {
                 btn.textContent = "Скопировано!";
                 btn.classList.add('success');
-                setTimeout(() => {
-                    btn.textContent = "Сгенерировать код";
-                    btn.classList.remove('success');
-                }, 2000);
+                setTimeout(() => { btn.textContent = "Сгенерировать код"; btn.classList.remove('success'); }, 2000);
             }).catch(err => {
                 console.log("Ошибка копирования. Скопируйте код вручную из консоли разработчика.");
-                console.log(html);
             });
         }
     </script>
