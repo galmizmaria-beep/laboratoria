@@ -310,7 +310,6 @@
             });
         }
 
-        // --- ИСПРАВЛЕННЫЙ ДВИЖОК ИГРЫ ДЛЯ GENIALLY ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
@@ -335,7 +334,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        /* === ИСПРАВЛЕНИЕ 1: Более агрессивные стили для встраивания === */
         html, body { 
             margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important;
             overflow: hidden !important; background: transparent !important; 
@@ -381,7 +379,7 @@
             cursor: pointer !important; box-shadow: 0 0 30px rgba(157, 78, 221, 0.8) !important; 
             display: none; z-index: 100 !important; font-size: 28px !important; 
             text-transform: uppercase !important; letter-spacing: 2px !important;
-            pointer-events: auto !important; /* === ИСПРАВЛЕНИЕ 2: Заставляем кнопку быть кликабельной === */
+            pointer-events: auto !important;
         }
         #gameRoot .player-wrap.active .ready-btn { display: block; animation: bounceIn 0.5s ease; }
         #gameRoot .ready-btn:hover { background: #b975f8 !important; transform: scale(1.05); }
@@ -440,7 +438,7 @@
             border: 4px solid rgba(255,255,255,0.1) !important;
             padding: 30px; border-radius: 25px; cursor: pointer !important; transition: all 0.2s; 
             font-size: 32px !important; text-align: left; font-family: inherit !important; font-weight: 700;
-            pointer-events: auto !important; /* === ИСПРАВЛЕНИЕ 2: Заставляем кнопку быть кликабельной === */
+            pointer-events: auto !important;
         }
         #gameRoot .option-btn:hover { background: rgba(157, 78, 221, 0.2) !important; border-color: #9d4edd !important; transform: translateX(15px); }
         #gameRoot .option-btn.selected { 
@@ -453,7 +451,7 @@
             font-family: inherit !important; padding: 25px 80px; font-size: 36px !important; 
             font-weight: 800; border-radius: 50px; cursor: pointer !important; 
             text-transform: uppercase; box-shadow: 0 0 40px rgba(0, 245, 255, 0.5) !important; transition: 0.3s;
-            pointer-events: auto !important; /* === ИСПРАВЛЕНИЕ 2: Заставляем кнопку быть кликабельной === */
+            pointer-events: auto !important;
         }
         #gameRoot .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 245, 255, 0.8) !important; }
 
@@ -547,7 +545,7 @@
                     <div class="name">\${p.name || 'Игрок ' + (i+1)}</div>
                 </div>
             \`).join('');
-            resizeGame(); // Вызов после инициализации
+            resizeGame();
         }
 
         function resetTasks() {
