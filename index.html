@@ -7,8 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Montserrat:wght@400;700;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Палитра в стиле Cthulhu Spacclurn (со 2-й картинки) */
-            --bg-deep-space: #0b0616;
+            var(--bg-deep-space): #0b0616;
             --bg-panel: rgba(26, 15, 46, 0.9);
             --bg-card: #1d1033;
             --neon-purple: #9d4edd;
@@ -25,8 +24,8 @@
             margin: 0;
             padding: 0;
             font-family: 'DM Sans', sans-serif;
-            background: radial-gradient(circle at 50% 0%, #29124f 0%, var(--bg-deep-space) 80%);
-            color: var(--text-light);
+            background: radial-gradient(circle at 50% 0%, #29124f 0%, #0b0616 80%);
+            color: #eaddf8;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,7 +33,6 @@
             overflow: hidden;
         }
 
-        /* Контейнер редактора с жестким форматом 16:9 */
         #app-container {
             width: 100vw;
             max-width: calc(100vh * (16 / 9));
@@ -46,11 +44,8 @@
             box-shadow: 0 0 50px rgba(157, 78, 221, 0.15);
             overflow: hidden;
             border: 1px solid rgba(157, 78, 221, 0.2);
-            /* Если хотите скругленные углы у самого редактора, раскомментируйте строку ниже: */
-            /* border-radius: 16px; */
         }
 
-        /* Sidebar Settings */
         .sidebar {
             width: 35%;
             max-width: 450px;
@@ -63,9 +58,8 @@
             gap: 20px;
         }
 
-        /* Стилизация скроллбара под космос */
         .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-track { background: var(--bg-deep-space); }
+        .sidebar::-webkit-scrollbar-track { background: #0b0616; }
         .sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
         .sidebar::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
 
@@ -115,17 +109,8 @@
             background-color: rgba(29, 16, 51, 0.8);
         }
 
-        input[type="color"] {
-            padding: 2px 5px;
-            height: 45px;
-            width: 100%;
-            cursor: pointer;
-        }
-
-        input[type="range"] {
-            padding: 0;
-            accent-color: var(--neon-purple);
-        }
+        input[type="color"] { padding: 2px 5px; height: 45px; width: 100%; cursor: pointer; }
+        input[type="range"] { padding: 0; accent-color: var(--neon-purple); }
 
         button {
             background-color: rgba(157, 78, 221, 0.1);
@@ -135,7 +120,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-radius: 30px; /* Круглые кнопки как на картинке */
+            border-radius: 30px;
         }
 
         button:hover {
@@ -144,7 +129,6 @@
             box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
         }
 
-        /* Player & Task Cards */
         .card {
             background-color: var(--bg-card);
             padding: 15px;
@@ -154,7 +138,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        /* Уменьшенные кнопки удаления в карточках */
         .card button {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
@@ -164,89 +147,30 @@
             margin-top: 10px;
         }
         
-        .card button:hover {
-            background: var(--danger);
-            color: white;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
-        }
-
-        .card input[type="radio"] {
-            accent-color: var(--neon-blue);
-            width: 20px;
-            height: 20px;
-            margin-top: 10px;
-        }
+        .card button:hover { background: var(--danger); color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        .card input[type="radio"] { accent-color: var(--neon-blue); width: 20px; height: 20px; margin-top: 10px; }
         
-        /* Стили для сообщения о сжатии */
-        .info-message {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: -10px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
+        .info-message { font-size: 0.75rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 10px; text-align: center; }
 
-        /* Main Preview Area */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 25px;
-            background: transparent;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .header h2 {
-            margin: 0;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 800;
-            font-size: 1.8rem;
-            color: #fff;
-        }
+        .main-content { flex: 1; display: flex; flex-direction: column; padding: 25px; background: transparent; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h2 { margin: 0; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.8rem; color: #fff; }
 
         .preview-container {
-            flex: 1;
-            background-color: #000; /* Черный фон для предпросмотра, если игра не имеет своего фона */
+            flex: 1; background-color: #000;
             border: 2px solid var(--border-color);
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
+            border-radius: 20px; overflow: hidden; position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        iframe { width: 100%; height: 100%; border: none; }
 
         .generate-btn {
-            padding: 12px 30px;
-            font-size: 1rem;
-            background-color: var(--neon-purple);
-            color: white;
-            border-color: var(--neon-purple);
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.4);
+            padding: 12px 30px; font-size: 1rem; background-color: var(--neon-purple);
+            color: white; border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(157, 78, 221, 0.4);
         }
-        
-        .generate-btn:hover {
-            background-color: var(--neon-purple-hover);
-            box-shadow: 0 0 25px rgba(157, 78, 221, 0.6);
-            transform: translateY(-2px);
-        }
-
-        .generate-btn.success {
-            background-color: var(--success);
-            border-color: var(--success);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-            color: white;
-        }
+        .generate-btn:hover { background-color: var(--neon-purple-hover); box-shadow: 0 0 25px rgba(157, 78, 221, 0.6); transform: translateY(-2px); }
+        .generate-btn.success { background-color: var(--success); border-color: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); color: white; }
     </style>
 </head>
 <body>
@@ -280,12 +204,12 @@
 
             <div class="form-group">
                 <label>Цвет жидкости</label>
-                <input type="color" id="liquidColor" value="#00ffcc" onchange="updatePreview()">
+                <input type="color" id="liquidColor" value="#00f5ff" onchange="updatePreview()">
             </div>
 
             <div class="form-group">
                 <label>Фон игры (URL)</label>
-                <input type="text" id="bgUrl" placeholder="Ссылка на картинку (оставьте пустым для прозрачности)" onchange="updatePreview()">
+                <input type="text" id="bgUrl" placeholder="Ссылка на картинку (оставьте пустым)" onchange="updatePreview()">
                 <div class="info-message">Для лучшей производительности используйте оптимизированные изображения.</div>
             </div>
 
@@ -322,23 +246,16 @@
             tasks: []
         };
 
-        // Initialize default values for the lab theme
+        // Initialize default - полностью пустой как просили
         window.onload = () => {
-            // Фон по умолчанию остается пустым (или укажите другой default, если нужно)
             document.getElementById('bgUrl').value = ''; 
-            
-            // Игроки по умолчанию - пустой массив
-            config.players = []; 
-            // Задания по умолчанию - пустой массив
-            config.tasks = []; 
-            
-            renderPlayers(); // Убедимся, что игроки отображаются в сайдбаре редактора
-            renderTasks();   // Убедимся, что задания отображаются в сайдбаре редактора
-            updatePreview(); // Обновим предварительный просмотр
+            config.players = [];
+            config.tasks = [];
+            updatePreview();
         };
 
-        function addPlayer(name = '', url = '') { // Изменено: параметры по умолчанию
-            if (config.players.length >= 4) return console.warn("Максимум 4 игрока!");
+        function addPlayer(name = '', url = '') {
+            if (config.players.length >= 4) return alert("Максимум 4 игрока!");
             let id = Date.now();
             config.players.push({ id, name, url });
             renderPlayers();
@@ -351,10 +268,8 @@
             updatePreview();
         }
 
-        function addTask(q = '', options = ['', '', ''], correctIdx = 0) { // Изменено: параметры по умолчанию
+        function addTask(q = '', options = ['', '', ''], correctIdx = 0) {
             let id = Date.now();
-            // Ensure options always have 3 or more elements for a cleaner UI if manually added
-            while(options.length < 3) options.push('');
             config.tasks.push({ id, question: q, options, correctIdx });
             renderTasks();
             updatePreview();
@@ -385,13 +300,7 @@
             const container = document.getElementById('tasksList');
             container.innerHTML = '';
             config.tasks.forEach((t, idx) => {
-                // Ensure there are always at least 3 options in the UI, add more if task has more
-                let displayOptions = t.options.slice();
-                while (displayOptions.length < 3) {
-                    displayOptions.push('');
-                }
-
-                let optionsHTML = displayOptions.map((opt, oIdx) => `
+                let optionsHTML = t.options.map((opt, oIdx) => `
                     <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
                         <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
                         <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
@@ -436,619 +345,179 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        /* Стили для корневых HTML и BODY внутри iframe */
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
             font-family: '${fontFamily}', sans-serif;
-            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра iframe */
+            font-size: 1.6vmin;
             box-sizing: border-box;
-            background: transparent; /* Убедимся, что фон body сам по себе прозрачен */
+            background: transparent;
         }
-        *, *::before, *::after {
-            box-sizing: inherit;
-        }
+        *, *::before, *::after { box-sizing: inherit; }
 
-        /* Новый корневой контейнер для всего игрового контента */
         #gameRoot {
             width: 100%; height: 100%;
-            ${gameBackgroundStyle} /* Динамический фон применяется к этому контейнеру */
+            ${gameBackgroundStyle}
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            box-sizing: border-box;
-            position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
-            padding-bottom: 6vmin; /* Добавим отступ снизу, чтобы игроки не прилипали к самому низу */
+            box-sizing: border-box; position: relative;
         }
 
-        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); pointer-events: none; z-index: 1;}
         
+        /* Измененное позиционирование: игроки распределены равномерно по всей ширине */
         .players-container {
             display: flex; 
-            gap: 2.5vmin; /* Отступ между отдельными блоками игроков */
+            width: 100%;
+            justify-content: space-evenly; /* Равномерное распределение */
+            align-items: flex-end;
+            padding: 0 4vmin 6vmin 4vmin;
             z-index: 2;
-            position: absolute; /* Позиционируем контейнер относительно gameRoot */
-            bottom: 6vmin; /* Отступ от нижнего края */
-            left: 0;
-            right: 0;
-            justify-content: center; /* Центрируем игроков горизонтально */
-            align-items: flex-start; /* Выравнивание элементов внутри player-outer-wrapper по верху */
         }
         
-        .player-outer-wrapper {
-            position: relative; /* Для абсолютного позиционирования ready-btn */
-            display: flex;
-            flex-direction: column; /* Элементы внутри - колонка: кнопка, затем inner-unit */
-            align-items: center; /* Центрируем элементы внутри по горизонтали */
-            opacity: 0.5;
-            transition: opacity 0.3s, filter 0.3s; /* Переходы для плавности */
-            min-width: 30vmin; /* Минимальная ширина, чтобы уместить колбу и карточку */
+        /* Карточка отдельного игрока */
+        .player-wrap {
+            display: flex; flex-direction: column; align-items: center;
+            position: relative; transition: 0.3s; opacity: 0.4;
+            gap: 1.5vmin;
+            width: 22%;
+            max-width: 25vmin;
         }
         
-        .player-outer-wrapper.active {
-            opacity: 1;
-            animation: pulse 1.5s infinite; /* Пульсация только для активного */
-            filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); /* Начальное свечение */
-        }
-        
-        @keyframes pulse {
-            0% { filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); }
-            50% { filter: drop-shadow(0 0 2vmin rgba(157, 78, 221, 1)); }
-            100% { filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); }
-        }
+        .player-wrap.active { opacity: 1; }
 
+        /* Кнопка READY как на референсе (парит сверху) */
         .ready-btn {
-            background: #9d4edd; color: white; border: none;
-            padding: 1.5vmin 4vmin;
-            border-radius: 1.5vmin;
-            font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 1.5vmin #9d4edd;
-            display: none; /* Скрыто по умолчанию */
-            z-index: 5;
+            position: absolute;
+            top: -9vmin;
+            background: #8b5cf6; color: white; border: none;
+            padding: 1.2vmin 3.5vmin;
+            border-radius: 2vmin;
+            font-weight: 800; cursor: pointer;
+            box-shadow: 0 0 2vmin rgba(139, 92, 246, 0.8); 
+            display: none; z-index: 5;
             font-size: 1.2em;
-            white-space: nowrap; /* Предотвращает перенос текста */
-            margin-bottom: 2vmin; /* Отступ между кнопкой и игровым блоком */
             text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
         }
         
-        .player-outer-wrapper.active .ready-btn { display: block; }
-        .ready-btn:hover { background: #b975f8; box-shadow: 0 0 2vmin #b975f8; }
+        .player-wrap.active .ready-btn { display: block; animation: bounceIn 0.5s ease; }
+        .ready-btn:hover { background: #7c3aed; transform: scale(1.05); }
 
-        .player-inner-unit {
-            display: flex;
-            align-items: flex-end; /* Выравнивает колбу и карточку по нижнему краю */
-            gap: 1.5vmin; /* Отступ между колбой и карточкой игрока */
-            position: relative; /* Для Z-индекса, если нужно */
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
+        /* Вытянутая колба */
         .flask {
-            width: 10vmin; /* Ширина колбы */
-            height: 30vmin; /* Высота колбы */
-            border: 0.4vmin solid rgba(255,255,255,0.7);
-            border-radius: 0 0 3vmin 3vmin; /* Закругленный низ */
-            overflow: hidden;
-            background: rgba(0,0,0,0.5); /* Фон колбы */
-            display: flex;
-            align-items: flex-end; /* Жидкость заполняется снизу */
-            flex-shrink: 0; /* Не позволяет колбе сжиматься */
+            width: 5.5vmin; height: 22vmin;
+            border: 0.4vmin solid rgba(255,255,255,0.4);
+            border-radius: 3vmin;
+            overflow: hidden; background: rgba(0,0,0,0.3);
+            display: flex; align-items: flex-end;
+            margin-bottom: -4vmin; /* Небольшой нахлест на аватар */
+            z-index: 1;
         }
         
         .liquid {
-            width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
-            box-shadow: 0 0 1.5vmin ${liquidColor};
+            width: 100%; background: ${liquidColor}; transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: inset 0 0 1.5vmin rgba(0,0,0,0.5), 0 -1vmin 2vmin ${liquidColor};
         }
 
-        .player-card {
-            background: rgba(26, 15, 46, 0.9); /* Темный полупрозрачный фон карточки */
-            border: 0.3vmin solid rgba(157, 78, 221, 0.3); /* Тонкая фиолетовая рамка */
-            border-radius: 2vmin; /* Закругленные углы карточки */
-            padding: 2vmin;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 20vmin; /* Ширина карточки */
-            height: 25vmin; /* Высота карточки */
-            box-shadow: 0 0 1vmin rgba(0,0,0,0.3);
-            transition: border-color 0.3s, box-shadow 0.3s;
-            flex-shrink: 0; /* Не позволяет карточке сжиматься */
-        }
-
-        .player-outer-wrapper.active .player-card {
-            border-color: #9d4edd; /* Ярче рамка у активного игрока */
-            box-shadow: 0 0 1vmin rgba(157, 78, 221, 0.7); /* Дополнительная тень для активного */
-        }
-
-        .avatar {
-            width: calc(15vmin * ${avatarSize/100}); /* Размер аватара */
-            height: calc(15vmin * ${avatarSize/100}); 
-            border-radius: 1.5vmin; /* Немного скругленные углы */
-            object-fit: cover;
-            border: 0.3vmin solid #eaddf8; /* Светлая рамка */
-            background: #2a2a35; /* Фоновый цвет, если аватар не загружен */
-            margin-bottom: 1.5vmin;
-        }
-
-        .name { 
-            color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.8vmin; font-size: 1.2em;
-            white-space: nowrap; /* Предотвращает перенос текста */
-            text-align: center;
-            max-width: 100%; /* Гарантирует, что имя не выйдет за пределы родителя */
+        /* Квадратный аватар в рамке */
+        .avatar-container {
+            width: calc(18vmin * ${avatarSize/100}); 
+            height: calc(18vmin * ${avatarSize/100}); 
+            border-radius: 3vmin;
+            border: 0.4vmin solid rgba(255,255,255,0.2);
+            background: #1d1033;
             overflow: hidden;
-            text-overflow: ellipsis; /* Добавляет многоточие для длинных имен */
-            text-transform: uppercase;
+            z-index: 2;
+            position: relative;
+            transition: all 0.3s;
         }
 
-        /* Modal Task */
+        /* Неоновое свечение для активного игрока */
+        .player-wrap.active .avatar-container {
+            border-color: #9d4edd;
+            box-shadow: 0 0 3vmin rgba(157, 78, 221, 0.8), inset 0 0 2vmin rgba(157, 78, 221, 0.4);
+        }
+
+        .avatar { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Имя-плашка внизу */
+        .name { 
+            background: rgba(15, 10, 25, 0.9); border: 0.2vmin solid rgba(255,255,255,0.15);
+            color: white; padding: 1vmin 2.5vmin; border-radius: 3vmin; 
+            font-size: 1.1em; font-weight: 700; text-transform: uppercase;
+            white-space: nowrap; text-align: center; max-width: 90%;
+            overflow: hidden; text-overflow: ellipsis; z-index: 3;
+            box-shadow: 0 1vmin 1.5vmin rgba(0,0,0,0.5);
+        }
+
+        /* Модальное окно и "Плашки" для ответов */
         .modal-bg {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            z-index: 10; justify-content: center; align-items: center;
         }
         
         .modal {
-            background: #1a1033; /* Темный фон, как у редактора */
-            border: 0.6vmin solid #9d4edd; /* Неоновая фиолетовая рамка */
-            border-radius: 2vmin;
-            padding: 4vmin;
-            width: 90%;
-            max-width: 70vmin;
-            text-align: center;
-            box-shadow: 0 0 4vmin rgba(157, 78, 221, 0.7); /* Яркая тень */
-            color: #eaddf8; /* Светлый текст */
+            background: rgba(20, 10, 35, 0.95); border: 0.4vmin solid #9d4edd;
+            border-radius: 3vmin; padding: 5vmin; width: 90%; max-width: 60vmin;
+            text-align: center; box-shadow: 0 0 5vmin rgba(139, 92, 246, 0.4); color: white;
         }
 
-        .question { font-size: 2.5em; margin-bottom: 3vmin; color: #fff; } /* Увеличенный размер шрифта для вопроса */
+        .question { font-size: 2.2em; font-weight: 800; margin-bottom: 4vmin; }
         
-        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } /* Увеличенный отступ */
+        .options { display: flex; flex-direction: column; gap: 1.5vmin; }
         
+        /* Дизайн плашки для ответа */
         .option-btn {
-            background: rgba(29, 16, 51, 0.7); /* Темный фон плашки */
-            color: #eaddf8; /* Цвет текста плашки */
-            border: 0.3vmin solid rgba(157, 78, 221, 0.4); /* Полупрозрачная фиолетовая рамка */
-            padding: 2.5vmin 3.5vmin; /* Увеличенный паддинг */
-            border-radius: 1.5vmin; /* Более округлые углы */
-            cursor: pointer;
-            transition: 0.2s; font-size: 1.5em; /* Увеличенный размер шрифта */
-            width: 45%; /* Подстраиваем ширину для 2-х колонок */
-            min-height: 8vmin; /* Минимальная высота плашки */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+            background: rgba(255, 255, 255, 0.05); color: white;
+            border: 0.2vmin solid rgba(255,255,255,0.1);
+            padding: 2.5vmin; border-radius: 1.5vmin;
+            cursor: pointer; transition: all 0.2s; font-size: 1.3em;
+            text-align: left; font-family: inherit; font-weight: 700;
         }
         
-        .option-btn:hover { border-color: #9d4edd; background: rgba(157, 78, 221, 0.2); }
-        .option-btn.selected { background: rgba(157, 78, 221, 0.4); border-color: #9d4edd; box-shadow: 0 0 1vmin rgba(157, 78, 221, 0.5);}
+        .option-btn:hover { background: rgba(157, 78, 221, 0.2); border-color: #9d4edd; transform: translateX(1vmin); }
+        .option-btn.selected { 
+            background: rgba(157, 78, 221, 0.5); border-color: #00f5ff; 
+            box-shadow: 0 0 2vmin rgba(0, 245, 255, 0.3); transform: translateX(1vmin);
+        }
         
         .check-btn {
-            margin-top: 3vmin;
-            background: #9d4edd; color: white; border: none;
-            padding: 1.5vmin 4vmin;
-            font-size: 1.2em;
-            border-radius: 1vmin;
-            cursor: pointer;
-            box-shadow: 0 0 2vmin rgba(157, 78, 221, 0.5);
-            text-transform: uppercase;
+            margin-top: 4vmin; background: #00f5ff; color: #000; border: none;
+            padding: 1.5vmin 5vmin; font-size: 1.3em; font-weight: 800;
+            border-radius: 3vmin; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 0 2vmin rgba(0, 245, 255, 0.5); transition: 0.3s;
         }
-        .check-btn:hover { background: #b975f8; box-shadow: 0 0 3vmin rgba(157, 78, 221, 0.7); }
+        .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 3vmin rgba(0, 245, 255, 0.8); }
 
         /* Winner Screen */
         .winner-screen {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
+            background: rgba(11, 6, 22, 0.95); z-index: 20; flex-direction: column;
             justify-content: center; align-items: center; color: white;
-            font-size: 1em;
         }
-        .winner-screen h1 { font-size: 6em; color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
+        .winner-screen h1 { font-size: 6em; font-weight: 800; color: ${liquidColor}; text-shadow: 0 0 3vmin ${liquidColor}; margin-bottom: 3vmin;}
         .winner-screen img {
-            width:30vmin;
-            height:30vmin;
-            border-radius:2vmin;
-            border: 0.5vmin solid ${liquidColor};
-            object-fit: cover;
+            width:35vmin; height:35vmin; border-radius:4vmin;
+            border: 0.8vmin solid ${liquidColor}; object-fit: cover; box-shadow: 0 0 5vmin ${liquidColor};
         }
-        .winner-screen h2 { font-size: 3em; margin-top: 2vmin; }
+        .winner-screen h2 { font-size: 3.5em; margin-top: 3vmin; text-transform: uppercase; font-weight: 800; }
+        
+        /* Сообщение-заглушка */
+        .empty-state {
+            color: rgba(255,255,255,0.5); font-size: 2.5em; font-weight: 700;
+            text-align: center; height: 100%; display: flex;
+            align-items: center; justify-content: center; width: 100%;
+        }
     </style>
 </head>
 <body>
-
-    <div id="app-container">
-        <!-- SIDEBAR WITH SETTINGS -->
-        <div class="sidebar">
-            <h2>Общие настройки</h2>
-            
-            <div class="form-group">
-                <label>Язык игры</label>
-                <select id="lang" onchange="updatePreview()">
-                    <option value="ru">Русский</option>
-                    <option value="en">English</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Шрифт</label>
-                <select id="fontFamily" onchange="updatePreview()">
-                    <option value="DM Sans">DM Sans</option>
-                    <option value="Montserrat">Montserrat</option>
-                    <option value="Roboto">Roboto</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Очки для победы (полная колба)</label>
-                <input type="number" id="maxScore" value="5" min="1" onchange="updatePreview()">
-            </div>
-
-            <div class="form-group">
-                <label>Цвет жидкости</label>
-                <input type="color" id="liquidColor" value="#00ffcc" onchange="updatePreview()">
-            </div>
-
-            <div class="form-group">
-                <label>Фон игры (URL)</label>
-                <input type="text" id="bgUrl" placeholder="Ссылка на картинку (оставьте пустым для прозрачности)" onchange="updatePreview()">
-                <div class="info-message">Для лучшей производительности используйте оптимизированные изображения.</div>
-            </div>
-
-            <div class="form-group">
-                <label>Размер аватаров (%)</label>
-                <input type="range" id="avatarSize" min="50" max="150" value="100" onchange="updatePreview()">
-            </div>
-
-            <h2>Игроки (Аватары)</h2>
-            <div id="playersList"></div>
-            <button onclick="addPlayer()">+ Добавить игрока (до 4)</button>
-
-            <h2 style="margin-top: 10px;">Задания (Вопросы)</h2>
-            <div id="tasksList"></div>
-            <button onclick="addTask()">+ Добавить вопрос</button>
-        </div>
-
-        <!-- MAIN AREA -->
-        <div class="main-content">
-            <div class="header">
-                <h2>Предпросмотр</h2>
-                <button id="generateBtn" class="generate-btn" onclick="generateCode()">Сгенерировать код</button>
-            </div>
-            <div class="preview-container">
-                <iframe id="previewFrame"></iframe>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // State
-        let config = {
-            players: [],
-            tasks: []
-        };
-
-        // Initialize default values for the lab theme
-        window.onload = () => {
-            // Фон по умолчанию остается пустым
-            document.getElementById('bgUrl').value = ''; 
-            
-            // Игроки по умолчанию - пустой массив
-            config.players = []; 
-            // Задания по умолчанию - пустой массив
-            config.tasks = []; 
-            
-            renderPlayers(); // Убедимся, что игроки отображаются в сайдбаре редактора
-            renderTasks();   // Убедимся, что задания отображаются в сайдбаре редактора
-            updatePreview(); // Обновим предварительный просмотр
-        };
-
-        // Теперь addPlayer и addTask могут быть вызваны без аргументов, чтобы создать пустые записи
-        function addPlayer(name = '', url = '') { 
-            if (config.players.length >= 4) return console.warn("Максимум 4 игрока!");
-            let id = Date.now();
-            config.players.push({ id, name, url });
-            renderPlayers();
-            updatePreview();
-        }
-
-        function removePlayer(id) {
-            config.players = config.players.filter(p => p.id !== id);
-            renderPlayers();
-            updatePreview();
-        }
-
-        // Теперь addTask может быть вызвана без аргументов, чтобы создать пустые записи
-        function addTask(q = '', options = ['', '', ''], correctIdx = 0) { 
-            let id = Date.now();
-            // Ensure options always have 3 or more elements for a cleaner UI if manually added
-            while(options.length < 3) options.push('');
-            config.tasks.push({ id, question: q, options, correctIdx });
-            renderTasks();
-            updatePreview();
-        }
-
-        function removeTask(id) {
-            config.tasks = config.tasks.filter(t => t.id !== id);
-            renderTasks();
-            updatePreview();
-        }
-
-        function renderPlayers() {
-            const container = document.getElementById('playersList');
-            container.innerHTML = '';
-            config.players.forEach((p, idx) => {
-                container.innerHTML += `
-                    <div class="card">
-                        <div class="form-group">
-                            <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
-                            <input type="text" id="p_url_${p.id}" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
-                            <button onclick="removePlayer(${p.id})">Удалить</button>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function renderTasks() {
-            const container = document.getElementById('tasksList');
-            container.innerHTML = '';
-            config.tasks.forEach((t, idx) => {
-                // Ensure there are always at least 3 options in the UI, add more if task has more
-                let displayOptions = t.options.slice();
-                while (displayOptions.length < 3) {
-                    displayOptions.push('');
-                }
-
-                let optionsHTML = displayOptions.map((opt, oIdx) => `
-                    <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
-                        <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
-                        <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
-                    </div>
-                `).join('');
-
-                container.innerHTML += `
-                    <div class="card">
-                        <input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px);">
-                        ${optionsHTML}
-                        <button onclick="removeTask(${t.id})">Удалить</button>
-                    </div>`;
-            });
-        }
-
-        // --- GAME ENGINE TEMPLATE ---
-        function getGameHTML() {
-            const lang = document.getElementById('lang').value;
-            const bgUrl = document.getElementById('bgUrl').value; 
-            const liquidColor = document.getElementById('liquidColor').value;
-            const maxScore = document.getElementById('maxScore').value;
-            const fontFamily = document.getElementById('fontFamily').value;
-            const avatarSize = document.getElementById('avatarSize').value;
-            
-            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
-                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
-
-            const gameState = {
-                players: config.players,
-                tasks: config.tasks,
-                maxScore: parseInt(maxScore),
-                txt: txt
-            };
-
-            const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: transparent;`;
-
-            return `
-<!DOCTYPE html>
-<html lang="${lang}">
-<head>
-    <meta charset="UTF-8">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
-        
-        /* Стили для корневых HTML и BODY внутри iframe */
-        html, body { 
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-            font-family: '${fontFamily}', sans-serif;
-            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра iframe */
-            box-sizing: border-box;
-            background: transparent; /* Убедимся, что фон body сам по себе прозрачен */
-        }
-        *, *::before, *::after {
-            box-sizing: inherit;
-        }
-
-        /* Новый корневой контейнер для всего игрового контента */
-        #gameRoot {
-            width: 100%; height: 100%;
-            ${gameBackgroundStyle} /* Динамический фон применяется к этому контейнеру */
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            box-sizing: border-box;
-            position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
-            padding-bottom: 6vmin; /* Добавим отступ снизу, чтобы игроки не прилипали к самому низу */
-        }
-
-        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
-        
-        .players-container {
-            display: flex; 
-            gap: 2.5vmin; /* Отступ между отдельными блоками игроков */
-            z-index: 2;
-            position: absolute; /* Позиционируем контейнер относительно gameRoot */
-            bottom: 6vmin; /* Отступ от нижнего края */
-            left: 0;
-            right: 0;
-            justify-content: center; /* Центрируем игроков горизонтально */
-            align-items: flex-start; /* Выравнивание элементов внутри player-outer-wrapper по верху */
-        }
-        
-        .player-outer-wrapper {
-            position: relative; /* Для абсолютного позиционирования ready-btn */
-            display: flex;
-            flex-direction: column; /* Элементы внутри - колонка: кнопка, затем inner-unit */
-            align-items: center; /* Центрируем элементы внутри по горизонтали */
-            opacity: 0.5;
-            transition: opacity 0.3s, filter 0.3s; /* Переходы для плавности */
-            min-width: 30vmin; /* Минимальная ширина, чтобы уместить колбу и карточку */
-        }
-        
-        .player-outer-wrapper.active {
-            opacity: 1;
-            animation: pulse 1.5s infinite; /* Пульсация только для активного */
-            filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); /* Начальное свечение */
-        }
-        
-        @keyframes pulse {
-            0% { filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); }
-            50% { filter: drop-shadow(0 0 2vmin rgba(157, 78, 221, 1)); }
-            100% { filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); }
-        }
-
-        .ready-btn {
-            background: #9d4edd; color: white; border: none;
-            padding: 1.5vmin 4vmin;
-            border-radius: 1.5vmin;
-            font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 1.5vmin #9d4edd;
-            display: none; /* Скрыто по умолчанию */
-            z-index: 5;
-            font-size: 1.2em;
-            white-space: nowrap; /* Предотвращает перенос текста */
-            margin-bottom: 2vmin; /* Отступ между кнопкой и игровым блоком */
-            text-transform: uppercase;
-        }
-        
-        .player-outer-wrapper.active .ready-btn { display: block; }
-        .ready-btn:hover { background: #b975f8; box-shadow: 0 0 2vmin #b975f8; }
-
-        .player-inner-unit {
-            display: flex;
-            align-items: flex-end; /* Выравнивает колбу и карточку по нижнему краю */
-            gap: 1.5vmin; /* Отступ между колбой и карточкой игрока */
-            position: relative; /* Для Z-индекса, если нужно */
-        }
-
-        .flask {
-            width: 10vmin; /* Ширина колбы */
-            height: 30vmin; /* Высота колбы */
-            border: 0.4vmin solid rgba(255,255,255,0.7);
-            border-radius: 0 0 3vmin 3vmin; /* Закругленный низ */
-            overflow: hidden;
-            background: rgba(0,0,0,0.5); /* Фон колбы */
-            display: flex;
-            align-items: flex-end; /* Жидкость заполняется снизу */
-            flex-shrink: 0; /* Не позволяет колбе сжиматься */
-        }
-        
-        .liquid {
-            width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
-            box-shadow: 0 0 1.5vmin ${liquidColor};
-        }
-
-        .player-card {
-            background: rgba(26, 15, 46, 0.9); /* Темный полупрозрачный фон карточки */
-            border: 0.3vmin solid rgba(157, 78, 221, 0.3); /* Тонкая фиолетовая рамка */
-            border-radius: 2vmin; /* Закругленные углы карточки */
-            padding: 2vmin;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 20vmin; /* Ширина карточки */
-            height: 25vmin; /* Высота карточки */
-            box-shadow: 0 0 1vmin rgba(0,0,0,0.3);
-            transition: border-color 0.3s, box-shadow 0.3s;
-            flex-shrink: 0; /* Не позволяет карточке сжиматься */
-        }
-
-        .player-outer-wrapper.active .player-card {
-            border-color: #9d4edd; /* Ярче рамка у активного игрока */
-            box-shadow: 0 0 1vmin rgba(157, 78, 221, 0.7); /* Дополнительная тень для активного */
-        }
-
-        .avatar {
-            width: calc(15vmin * ${avatarSize/100}); /* Размер аватара */
-            height: calc(15vmin * ${avatarSize/100}); 
-            border-radius: 1.5vmin; /* Немного скругленные углы */
-            object-fit: cover;
-            border: 0.3vmin solid #eaddf8; /* Светлая рамка */
-            background: #2a2a35; /* Фоновый цвет, если аватар не загружен */
-            margin-bottom: 1.5vmin;
-        }
-
-        .name { 
-            color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.8vmin; font-size: 1.2em;
-            white-space: nowrap; /* Предотвращает перенос текста */
-            text-align: center;
-            max-width: 100%; /* Гарантирует, что имя не выйдет за пределы родителя */
-            overflow: hidden;
-            text-overflow: ellipsis; /* Добавляет многоточие для длинных имен */
-            text-transform: uppercase;
-        }
-
-        /* Modal Task */
-        .modal-bg {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
-        }
-        
-        .modal {
-            background: #1a1033; /* Темный фон, как у редактора */
-            border: 0.6vmin solid #9d4edd; /* Неоновая фиолетовая рамка */
-            border-radius: 2vmin;
-            padding: 4vmin;
-            width: 90%;
-            max-width: 70vmin;
-            text-align: center;
-            box-shadow: 0 0 4vmin rgba(157, 78, 221, 0.7); /* Яркая тень */
-            color: #eaddf8; /* Светлый текст */
-        }
-
-        .question { font-size: 2.5em; margin-bottom: 3vmin; color: #fff; } /* Увеличенный размер шрифта для вопроса */
-        
-        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } /* Увеличенный отступ */
-        
-        .option-btn {
-            background: rgba(29, 16, 51, 0.7); /* Темный фон плашки */
-            color: #eaddf8; /* Цвет текста плашки */
-            border: 0.3vmin solid rgba(157, 78, 221, 0.4); /* Полупрозрачная фиолетовая рамка */
-            padding: 2.5vmin 3.5vmin; /* Увеличенный паддинг */
-            border-radius: 1.5vmin; /* Более округлые углы */
-            cursor: pointer;
-            transition: 0.2s; font-size: 1.5em; /* Увеличенный размер шрифта */
-            width: 45%; /* Подстраиваем ширину для 2-х колонок */
-            min-height: 8vmin; /* Минимальная высота плашки */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-        
-        .option-btn:hover { border-color: #9d4edd; background: rgba(157, 78, 221, 0.2); }
-        .option-btn.selected { background: rgba(157, 78, 221, 0.4); border-color: #9d4edd; box-shadow: 0 0 1vmin rgba(157, 78, 221, 0.5);}
-        
-        .check-btn {
-            margin-top: 3vmin;
-            background: #9d4edd; color: white; border: none;
-            padding: 1.5vmin 4vmin;
-            font-size: 1.2em;
-            border-radius: 1vmin;
-            cursor: pointer;
-            box-shadow: 0 0 2vmin rgba(157, 78, 221, 0.5);
-            text-transform: uppercase;
-        }
-        .check-btn:hover { background: #b975f8; box-shadow: 0 0 3vmin rgba(157, 78, 221, 0.7); }
-
-        /* Winner Screen */
-        .winner-screen {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
-            justify-content: center; align-items: center; color: white;
-            font-size: 1em;
-        }
-        .winner-screen h1 { font-size: 6em; color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
-        .winner-screen img {
-            width:30vmin;
-            height:30vmin;
-            border-radius:2vmin;
-            border: 0.5vmin solid ${liquidColor};
-            object-fit: cover;
-        }
-        .winner-screen h2 { font-size: 3em; margin-top: 2vmin; }
-    </style>
-</head>
-<body>
-    <!-- Новый корневой div для всего игрового контента -->
     <div id="gameRoot"> 
         <div class="overlay"></div>
         <div class="players-container" id="pc"></div>
@@ -1068,19 +537,16 @@
             <img id="winnerAvatar">
             <h2 id="winnerName"></h2>
         </div>
-    </div> <!-- Конец #gameRoot -->
+    </div>
 
     <script>
         const state = ${JSON.stringify(gameState)};
-
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
-        
         let availableTaskIndices = [];
         let usedTaskIndices = [];
         let selectedOption = null;
 
-        // Функция для перемешивания массива (Fisher-Yates)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -1091,12 +557,8 @@
         function init() {
             const gameRoot = document.getElementById('gameRoot');
 
-            if(state.players.length === 0) {
-                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>';
-                return;
-            }
-            if(state.tasks.length === 0) {
-                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>';
+            if(state.players.length === 0 || state.tasks.length === 0) {
+                gameRoot.innerHTML = '<div class="empty-state">Добавьте игроков и задания в редакторе</div>'; 
                 return;
             }
 
@@ -1104,17 +566,15 @@
 
             const pc = document.getElementById('pc');
             pc.innerHTML = state.players.map((p, i) => \`
-                <div class="player-outer-wrapper \${i === 0 ? 'active' : ''}" id="pOuter\${i}">
-                    <button class="ready-btn" id="readyBtnP\${i}" onclick="openTask()">\${state.txt.ready}</button>
-                    <div class="player-inner-unit">
-                        <div class="flask">
-                            <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
-                        </div>
-                        <div class="player-card" id="pCard\${i}">
-                            <img src="\${p.url}" class="avatar">
-                            <div class="name">\${p.name}</div>
-                        </div>
+                <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
+                    <button class="ready-btn" onclick="openTask()">\${state.txt.ready}</button>
+                    <div class="flask">
+                        <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
                     </div>
+                    <div class="avatar-container">
+                        <img src="\${p.url}" class="avatar">
+                    </div>
+                    <div class="name">\${p.name || 'Игрок ' + (i+1)}</div>
                 </div>
             \`).join('');
         }
@@ -1126,22 +586,10 @@
         }
 
         function openTask() {
-            if(state.tasks.length === 0) {
-                console.warn("Нет заданий!");
-                return;
-            }
-            if(availableTaskIndices.length === 0) {
-                console.log("Все задания использованы, сброс пула заданий.");
-                resetTasks();
-                if(availableTaskIndices.length === 0) {
-                    console.error("Не удалось сбросить задания. Возможно, нет заданий в списке.");
-                    return;
-                }
-            }
+            if(availableTaskIndices.length === 0) resetTasks();
             
             const taskIndex = availableTaskIndices.shift();
             usedTaskIndices.push(taskIndex);
-            
             const task = state.tasks[taskIndex];
             
             document.getElementById('qText').innerText = task.question;
@@ -1151,7 +599,6 @@
             ).join('');
             
             selectedOption = null;
-            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             document.getElementById('modalBg').style.display = 'flex';
         }
 
@@ -1162,9 +609,8 @@
         }
 
         function checkAnswer() {
-            if(selectedOption === null) {
-                return;
-            }
+            if(selectedOption === null) return;
+            
             const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
             const task = state.tasks[lastTaskIndex];
             
@@ -1184,9 +630,9 @@
         }
 
         function nextTurn() {
-            document.getElementById('pOuter'+currentPlayer).classList.remove('active');
+            document.getElementById('p'+currentPlayer).classList.remove('active');
             currentPlayer = (currentPlayer + 1) % state.players.length;
-            document.getElementById('pOuter'+currentPlayer).classList.add('active');
+            document.getElementById('p'+currentPlayer).classList.add('active');
         }
 
         function showWinner() {
@@ -1196,7 +642,7 @@
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
         }
 
-        init(); // Вызываем инициализацию игры сразу после определения функций
+        init();
     <\/script>
 </body>
 </html>`;
@@ -1205,7 +651,7 @@
         function updatePreview() {
             const html = getGameHTML();
             const iframe = document.getElementById('previewFrame');
-            iframe.srcdoc = html; // Более надежный способ обновления srcdoc
+            iframe.srcdoc = html;
         }
 
         function generateCode() {
@@ -1215,18 +661,13 @@
             navigator.clipboard.writeText(html).then(() => {
                 btn.textContent = "Скопировано!";
                 btn.classList.add('success');
-                
                 setTimeout(() => {
                     btn.textContent = "Сгенерировать код";
                     btn.classList.remove('success');
                 }, 2000);
             }).catch(err => {
-                console.error("Ошибка копирования в буфер обмена:", err);
-                // Используем console.log вместо alert для Genially-совместимости
                 console.log("Ошибка копирования. Скопируйте код вручную из консоли разработчика.");
-                console.log("--- Начало сгенерированного кода ---");
                 console.log(html);
-                console.log("--- Конец сгенерированного кода ---");
             });
         }
     </script>
