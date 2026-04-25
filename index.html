@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Montserrat:wght@400;700;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* Палитра в стиле Cthulhu Spacclurn (со 2-й картинки) */
             --bg-deep-space: #0b0616;
             --bg-panel: rgba(26, 15, 46, 0.9);
             --bg-card: #1d1033;
@@ -33,6 +34,7 @@
             overflow: hidden;
         }
 
+        /* Контейнер редактора с жестким форматом 16:9 */
         #app-container {
             width: 100vw;
             max-width: calc(100vh * (16 / 9));
@@ -44,8 +46,11 @@
             box-shadow: 0 0 50px rgba(157, 78, 221, 0.15);
             overflow: hidden;
             border: 1px solid rgba(157, 78, 221, 0.2);
+            /* Если хотите скругленные углы у самого редактора, раскомментируйте строку ниже: */
+            /* border-radius: 16px; */
         }
 
+        /* Sidebar Settings */
         .sidebar {
             width: 35%;
             max-width: 450px;
@@ -58,6 +63,7 @@
             gap: 20px;
         }
 
+        /* Стилизация скроллбара под космос */
         .sidebar::-webkit-scrollbar { width: 6px; }
         .sidebar::-webkit-scrollbar-track { background: var(--bg-deep-space); }
         .sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
@@ -129,7 +135,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-radius: 30px;
+            border-radius: 30px; /* Круглые кнопки как на картинке */
         }
 
         button:hover {
@@ -138,6 +144,7 @@
             box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
         }
 
+        /* Player & Task Cards */
         .card {
             background-color: var(--bg-card);
             padding: 15px;
@@ -147,6 +154,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
+        /* Уменьшенные кнопки удаления в карточках */
         .card button {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
@@ -162,23 +170,6 @@
             box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
 
-        .card button.add-option-btn {
-            background: rgba(0, 245, 255, 0.1);
-            color: var(--neon-blue);
-            border-color: var(--neon-blue);
-        }
-        .card button.add-option-btn:hover {
-            background: var(--neon-blue);
-            color: #000;
-        }
-
-        .card button.remove-option-btn {
-            padding: 6px 10px;
-            font-size: 0.75rem;
-            margin-top: 0;
-            margin-left: 5px;
-        }
-
         .card input[type="radio"] {
             accent-color: var(--neon-blue);
             width: 20px;
@@ -186,6 +177,7 @@
             margin-top: 10px;
         }
         
+        /* Стили для сообщения о сжатии */
         .info-message {
             font-size: 0.75rem;
             color: var(--text-muted);
@@ -194,6 +186,7 @@
             text-align: center;
         }
 
+        /* Main Preview Area */
         .main-content {
             flex: 1;
             display: flex;
@@ -219,7 +212,7 @@
 
         .preview-container {
             flex: 1;
-            background-color: #000;
+            background-color: #000; /* Черный фон для предпросмотра, если игра не имеет своего фона */
             border: 2px solid var(--border-color);
             border-radius: 20px;
             overflow: hidden;
@@ -254,15 +247,12 @@
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
             color: white;
         }
-
-        .task-type-select {
-            margin-bottom: 5px;
-        }
     </style>
 </head>
 <body>
 
     <div id="app-container">
+        <!-- SIDEBAR WITH SETTINGS -->
         <div class="sidebar">
             <h2>Общие настройки</h2>
             
@@ -313,6 +303,7 @@
             <button onclick="addTask()">+ Добавить вопрос</button>
         </div>
 
+        <!-- MAIN AREA -->
         <div class="main-content">
             <div class="header">
                 <h2>Предпросмотр</h2>
@@ -325,23 +316,37 @@
     </div>
 
     <script>
+        // State
         let config = {
             players: [],
             tasks: []
         };
 
+        // Initialize default values for the lab theme
         window.onload = () => {
-            document.getElementById('bgUrl').value = ''; 
-            addPlayer('Игрок 1', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png'); 
-            addPlayer('Игрок 2', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png');
-            addTask('choice', 'Сколько будет 2+2?', ['3', '4', '5'], 1);
-            addTask('input', 'Столица Франции?', [], 0, 'Париж');
-            updatePreview();
+            // Set default background URL to the lab image
+            document.getElementById('bgUrl').value = 'https://i.ibb.co/hL4g6Rz/original-image.png'; 
+            
+            // Clear initial players, add specific ones from the lab image
+            config.players = []; // Ensure it's empty before adding
+            addPlayer('GENIUS MARIE', 'https://i.ibb.co/7z9Rz6P/Genius-Marie.png'); 
+            addPlayer('PROF. CRAZY', 'https://i.ibb.co/k2c6gC0/Prof-Crazy.png');
+            addPlayer('DR. QUARK', 'https://i.ibb.co/C0c17G0/Dr-Quark.png');
+            addPlayer('MDM. FRANKLIN', 'https://i.ibb.co/C9H729M/Mdm-Franklin.png');
+
+            // Default tasks
+            config.tasks = []; // Ensure it's empty before adding
+            addTask('Сколько будет 2+2?', ['3', '4', '5', '4'], 3);
+            addTask('Какого цвета солнце?', ['Зеленое', 'Красное', 'Желтое', 'Синее'], 2);
+            
+            renderPlayers(); // Make sure the players are rendered in the editor's sidebar
+            renderTasks();   // Make sure the tasks are rendered in the editor's sidebar
+            updatePreview(); // Update the iframe preview
         };
 
         function addPlayer(name = '', url = '') {
             if (config.players.length >= 4) return console.warn("Максимум 4 игрока!");
-            let id = Date.now() + Math.random();
+            let id = Date.now();
             config.players.push({ id, name, url });
             renderPlayers();
             updatePreview();
@@ -353,40 +358,17 @@
             updatePreview();
         }
 
-        function addTask(type = 'choice', q = '', options = ['', ''], correctIdx = 0, correctText = '') {
-            let id = Date.now() + Math.random();
-            config.tasks.push({ id, type, question: q, options: [...options], correctIdx, correctText });
+        function addTask(q = '', options = ['', '', ''], correctIdx = 0) {
+            let id = Date.now();
+            // Ensure options always have 3 or more elements for a cleaner UI if manually added
+            while(options.length < 3) options.push('');
+            config.tasks.push({ id, question: q, options, correctIdx });
             renderTasks();
             updatePreview();
         }
 
         function removeTask(id) {
             config.tasks = config.tasks.filter(t => t.id !== id);
-            renderTasks();
-            updatePreview();
-        }
-
-        function addOptionToTask(idx) {
-            config.tasks[idx].options.push('');
-            renderTasks();
-            updatePreview();
-        }
-
-        function removeOptionFromTask(idx, oIdx) {
-            if (config.tasks[idx].options.length <= 2) return;
-            config.tasks[idx].options.splice(oIdx, 1);
-            if (config.tasks[idx].correctIdx >= config.tasks[idx].options.length) {
-                config.tasks[idx].correctIdx = 0;
-            }
-            renderTasks();
-            updatePreview();
-        }
-
-        function changeTaskType(idx, newType) {
-            config.tasks[idx].type = newType;
-            if (newType === 'choice' && config.tasks[idx].options.length < 2) {
-                config.tasks[idx].options = ['', ''];
-            }
             renderTasks();
             updatePreview();
         }
@@ -410,42 +392,29 @@
             const container = document.getElementById('tasksList');
             container.innerHTML = '';
             config.tasks.forEach((t, idx) => {
-                let typeSelect = `
-                    <select class="task-type-select" onchange="changeTaskType(${idx}, this.value)" style="margin-bottom:10px;">
-                        <option value="choice" ${t.type === 'choice' ? 'selected' : ''}>Выбор ответа</option>
-                        <option value="input" ${t.type === 'input' ? 'selected' : ''}>Ввод ответа</option>
-                    </select>
-                `;
-
-                let bodyHTML = '';
-                if (t.type === 'choice') {
-                    let optionsHTML = t.options.map((opt, oIdx) => `
-                        <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
-                            <input type="radio" name="correct_${idx}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
-                            <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
-                            ${t.options.length > 2 ? `<button class="remove-option-btn" onclick="removeOptionFromTask(${idx}, ${oIdx})">✕</button>` : ''}
-                        </div>
-                    `).join('');
-                    bodyHTML = optionsHTML + `<button class="add-option-btn" onclick="addOptionToTask(${idx})" style="margin-top:10px;">+ Вариант</button>`;
-                } else {
-                    bodyHTML = `
-                        <div class="form-group" style="margin-top:10px;">
-                            <label>Правильный ответ (текст)</label>
-                            <input type="text" placeholder="Введите правильный ответ" value="${t.correctText || ''}" onchange="config.tasks[${idx}].correctText=this.value; updatePreview()">
-                        </div>
-                    `;
+                // Ensure there are always at least 3 options in the UI, add more if task has more
+                let displayOptions = t.options.slice();
+                while (displayOptions.length < 3) {
+                    displayOptions.push('');
                 }
+
+                let optionsHTML = displayOptions.map((opt, oIdx) => `
+                    <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                        <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
+                        <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
+                    </div>
+                `).join('');
 
                 container.innerHTML += `
                     <div class="card">
-                        ${typeSelect}
                         <input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px);">
-                        ${bodyHTML}
-                        <button onclick="removeTask(${t.id})">Удалить вопрос</button>
+                        ${optionsHTML}
+                        <button onclick="removeTask(${t.id})">Удалить</button>
                     </div>`;
             });
         }
 
+        // --- GAME ENGINE TEMPLATE ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
@@ -454,375 +423,388 @@
             const fontFamily = document.getElementById('fontFamily').value;
             const avatarSize = document.getElementById('avatarSize').value;
             
-            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход', inputPlaceholder: 'Введите ответ...' } 
-                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn', inputPlaceholder: 'Type your answer...' };
-
-            // Фильтруем пустые варианты для choice
-            const cleanTasks = config.tasks.map(t => {
-                if (t.type === 'choice') {
-                    const filtered = t.options.filter(o => o.trim() !== '');
-                    let ci = t.correctIdx;
-                    if (ci >= filtered.length) ci = 0;
-                    return { ...t, options: filtered, correctIdx: ci };
-                }
-                return { ...t };
-            });
+            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
+                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
 
             const gameState = {
                 players: config.players,
-                tasks: cleanTasks,
+                tasks: config.tasks,
                 maxScore: parseInt(maxScore),
                 txt: txt
             };
 
             const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: transparent;`;
 
-            return `<!DOCTYPE html>
+            return `
+<!DOCTYPE html>
 <html lang="${lang}">
 <head>
-<meta charset="UTF-8">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
+        
+        /* Стили для корневых HTML и BODY внутри iframe */
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            font-family: '${fontFamily}', sans-serif;
+            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра iframe */
+            box-sizing: border-box;
+            background: transparent; /* Убедимся, что фон body сам по себе прозрачен */
+        }
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
 
-html, body { 
-    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-    font-family: '${fontFamily}', sans-serif;
-    box-sizing: border-box;
-    background: transparent;
-}
-*, *::before, *::after { box-sizing: inherit; }
+        /* Новый корневой контейнер для всего игрового контента */
+        #gameRoot {
+            width: 100%; height: 100%;
+            ${gameBackgroundStyle} /* Динамический фон применяется к этому контейнеру */
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            box-sizing: border-box;
+            position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
+            padding-bottom: 6vmin; /* Добавим отступ снизу, чтобы игроки не прилипали к самому низу */
+        }
 
-#gameRoot {
-    width: 100%; height: 100%;
-    ${gameBackgroundStyle}
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    box-sizing: border-box;
-    position: relative;
-}
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
+        
+        .players-container {
+            display: flex; 
+            gap: 2.5vmin; /* Отступ между отдельными блоками игроков */
+            z-index: 2;
+            position: absolute; /* Позиционируем контейнер относительно gameRoot */
+            bottom: 6vmin; /* Отступ от нижнего края */
+            left: 0;
+            right: 0;
+            justify-content: center; /* Центрируем игроков горизонтально */
+            align-items: flex-start; /* Выравнивание элементов внутри player-outer-wrapper по верху */
+        }
+        
+        .player-outer-wrapper {
+            position: relative; /* Для абсолютного позиционирования ready-btn */
+            display: flex;
+            flex-direction: column; /* Элементы внутри - колонка: кнопка, затем inner-unit */
+            align-items: center; /* Центрируем элементы внутри по горизонтали */
+            opacity: 0.5;
+            transition: opacity 0.3s, filter 0.3s; /* Переходы для плавности */
+            min-width: 30vmin; /* Минимальная ширина, чтобы уместить колбу и карточку */
+        }
+        
+        .player-outer-wrapper.active {
+            opacity: 1;
+            animation: pulse 1.5s infinite; /* Пульсация только для активного */
+            filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); /* Начальное свечение */
+        }
+        
+        @keyframes pulse {
+            0% { filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); }
+            50% { filter: drop-shadow(0 0 2vmin rgba(157, 78, 221, 1)); }
+            100% { filter: drop-shadow(0 0 1vmin rgba(157, 78, 221, 0.7)); }
+        }
 
-.overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 1;}
+        .ready-btn {
+            background: #9d4edd; color: white; border: none;
+            padding: 1.5vmin 4vmin;
+            border-radius: 1.5vmin;
+            font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 1.5vmin #9d4edd;
+            display: none; /* Скрыто по умолчанию */
+            z-index: 5;
+            font-size: 1.2em;
+            white-space: nowrap; /* Предотвращает перенос текста */
+            margin-bottom: 2vmin; /* Отступ между кнопкой и игровым блоком */
+            text-transform: uppercase;
+        }
+        
+        .player-outer-wrapper.active .ready-btn { display: block; }
+        .ready-btn:hover { background: #b975f8; box-shadow: 0 0 2vmin #b975f8; }
 
-.players-container {
-    display: flex; gap: 4%;
-    z-index: 2;
-    position: relative;
-    align-items: flex-end;
-}
+        .player-inner-unit {
+            display: flex;
+            align-items: flex-end; /* Выравнивает колбу и карточку по нижнему краю */
+            gap: 1.5vmin; /* Отступ между колбой и карточкой игрока */
+            position: relative; /* Для Z-индекса, если нужно */
+        }
 
-.player-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    transition: 0.3s; opacity: 0.5;
-    gap: 2%;
-    justify-content: flex-end;
-}
+        .flask {
+            width: 10vmin; /* Ширина колбы */
+            height: 30vmin; /* Высота колбы */
+            border: 0.4vmin solid rgba(255,255,255,0.7);
+            border-radius: 0 0 3vmin 3vmin; /* Закругленный низ */
+            overflow: hidden;
+            background: rgba(0,0,0,0.5); /* Фон колбы */
+            display: flex;
+            align-items: flex-end; /* Жидкость заполняется снизу */
+            flex-shrink: 0; /* Не позволяет колбе сжиматься */
+        }
+        
+        .liquid {
+            width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
+            box-shadow: 0 0 1.5vmin ${liquidColor};
+        }
 
-.player-wrap.active {
-    opacity: 1;
-    animation: pulse 1.5s infinite;
-}
+        .player-card {
+            background: rgba(26, 15, 46, 0.9); /* Темный полупрозрачный фон карточки */
+            border: 0.3vmin solid rgba(157, 78, 221, 0.3); /* Тонкая фиолетовая рамка */
+            border-radius: 2vmin; /* Закругленные углы карточки */
+            padding: 2vmin;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 20vmin; /* Ширина карточки */
+            height: 25vmin; /* Высота карточки */
+            box-shadow: 0 0 1vmin rgba(0,0,0,0.3);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            flex-shrink: 0; /* Не позволяет карточке сжиматься */
+        }
 
-@keyframes pulse {
-    0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5)); }
-    50% { transform: scale(1.05); filter: drop-shadow(0 0 16px rgba(139, 92, 246, 1)); }
-    100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5)); }
-}
+        .player-outer-wrapper.active .player-card {
+            border-color: #9d4edd; /* Ярче рамка у активного игрока */
+            box-shadow: 0 0 1vmin rgba(157, 78, 221, 0.7); /* Дополнительная тень для активного */
+        }
 
-.ready-btn {
-    background: #8b5cf6; color: white; border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold; cursor: pointer;
-    box-shadow: 0 0 12px #8b5cf6; display: none; z-index: 5;
-    font-size: 16px;
-    white-space: nowrap;
-    margin-bottom: 8px;
-}
+        .avatar {
+            width: calc(15vmin * ${avatarSize/100}); /* Размер аватара */
+            height: calc(15vmin * ${avatarSize/100}); 
+            border-radius: 1.5vmin; /* Немного скругленные углы */
+            object-fit: cover;
+            border: 0.3vmin solid #eaddf8; /* Светлая рамка */
+            background: #2a2a35; /* Фоновый цвет, если аватар не загружен */
+            margin-bottom: 1.5vmin;
+        }
 
-.player-wrap.active .ready-btn { display: block; }
-.ready-btn:hover { background: #7c3aed; }
+        .name { 
+            color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.8vmin; font-size: 1.2em;
+            white-space: nowrap; /* Предотвращает перенос текста */
+            text-align: center;
+            max-width: 100%; /* Гарантирует, что имя не выйдет за пределы родителя */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Добавляет многоточие для длинных имен */
+            text-transform: uppercase;
+        }
 
-.flask {
-    width: 40px;
-    height: 120px;
-    border: 3px solid rgba(255,255,255,0.7);
-    border-radius: 0 0 20px 20px;
-    overflow: hidden; background: rgba(0,0,0,0.5);
-    display: flex; align-items: flex-end;
-    flex-shrink: 0;
-    margin-bottom: 8px;
-}
+        /* Modal Task */
+        .modal-bg {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
+        }
+        
+        .modal {
+            background: #1a1033; /* Темный фон, как у редактора */
+            border: 0.6vmin solid #9d4edd; /* Неоновая фиолетовая рамка */
+            border-radius: 2vmin;
+            padding: 4vmin;
+            width: 90%;
+            max-width: 70vmin;
+            text-align: center;
+            box-shadow: 0 0 4vmin rgba(157, 78, 221, 0.7); /* Яркая тень */
+            color: #eaddf8; /* Светлый текст */
+        }
 
-.liquid {
-    width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
-    box-shadow: 0 0 8px ${liquidColor};
-}
+        .question { font-size: 2.5em; margin-bottom: 3vmin; color: #fff; } /* Увеличенный размер шрифта для вопроса */
+        
+        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } /* Увеличенный отступ */
+        
+        .option-btn {
+            background: rgba(29, 16, 51, 0.7); /* Темный фон плашки */
+            color: #eaddf8; /* Цвет текста плашки */
+            border: 0.3vmin solid rgba(157, 78, 221, 0.4); /* Полупрозрачная фиолетовая рамка */
+            padding: 2.5vmin 3.5vmin; /* Увеличенный паддинг */
+            border-radius: 1.5vmin; /* Более округлые углы */
+            cursor: pointer;
+            transition: 0.2s; font-size: 1.5em; /* Увеличенный размер шрифта */
+            width: 45%; /* Подстраиваем ширину для 2-х колонок */
+            min-height: 8vmin; /* Минимальная высота плашки */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .option-btn:hover { border-color: #9d4edd; background: rgba(157, 78, 221, 0.2); }
+        .option-btn.selected { background: rgba(157, 78, 221, 0.4); border-color: #9d4edd; box-shadow: 0 0 1vmin rgba(157, 78, 221, 0.5);}
+        
+        .check-btn {
+            margin-top: 3vmin;
+            background: #9d4edd; color: white; border: none;
+            padding: 1.5vmin 4vmin;
+            font-size: 1.2em;
+            border-radius: 1vmin;
+            cursor: pointer;
+            box-shadow: 0 0 2vmin rgba(157, 78, 221, 0.5);
+            text-transform: uppercase;
+        }
+        .check-btn:hover { background: #b975f8; box-shadow: 0 0 3vmin rgba(157, 78, 221, 0.7); }
 
-.avatar {
-    width: ${Math.round(80 * avatarSize / 100)}px; 
-    height: ${Math.round(80 * avatarSize / 100)}px; 
-    border-radius: 12px;
-    object-fit: cover;
-    border: 2px solid white;
-    background: #2a2a35;
-    flex-shrink: 0;
-}
-
-.name { 
-    color: white; margin-top: 6px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 4px; font-size: 14px;
-    white-space: nowrap;
-    text-align: center;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.modal-bg {
-    display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.85); z-index: 10; justify-content: center; align-items: center;
-}
-
-.modal {
-    background: #121212; border: 3px solid #8b5cf6;
-    border-radius: 16px;
-    padding: 30px;
-    width: 80%;
-    max-width: 600px;
-    text-align: center;
-    box-shadow: 0 0 24px rgba(139, 92, 246, 0.5); color: white;
-}
-
-.question { font-size: 22px; margin-bottom: 20px; }
-
-.options { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-
-.option-btn {
-    background: transparent; color: white; border: 2px solid #374151;
-    padding: 14px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s; font-size: 16px;
-    min-width: 45%;
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    flex-grow: 1;
-}
-
-.option-btn:hover { border-color: #8b5cf6; }
-.option-btn.selected { background: rgba(139, 92, 246, 0.3); border-color: #8b5cf6; }
-
-.text-input-answer {
-    width: 80%; padding: 14px 20px; font-size: 18px; border: 2px solid #374151;
-    border-radius: 8px; background: #1a1a2e; color: white; outline: none;
-    text-align: center; margin-bottom: 10px;
-    font-family: inherit;
-}
-.text-input-answer:focus { border-color: #8b5cf6; }
-
-.check-btn {
-    margin-top: 20px;
-    background: #8b5cf6; color: white; border: none;
-    padding: 12px 30px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-.check-btn:hover { background: #7c3aed; }
-
-.winner-screen {
-    display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
-    justify-content: center; align-items: center; color: white;
-}
-.winner-screen h1 { font-size: 48px; color: ${liquidColor}; text-shadow: 0 0 16px ${liquidColor}; margin-bottom: 16px;}
-.winner-screen img {
-    width: 200px;
-    height: 200px;
-    border-radius: 16px;
-    border: 4px solid ${liquidColor};
-    object-fit: cover;
-}
-.winner-screen h2 { font-size: 28px; margin-top: 16px; }
-</style>
+        /* Winner Screen */
+        .winner-screen {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
+            justify-content: center; align-items: center; color: white;
+            font-size: 1em;
+        }
+        .winner-screen h1 { font-size: 6em; color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
+        .winner-screen img {
+            width:30vmin;
+            height:30vmin;
+            border-radius:2vmin;
+            border: 0.5vmin solid ${liquidColor};
+            object-fit: cover;
+        }
+        .winner-screen h2 { font-size: 3em; margin-top: 2vmin; }
+    </style>
 </head>
 <body>
-<div id="gameRoot"> 
-    <div class="overlay"></div>
-    <div class="players-container" id="pc"></div>
-    <div class="modal-bg" id="modalBg">
-        <div class="modal">
-            <div class="question" id="qText"></div>
-            <div class="options" id="optsDiv"></div>
-            <div id="inputDiv" style="display:none;">
-                <input type="text" class="text-input-answer" id="textAnswer" placeholder="${txt.inputPlaceholder}">
+    <!-- Новый корневой div для всего игрового контента -->
+    <div id="gameRoot"> 
+        <div class="overlay"></div>
+        <div class="players-container" id="pc"></div>
+
+        <!-- Modal -->
+        <div class="modal-bg" id="modalBg">
+            <div class="modal">
+                <div class="question" id="qText"></div>
+                <div class="options" id="optsDiv"></div>
+                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
             </div>
-            <button class="check-btn" id="checkBtn">${txt.check}</button>
         </div>
-    </div>
-    <div class="winner-screen" id="winnerScreen">
-        <h1>${txt.win}</h1>
-        <img id="winnerAvatar">
-        <h2 id="winnerName"></h2>
-    </div>
-</div>
 
-<script>
-var state = ${JSON.stringify(gameState)};
-var currentPlayer = 0;
-var scores = [];
-var availableTaskIndices = [];
-var usedTaskIndices = [];
-var selectedOption = null;
-var currentTaskRef = null;
+        <!-- Winner -->
+        <div class="winner-screen" id="winnerScreen">
+            <h1>${txt.win}</h1>
+            <img id="winnerAvatar">
+            <h2 id="winnerName"></h2>
+        </div>
+    </div> <!-- Конец #gameRoot -->
 
-for(var i=0;i<state.players.length;i++) scores.push(0);
+    <script>
+        const state = ${JSON.stringify(gameState)};
 
-function shuffleArray(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = array[i]; array[i] = array[j]; array[j] = temp;
-    }
-}
-
-function resetTasks() {
-    availableTaskIndices = [];
-    for(var i=0;i<state.tasks.length;i++) availableTaskIndices.push(i);
-    shuffleArray(availableTaskIndices);
-    usedTaskIndices = [];
-}
-
-function init() {
-    if(state.players.length === 0 || state.tasks.length === 0) return;
-    resetTasks();
-    var pc = document.getElementById('pc');
-    var html = '';
-    for(var i=0;i<state.players.length;i++){
-        var p = state.players[i];
-        html += '<div class="player-wrap '+(i===0?'active':'')+'" id="p'+i+'">';
-        html += '<button class="ready-btn" id="readyBtn'+i+'">'+state.txt.ready+'</button>';
-        html += '<div class="flask"><div class="liquid" id="liq'+i+'" style="height:0%"></div></div>';
-        html += '<img src="'+p.url+'" class="avatar">';
-        html += '<div class="name">'+p.name+'</div>';
-        html += '</div>';
-    }
-    pc.innerHTML = html;
-
-    for(var i=0;i<state.players.length;i++){
-        (function(idx){
-            document.getElementById('readyBtn'+idx).addEventListener('click', function(e){
-                e.preventDefault();
-                e.stopPropagation();
-                openTask();
-            });
-        })(i);
-    }
-
-    document.getElementById('checkBtn').addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        checkAnswer();
-    });
-}
-
-function openTask() {
-    if(state.tasks.length === 0) return;
-    if(availableTaskIndices.length === 0) {
-        resetTasks();
-        if(availableTaskIndices.length === 0) return;
-    }
-    
-    var taskIndex = availableTaskIndices.shift();
-    usedTaskIndices.push(taskIndex);
-    var task = state.tasks[taskIndex];
-    currentTaskRef = task;
-    
-    document.getElementById('qText').innerText = task.question;
-    var optsDiv = document.getElementById('optsDiv');
-    var inputDiv = document.getElementById('inputDiv');
-    
-    if(task.type === 'input') {
-        optsDiv.style.display = 'none';
-        inputDiv.style.display = 'block';
-        document.getElementById('textAnswer').value = '';
-        selectedOption = null;
-    } else {
-        optsDiv.style.display = 'flex';
-        inputDiv.style.display = 'none';
-        var html = '';
-        for(var i=0;i<task.options.length;i++){
-            html += '<button class="option-btn" data-idx="'+i+'">'+task.options[i]+'</button>';
-        }
-        optsDiv.innerHTML = html;
-        selectedOption = null;
+        let currentPlayer = 0;
+        let scores = Array(state.players.length).fill(0);
         
-        var btns = optsDiv.querySelectorAll('.option-btn');
-        for(var i=0;i<btns.length;i++){
-            (function(btn, idx){
-                btn.addEventListener('click', function(e){
-                    e.preventDefault();
-                    e.stopPropagation();
-                    selectedOption = idx;
-                    var all = optsDiv.querySelectorAll('.option-btn');
-                    for(var j=0;j<all.length;j++) all[j].classList.remove('selected');
-                    btn.classList.add('selected');
-                });
-            })(btns[i], parseInt(btns[i].getAttribute('data-idx')));
+        let availableTaskIndices = [];
+        let usedTaskIndices = [];
+        let selectedOption = null;
+
+        // Функция для перемешивания массива (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
         }
-    }
-    
-    document.getElementById('modalBg').style.display = 'flex';
-}
 
-function checkAnswer() {
-    if(!currentTaskRef) return;
-    var task = currentTaskRef;
-    var correct = false;
-    
-    if(task.type === 'input') {
-        var userAnswer = document.getElementById('textAnswer').value.trim().toLowerCase();
-        if(userAnswer === '') return;
-        var correctAnswer = (task.correctText || '').trim().toLowerCase();
-        correct = (userAnswer === correctAnswer);
-    } else {
-        if(selectedOption === null) return;
-        correct = (selectedOption === task.correctIdx);
-    }
-    
-    if(correct) {
-        scores[currentPlayer]++;
-        var pcn = (scores[currentPlayer] / state.maxScore) * 100;
-        document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
-        if(scores[currentPlayer] >= state.maxScore) {
-            showWinner();
-            return;
+        function init() {
+            const gameRoot = document.getElementById('gameRoot');
+
+            if(state.players.length === 0) {
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>';
+                return;
+            }
+            if(state.tasks.length === 0) {
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>';
+                return;
+            }
+
+            resetTasks();
+
+            const pc = document.getElementById('pc');
+            pc.innerHTML = state.players.map((p, i) => \`
+                <div class="player-outer-wrapper \${i === 0 ? 'active' : ''}" id="pOuter\${i}">
+                    <button class="ready-btn" id="readyBtnP\${i}" onclick="openTask()">\${state.txt.ready}</button>
+                    <div class="player-inner-unit">
+                        <div class="flask">
+                            <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
+                        </div>
+                        <div class="player-card" id="pCard\${i}">
+                            <img src="\${p.url}" class="avatar">
+                            <div class="name">\${p.name}</div>
+                        </div>
+                    </div>
+                </div>
+            \`).join('');
         }
-    }
-    
-    document.getElementById('modalBg').style.display = 'none';
-    currentTaskRef = null;
-    nextTurn();
-}
 
-function nextTurn() {
-    document.getElementById('p'+currentPlayer).classList.remove('active');
-    currentPlayer = (currentPlayer + 1) % state.players.length;
-    document.getElementById('p'+currentPlayer).classList.add('active');
-}
+        function resetTasks() {
+            availableTaskIndices = Array.from({length: state.tasks.length}, (_, i) => i);
+            shuffleArray(availableTaskIndices);
+            usedTaskIndices = [];
+        }
 
-function showWinner() {
-    document.getElementById('modalBg').style.display = 'none';
-    document.getElementById('winnerScreen').style.display = 'flex';
-    document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
-    document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
-}
+        function openTask() {
+            if(state.tasks.length === 0) {
+                console.warn("Нет заданий!");
+                return;
+            }
+            if(availableTaskIndices.length === 0) {
+                console.log("Все задания использованы, сброс пула заданий.");
+                resetTasks();
+                if(availableTaskIndices.length === 0) {
+                    console.error("Не удалось сбросить задания. Возможно, нет заданий в списке.");
+                    return;
+                }
+            }
+            
+            const taskIndex = availableTaskIndices.shift();
+            usedTaskIndices.push(taskIndex);
+            
+            const task = state.tasks[taskIndex];
+            
+            document.getElementById('qText').innerText = task.question;
+            const optsDiv = document.getElementById('optsDiv');
+            optsDiv.innerHTML = task.options.map((opt, i) => 
+                \`<button class="option-btn" onclick="selectOpt(\${i}, this)">\${opt}</button>\`
+            ).join('');
+            
+            selectedOption = null;
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('modalBg').style.display = 'flex';
+        }
 
-init();
-<\/script>
+        function selectOpt(idx, el) {
+            selectedOption = idx;
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function checkAnswer() {
+            if(selectedOption === null) {
+                return;
+            }
+            const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
+            const task = state.tasks[lastTaskIndex];
+            
+            if(selectedOption === task.correctIdx) {
+                scores[currentPlayer]++;
+                const pcn = (scores[currentPlayer] / state.maxScore) * 100;
+                document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
+                
+                if(scores[currentPlayer] >= state.maxScore) {
+                    showWinner();
+                    return;
+                }
+            }
+            
+            document.getElementById('modalBg').style.display = 'none';
+            nextTurn();
+        }
+
+        function nextTurn() {
+            document.getElementById('pOuter'+currentPlayer).classList.remove('active');
+            currentPlayer = (currentPlayer + 1) % state.players.length;
+            document.getElementById('pOuter'+currentPlayer).classList.add('active');
+        }
+
+        function showWinner() {
+            document.getElementById('modalBg').style.display = 'none';
+            document.getElementById('winnerScreen').style.display = 'flex';
+            document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
+            document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
+        }
+
+        init(); // Вызываем инициализацию игры сразу после определения функций
+    <\/script>
 </body>
 </html>`;
         }
@@ -830,7 +812,7 @@ init();
         function updatePreview() {
             const html = getGameHTML();
             const iframe = document.getElementById('previewFrame');
-            iframe.srcdoc = html;
+            iframe.srcdoc = html; // Более надежный способ обновления srcdoc
         }
 
         function generateCode() {
@@ -847,6 +829,8 @@ init();
                 }, 2000);
             }).catch(err => {
                 console.error("Ошибка копирования в буфер обмена:", err);
+                // Используем console.log вместо alert для Genially-совместимости
+                console.log("Ошибка копирования. Скопируйте код вручную из консоли разработчика.");
                 console.log("--- Начало сгенерированного кода ---");
                 console.log(html);
                 console.log("--- Конец сгенерированного кода ---");
