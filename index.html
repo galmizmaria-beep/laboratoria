@@ -311,7 +311,7 @@
             });
         }
 
-        // --- ИДЕАЛЬНЫЙ ДВИЖОК ИГРЫ ДЛЯ GENIALLY (REM СКАЛИРОВАНИЕ) ---
+        // --- ИДЕАЛЬНЫЙ ДВИЖОК ИГРЫ ДЛЯ GENIALLY (CSS TRANSFORM SCALING) ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
@@ -320,7 +320,7 @@
             const fontFamily = document.getElementById('fontFamily').value;
             
             const avatarSize = document.getElementById('avatarSize').value;
-            const finalAvatarSize = Math.round(280 * (avatarSize / 100));
+            const finalAvatarSize = Math.round(280 * (avatarSize / 100)); // This value will now be interpreted as px
 
             const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!' } 
                                       : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!' };
@@ -332,7 +332,6 @@
 <html lang="${lang}">
 <head>
     <meta charset="UTF-8">
-    <!-- Удален meta-тег viewport, чтобы Genially мог управлять размерами iframe -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
@@ -345,43 +344,55 @@
 
         *, *::before, *::after { box-sizing: border-box !important; }
 
-        /* Игровое поле. Размеры заданы в rem. Скрипт будет менять только базовый размер шрифта (1rem) */
+        /* Игровое поле: занимает 100% iframe, является контейнером для gameContentWrapper */
         #gameRoot {
-            width: 1920rem; height: 1080rem;
-            position: absolute; left: 50%; top: 50%;
-            transform: translate(-50%, -50%); /* Идеальное центрирование без искажения хитбоксов */
+            width: 100%; height: 100%;
+            position: relative; /* Важно для абсолютного позиционирования дочернего элемента */
             ${gameBackgroundStyle}
             background-size: cover; background-position: center;
-            box-shadow: inset 0 0 100rem rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8); /* Изменено с rem на px */
             overflow: hidden;
         }
 
-        /* Все классы начинаются с #gameRoot, чтобы перебить стили Genially */
+        /* Обёртка контента, которая будет масштабироваться и центрироваться */
+        #gameRoot #gameContentWrapper {
+            width: 1920px; /* Фиксированное разрешение дизайна */
+            height: 1080px; /* Фиксированное разрешение дизайна */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Начальное центрирование */
+            transform-origin: center center; /* Масштабирование из центра */
+            overflow: hidden;
+            /* Цвет фона, если его нет в gameRoot, можно добавить здесь */
+        }
+
+        /* Все классы начинаются с #gameRoot, чтобы перебить стили Genially, но теперь внутри #gameContentWrapper */
         #gameRoot .overlay { 
             position: absolute; top:0; left:0; width:100%; height:100%; 
             background: rgba(0,0,0,0.4) !important; pointer-events: none !important; z-index: 1;
         }
         
         #gameRoot .players-container {
-            position: absolute; bottom: 80rem; left: 0; width: 100%;
+            position: absolute; bottom: 80px; left: 0; width: 100%; /* Изменено с rem на px */
             display: flex; justify-content: space-evenly; align-items: flex-end; z-index: 5;
         }
         
         #gameRoot .player-wrap {
             display: flex; flex-direction: column; align-items: center;
             position: relative; transition: opacity 0.3s; opacity: 0.4;
-            width: 350rem;
+            width: 350px; /* Изменено с rem на px */
         }
         #gameRoot .player-wrap.active { opacity: 1; z-index: 10; }
 
         #gameRoot .ready-btn {
-            position: absolute !important; top: -110rem !important;
+            position: absolute !important; top: -110px !important; /* Изменено с rem на px */
             background: #9d4edd !important; color: white !important; border: none !important;
-            padding: 20rem 50rem !important; border-radius: 40rem !important; 
+            padding: 20px 50px !important; border-radius: 40px !important; /* Изменено с rem на px */
             font-family: inherit !important; font-weight: 800 !important; 
-            cursor: pointer !important; box-shadow: 0 0 30rem rgba(157, 78, 221, 0.8) !important; 
-            display: none; z-index: 100 !important; font-size: 28rem !important; 
-            text-transform: uppercase !important; letter-spacing: 2rem !important;
+            cursor: pointer !important; box-shadow: 0 0 30px rgba(157, 78, 221, 0.8) !important; /* Изменено с rem на px */
+            display: none; z-index: 100 !important; font-size: 28px !important; /* Изменено с rem на px */
+            text-transform: uppercase !important; letter-spacing: 2px !important; /* Изменено с rem на px */
             pointer-events: auto !important;
         }
         #gameRoot .player-wrap.active .ready-btn { display: block; animation: bounceIn 0.5s ease; }
@@ -394,31 +405,31 @@
         }
 
         #gameRoot .flask {
-            width: 80rem; height: 380rem; border: 8rem solid rgba(255,255,255,0.3) !important;
-            border-radius: 40rem; overflow: hidden; background: rgba(0,0,0,0.4) !important;
-            display: flex; align-items: flex-end; margin-bottom: -50rem; z-index: 2;
+            width: 80px; height: 380px; border: 8px solid rgba(255,255,255,0.3) !important; /* Изменено с rem на px */
+            border-radius: 40px; overflow: hidden; background: rgba(0,0,0,0.4) !important; /* Изменено с rem на px */
+            display: flex; align-items: flex-end; margin-bottom: -50px; z-index: 2; /* Изменено с rem на px */
         }
         #gameRoot .liquid {
             width: 100%; background: ${liquidColor} !important; transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: inset 0 0 20rem rgba(0,0,0,0.5), 0 -10rem 40rem ${liquidColor} !important;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 -10px 40px ${liquidColor} !important; /* Изменено с rem на px */
         }
 
         #gameRoot .avatar-container {
-            width: ${finalAvatarSize}rem; height: ${finalAvatarSize}rem; border-radius: 40rem;
-            border: 8rem solid rgba(255,255,255,0.2) !important; background: #1d1033 !important;
+            width: ${finalAvatarSize}px; height: ${finalAvatarSize}px; border-radius: 40px; /* Изменено с rem на px */
+            border: 8px solid rgba(255,255,255,0.2) !important; background: #1d1033 !important; /* Изменено с rem на px */
             overflow: hidden; z-index: 3; position: relative; transition: all 0.3s;
         }
         #gameRoot .player-wrap.active .avatar-container {
-            border-color: #9d4edd !important; box-shadow: 0 0 50rem rgba(157, 78, 221, 0.9), inset 0 0 30rem rgba(157, 78, 221, 0.5) !important;
+            border-color: #9d4edd !important; box-shadow: 0 0 50px rgba(157, 78, 221, 0.9), inset 0 0 30px rgba(157, 78, 221, 0.5) !important; /* Изменено с rem на px */
         }
         #gameRoot .avatar { width: 100%; height: 100%; object-fit: cover; }
 
         #gameRoot .name { 
-            margin-top: 30rem; background: rgba(20, 15, 35, 0.9) !important; 
-            border: 4rem solid rgba(255,255,255,0.15) !important;
-            color: white !important; padding: 15rem 40rem; border-radius: 40rem; font-size: 26rem !important; 
+            margin-top: 30px; background: rgba(20, 15, 35, 0.9) !important; /* Изменено с rem на px */
+            border: 4px solid rgba(255,255,255,0.15) !important; /* Изменено с rem на px */
+            color: white !important; padding: 15px 40px; border-radius: 40px; font-size: 26px !important; /* Изменено с rem на px */
             font-weight: 700; text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%;
-            overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15rem 25rem rgba(0,0,0,0.6);
+            overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6); /* Изменено с rem на px */
         }
 
         /* Модалки */
@@ -429,92 +440,97 @@
         }
         
         #gameRoot .modal {
-            background: rgba(25, 15, 45, 0.95) !important; border: 8rem solid #9d4edd !important;
-            border-radius: 50rem; padding: 70rem; width: 1100rem;
-            text-align: center; box-shadow: 0 0 80rem rgba(157, 78, 221, 0.5) !important; color: white !important;
+            background: rgba(25, 15, 45, 0.95) !important; border: 8px solid #9d4edd !important; /* Изменено с rem на px */
+            border-radius: 50px; padding: 70px; width: 1100px; /* Изменено с rem на px */
+            text-align: center; box-shadow: 0 0 80px rgba(157, 78, 221, 0.5) !important; color: white !important; /* Изменено с rem на px */
         }
 
-        #gameRoot .question { font-size: 48rem !important; font-weight: 800; margin-bottom: 60rem; line-height: 1.3;}
-        #gameRoot .options { display: flex; flex-direction: column; gap: 20rem; }
+        #gameRoot .question { font-size: 48px !important; font-weight: 800; margin-bottom: 60px; line-height: 1.3;} /* Изменено с rem на px */
+        #gameRoot .options { display: flex; flex-direction: column; gap: 20px; } /* Изменено с rem на px */
         
         #gameRoot .option-btn {
             background: rgba(255, 255, 255, 0.05) !important; color: white !important; 
-            border: 4rem solid rgba(255,255,255,0.1) !important;
-            padding: 30rem; border-radius: 25rem; cursor: pointer !important; transition: all 0.2s; 
-            font-size: 32rem !important; text-align: left; font-family: inherit !important; font-weight: 700;
+            border: 4px solid rgba(255,255,255,0.1) !important; /* Изменено с rem на px */
+            padding: 30px; border-radius: 25px; cursor: pointer !important; transition: all 0.2s; /* Изменено с rem на px */
+            font-size: 32px !important; text-align: left; font-family: inherit !important; font-weight: 700; /* Изменено с rem на px */
         }
-        #gameRoot .option-btn:hover { background: rgba(157, 78, 221, 0.2) !important; border-color: #9d4edd !important; transform: translateX(15rem); }
+        #gameRoot .option-btn:hover { background: rgba(157, 78, 221, 0.2) !important; border-color: #9d4edd !important; transform: translateX(15px); } /* Изменено с rem на px */
         #gameRoot .option-btn.selected { 
             background: rgba(157, 78, 221, 0.6) !important; border-color: #00f5ff !important; 
-            box-shadow: 0 0 40rem rgba(0, 245, 255, 0.4) !important; transform: translateX(15rem);
+            box-shadow: 0 0 40px rgba(0, 245, 255, 0.4) !important; transform: translateX(15px); /* Изменено с rem на px */
         }
         
         #gameRoot .check-btn {
-            margin-top: 60rem; background: #00f5ff !important; color: #000 !important; border: none !important;
-            font-family: inherit !important; padding: 25rem 80rem; font-size: 36rem !important; 
-            font-weight: 800; border-radius: 50rem; cursor: pointer !important; 
-            text-transform: uppercase; box-shadow: 0 0 40rem rgba(0, 245, 255, 0.5) !important; transition: 0.3s;
+            margin-top: 60px; background: #00f5ff !important; color: #000 !important; border: none !important; /* Изменено с rem на px */
+            font-family: inherit !important; padding: 25px 80px; font-size: 36px !important; /* Изменено с rem на px */
+            font-weight: 800; border-radius: 50px; cursor: pointer !important; /* Изменено с rem на px */
+            text-transform: uppercase; box-shadow: 0 0 40px rgba(0, 245, 255, 0.5) !important; transition: 0.3s; /* Изменено с rem на px */
         }
-        #gameRoot .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60rem rgba(0, 245, 255, 0.8) !important; }
+        #gameRoot .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 245, 255, 0.8) !important; } /* Изменено с rem на px */
 
         #gameRoot .winner-screen {
             display: none; position: absolute; top:0; left:0; width:100%; height:100%;
             background: rgba(11, 6, 22, 0.95) !important; z-index: 300; flex-direction: column;
             justify-content: center; align-items: center; color: white !important;
         }
-        #gameRoot .winner-screen h1 { font-size: 140rem !important; font-weight: 800; color: ${liquidColor} !important; text-shadow: 0 0 60rem ${liquidColor} !important; margin: 0 0 50rem 0;}
+        #gameRoot .winner-screen h1 { font-size: 140px !important; font-weight: 800; color: ${liquidColor} !important; text-shadow: 0 0 60px ${liquidColor} !important; margin: 0 0 50px 0;} /* Изменено с rem на px */
         #gameRoot .winner-screen img {
-            width: 450rem; height: 450rem; border-radius: 60rem;
-            border: 15rem solid ${liquidColor} !important; object-fit: cover; box-shadow: 0 0 100rem ${liquidColor} !important;
+            width: 450px; height: 450px; border-radius: 60px; /* Изменено с rem на px */
+            border: 15px solid ${liquidColor} !important; object-fit: cover; box-shadow: 0 0 100px ${liquidColor} !important; /* Изменено с rem на px */
         }
-        #gameRoot .winner-screen h2 { font-size: 70rem !important; margin-top: 50rem; text-transform: uppercase; font-weight: 800; }
+        #gameRoot .winner-screen h2 { font-size: 70px !important; margin-top: 50px; text-transform: uppercase; font-weight: 800; } /* Изменено с rem на px */
         
         #gameRoot .empty-state {
-            color: rgba(255,255,255,0.5) !important; font-size: 40rem !important; font-weight: 700;
+            color: rgba(255,255,255,0.5) !important; font-size: 40px !important; font-weight: 700; /* Изменено с rem на px */
             text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%;
         }
     </style>
 </head>
 <body>
     <div id="gameRoot"> 
-        <div class="overlay"></div>
-        <div class="players-container" id="pc"></div>
+        <div id="gameContentWrapper"> <!-- НОВЫЙ КОНТЕЙНЕР ДЛЯ МАСШТАБИРОВАНИЯ -->
+            <div class="overlay"></div>
+            <div class="players-container" id="pc"></div>
 
-        <div class="modal-bg" id="modalBg">
-            <div class="modal">
-                <div class="question" id="qText"></div>
-                <div class="options" id="optsDiv"></div>
-                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+            <div class="modal-bg" id="modalBg">
+                <div class="modal">
+                    <div class="question" id="qText"></div>
+                    <div class="options" id="optsDiv"></div>
+                    <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+                </div>
             </div>
-        </div>
 
-        <div class="winner-screen" id="winnerScreen">
-            <h1>${txt.win}</h1>
-            <img id="winnerAvatar">
-            <h2 id="winnerName"></h2>
-        </div>
+            <div class="winner-screen" id="winnerScreen">
+                <h1>${txt.win}</h1>
+                <img id="winnerAvatar">
+                <h2 id="winnerName"></h2>
+            </div>
+        </div> <!-- КОНЕЦ НОВОГО КОНТЕЙНЕРА -->
     </div>
 
     <script>
-        // ИДЕАЛЬНОЕ МАСШТАБИРОВАНИЕ ЧЕРЕЗ REM
+        // ИДЕАЛЬНОЕ МАСШТАБИРОВАНИЕ ЧЕРЕЗ CSS TRANSFORM
         function resizeGame() {
-            // ИСПОЛЬЗУЕМ clientWidth/clientHeight ВМЕСТО innerWidth/innerHeight
+            const gameContent = document.getElementById('gameContentWrapper');
+            if (!gameContent) return;
+
+            const designWidth = 1920;
+            const designHeight = 1080;
+            
+            // Получаем текущие размеры iframe
             const w = document.documentElement.clientWidth;
             const h = document.documentElement.clientHeight;
-            const aspect = 1920 / 1080;
-            
-            let scale;
-            if (w / h > aspect) {
-                scale = h / 1080; // Если окно слишком широкое, подгоняем по высоте
-            } else {
-                scale = w / 1920; // Если слишком узкое, подгоняем по ширине
-            }
-            
-            // Физически меняем базовый размер (1rem = scale px)
-            document.documentElement.style.fontSize = scale + 'px';
+
+            // Вычисляем коэффициенты масштабирования по ширине и высоте
+            const scaleX = w / designWidth;
+            const scaleY = h / designHeight;
+            const scale = Math.min(scaleX, scaleY); // Используем наименьший, чтобы всё поместилось
+
+            // Применяем масштабирование и центрирование
+            gameContent.style.transform = `translate(-50%, -50%) scale(${scale})`;
         }
         window.addEventListener('resize', resizeGame);
-        resizeGame(); // Вызов при старте
+        resizeGame(); // Вызов при старте для установки начального размера
 
         // ЛОГИКА ИГРЫ
         const state = ${JSON.stringify(gameState)};
@@ -534,19 +550,48 @@
         function init() {
             const gameRoot = document.getElementById('gameRoot');
             if(state.players.length === 0 || state.tasks.length === 0) {
+                // Если нет игроков или заданий, показываем сообщение на весь gameRoot
                 gameRoot.innerHTML = '<div class="empty-state">Добавьте игроков и задания в редакторе</div>'; 
+                gameRoot.style.display = 'flex'; // Убедимся, что empty-state будет центрировано
+                gameRoot.style.justifyContent = 'center';
+                gameRoot.style.alignItems = 'center';
                 return;
             }
+            // Если есть игроки и задания, убедимся, что gameContentWrapper существует и пуст перед рендерингом
+            const gameContentWrapper = document.getElementById('gameContentWrapper');
+            if(gameContentWrapper) {
+                gameContentWrapper.innerHTML = `
+                    <div class="overlay"></div>
+                    <div class="players-container" id="pc"></div>
+
+                    <div class="modal-bg" id="modalBg">
+                        <div class="modal">
+                            <div class="question" id="qText"></div>
+                            <div class="options" id="optsDiv"></div>
+                            <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+                        </div>
+                    </div>
+
+                    <div class="winner-screen" id="winnerScreen">
+                        <h1>${txt.win}</h1>
+                        <img id="winnerAvatar">
+                        <h2 id="winnerName"></h2>
+                    </div>
+                `; // Re-inject the static structure
+            }
+
             resetTasks();
             const pc = document.getElementById('pc');
-            pc.innerHTML = state.players.map((p, i) => \`
-                <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
-                    <button class="ready-btn" onclick="openTask()">\${state.txt.ready}</button>
-                    <div class="flask"><div class="liquid" id="liq\${i}" style="height: 0%;"></div></div>
-                    <div class="avatar-container"><img src="\${p.url}" class="avatar"></div>
-                    <div class="name">\${p.name || 'Игрок ' + (i+1)}</div>
-                </div>
-            \`).join('');
+            if (pc) {
+                pc.innerHTML = state.players.map((p, i) => `
+                    <div class="player-wrap ${i === 0 ? 'active' : ''}" id="p${i}">
+                        <button class="ready-btn" onclick="openTask()">${state.txt.ready}</button>
+                        <div class="flask"><div class="liquid" id="liq${i}" style="height: 0%;"></div></div>
+                        <div class="avatar-container"><img src="${p.url}" class="avatar"></div>
+                        <div class="name">${p.name || 'Игрок ' + (i+1)}</div>
+                    </div>
+                `).join('');
+            }
         }
 
         function resetTasks() {
@@ -564,7 +609,7 @@
             document.getElementById('qText').innerText = task.question;
             const optsDiv = document.getElementById('optsDiv');
             optsDiv.innerHTML = task.options.map((opt, i) => 
-                \`<button class="option-btn" onclick="selectOpt(\${i}, this)">\${opt}</button>\`
+                `<button class="option-btn" onclick="selectOpt(${i}, this)">${opt}</button>`
             ).join('');
             
             selectedOption = null;
@@ -585,31 +630,51 @@
             if(selectedOption === task.correctIdx) {
                 scores[currentPlayer]++;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
-                document.getElementById('liq'+currentPlayer).style.height = Math.min(pcn, 100) + '%';
+                const liqElement = document.getElementById('liq'+currentPlayer);
+                if (liqElement) {
+                    liqElement.style.height = Math.min(pcn, 100) + '%';
+                }
                 
                 if(scores[currentPlayer] >= state.maxScore) {
                     showWinner();
                     return;
                 }
             }
-            document.getElementById('modalBg').style.display = 'none';
+            const modalBg = document.getElementById('modalBg');
+            if (modalBg) {
+                modalBg.style.display = 'none';
+            }
             nextTurn();
         }
 
         function nextTurn() {
-            document.getElementById('p'+currentPlayer).classList.remove('active');
+            const currentPlayerElement = document.getElementById('p'+currentPlayer);
+            if (currentPlayerElement) {
+                currentPlayerElement.classList.remove('active');
+            }
             currentPlayer = (currentPlayer + 1) % state.players.length;
-            document.getElementById('p'+currentPlayer).classList.add('active');
+            const nextPlayerElement = document.getElementById('p'+currentPlayer);
+            if (nextPlayerElement) {
+                nextPlayerElement.classList.add('active');
+            }
         }
 
         function showWinner() {
-            document.getElementById('modalBg').style.display = 'none';
-            document.getElementById('winnerScreen').style.display = 'flex';
-            document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
-            document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
+            const modalBg = document.getElementById('modalBg');
+            if (modalBg) {
+                modalBg.style.display = 'none';
+            }
+            const winnerScreen = document.getElementById('winnerScreen');
+            if (winnerScreen) {
+                winnerScreen.style.display = 'flex';
+                const winnerAvatar = document.getElementById('winnerAvatar');
+                if (winnerAvatar) winnerAvatar.src = state.players[currentPlayer].url;
+                const winnerName = document.getElementById('winnerName');
+                if (winnerName) winnerName.innerText = state.players[currentPlayer].name || 'Игрок ' + (currentPlayer + 1);
+            }
         }
 
-        init();
+        init(); // Инициализация игры при загрузке iframe
     <\/script>
 </body>
 </html>`;
