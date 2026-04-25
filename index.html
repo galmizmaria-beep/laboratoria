@@ -338,7 +338,7 @@
         
         /* Жесткий сброс стилей для изоляции от Genially */
         html, body { 
-            margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important; /* Изменено на 100% вместо 100vw/100vh */
+            margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important;
             overflow: hidden !important; background: transparent !important; 
             font-family: '${fontFamily}', sans-serif !important;
         }
@@ -498,8 +498,9 @@
     <script>
         // ИДЕАЛЬНОЕ МАСШТАБИРОВАНИЕ ЧЕРЕЗ REM
         function resizeGame() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            // ИСПОЛЬЗУЕМ clientWidth/clientHeight ВМЕСТО innerWidth/innerHeight
+            const w = document.documentElement.clientWidth;
+            const h = document.documentElement.clientHeight;
             const aspect = 1920 / 1080;
             
             let scale;
