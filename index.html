@@ -87,7 +87,8 @@
             align-items: center;
             gap: 15px;
         }
-        .form-group.row .color-picker-wrapper {
+        .form-group.row .color-picker-wrapper,
+        .form-group.row .input-wrapper {
              flex: 1;
         }
 
@@ -212,9 +213,15 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Очки для победы</label>
-                <input type="number" id="maxScore" value="5" min="1" onchange="updatePreview()">
+            <div class="form-group row">
+                <div class="input-wrapper">
+                    <label>Очки для победы</label>
+                    <input type="number" id="maxScore" value="20" min="1" onchange="updatePreview()">
+                </div>
+                <div class="input-wrapper">
+                    <label>Очки за ответ</label>
+                    <input type="number" id="pointsPerAnswer" value="5" min="1" onchange="updatePreview()">
+                </div>
             </div>
             
             <div class="form-group row">
@@ -271,7 +278,7 @@
         window.onload = () => {
             config.players = [];
             config.tasks = [];
-            addPlayer('Игрок 1', 'https://i.imgur.com/sCE1g4M.png'); // Fixed default image
+            addPlayer('Игрок 1', 'https://i.imgur.com/8DbkK2i.png'); // New working default image
             addTask();
             updatePreview();
         };
@@ -393,21 +400,25 @@
             const bgUrl = document.getElementById('bgUrl').value; 
             const liquidColor = document.getElementById('liquidColor').value;
             const maxScore = document.getElementById('maxScore').value;
+            const pointsPerAnswer = document.getElementById('pointsPerAnswer').value;
             const fontFamily = document.getElementById('fontFamily').value;
             const avatarSize = document.getElementById('avatarSize').value;
             const finalAvatarSize = Math.round(280 * (avatarSize / 100));
             const themeColor = document.getElementById('themeColor').value;
             const glowColor = document.getElementById('glowColor').value;
 
-            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', inputPlaceholder: 'Введите ответ...' } 
-                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', inputPlaceholder: 'Type your answer...' };
+            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', points: 'очков', inputPlaceholder: 'Введите ответ...' } 
+                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', points: 'points', inputPlaceholder: 'Type your answer...' };
             
-            // Fixed maxScore parsing and created gameState
-            const gameState = { players: config.players, tasks: config.tasks, maxScore: parseInt(maxScore) || 5, txt: txt };
+            const gameState = { 
+                players: config.players, 
+                tasks: config.tasks, 
+                maxScore: parseInt(maxScore) || 20, 
+                pointsPerAnswer: parseInt(pointsPerAnswer) || 5,
+                txt: txt 
+            };
             
-            // --- NEW: Distribute tasks to players ---
             const allTaskIndices = gameState.tasks.map((_, i) => i);
-            // Simple shuffle
             for (let i = allTaskIndices.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [allTaskIndices[i], allTaskIndices[j]] = [allTaskIndices[j], allTaskIndices[i]];
@@ -416,12 +427,10 @@
             const playerTasks = Array.from({ length: gameState.players.length }, () => []);
             if (gameState.players.length > 0) {
                 allTaskIndices.forEach((taskIndex, i) => {
-                    const playerIndex = i % gameState.players.length;
-                    playerTasks[playerIndex].push(taskIndex);
+                    playerTasks[i % gameState.players.length].push(taskIndex);
                 });
             }
-            gameState.playerTasks = playerTasks; // Add distributed tasks to the main state object
-            // --- END NEW LOGIC ---
+            gameState.playerTasks = playerTasks;
 
             const gameBackgroundStyle = bgUrl ? `background-image: url('${bgUrl}');` : `background-color: #0b0616;`;
 
@@ -473,6 +482,7 @@
         #gameRoot .winner-screen h1 { font-size: 140px !important; font-weight: 800; color: ${liquidColor} !important; text-shadow: 0 0 60px ${liquidColor} !important; margin: 0 0 50px 0;}
         #gameRoot .winner-screen img { width: 450px; height: 450px; border-radius: 60px; border: 15px solid ${liquidColor} !important; object-fit: cover; box-shadow: 0 0 100px ${liquidColor} !important; }
         #gameRoot .winner-screen h2 { font-size: 70px !important; margin-top: 50px; text-transform: uppercase; font-weight: 800; }
+        #gameRoot .winner-screen h3 { font-size: 50px !important; font-weight: 700; color: #eaddf8 !important; margin-top: 25px; }
         #gameRoot .empty-state { color: rgba(255,255,255,0.5) !important; font-size: 40px !important; font-weight: 700; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; }
     </style>
 </head>
@@ -489,7 +499,7 @@
                 </div>
             </div>
             <div class="winner-screen" id="winnerScreen">
-                <h1>${txt.win}</h1> <img id="winnerAvatar"> <h2 id="winnerName"></h2>
+                <h1>${txt.win}</h1> <img id="winnerAvatar"> <h2 id="winnerName"></h2> <h3 id="winnerScore"></h3>
             </div>
         </div>
     </div>
@@ -497,7 +507,7 @@
         const state = ${JSON.stringify(gameState)};
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
-        let playerTaskQueues; // NEW: Each player gets their own task queue
+        let playerTaskQueues;
         let currentTaskIndex = -1;
         let selectedOption = null;
 
@@ -515,15 +525,11 @@
             if(!gameRoot || state.players.length === 0 || state.tasks.length === 0) {
                 if(gameRoot) gameRoot.innerHTML = '<div class="empty-state">Добавьте игроков и задания в редакторе</div>'; return;
             }
-            
             playerTaskQueues = JSON.parse(JSON.stringify(state.playerTasks || []));
-
             const pc = document.getElementById('pc');
             pc.innerHTML = state.players.map((p, i) => \`<div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}"><button class="ready-btn">\${state.txt.ready}</button><div class="flask"><div class="liquid" id="liq\${i}" style="height: 0%;"></div></div><div class="avatar-container"><img src="\${p.url}" class="avatar" onerror="this.style.display='none'"></div><div class="name">\${p.name || 'Игрок ' + (i+1)}</div></div>\`).join('');
-            
             document.querySelectorAll('.ready-btn').forEach(btn => btn.addEventListener('click', openTask));
             document.getElementById('checkBtn').addEventListener('click', checkAnswer);
-            
             updatePlayButtonVisibility(currentPlayer);
             resizeGame();
         }
@@ -531,23 +537,16 @@
         function updatePlayButtonVisibility(playerIndex) {
             const readyBtn = document.querySelector(\`#p\${playerIndex} .ready-btn\`);
             if (readyBtn) {
-                if (playerTaskQueues[playerIndex] && playerTaskQueues[playerIndex].length > 0) {
-                    readyBtn.style.visibility = 'visible';
-                } else {
-                    readyBtn.style.visibility = 'hidden';
-                }
+                readyBtn.style.visibility = (playerTaskQueues[playerIndex] && playerTaskQueues[playerIndex].length > 0) ? 'visible' : 'hidden';
             }
         }
 
         function openTask() {
             if (!playerTaskQueues[currentPlayer] || playerTaskQueues[currentPlayer].length === 0) return;
-
             currentTaskIndex = playerTaskQueues[currentPlayer].shift();
             const task = state.tasks[currentTaskIndex];
-            
             document.getElementById('qText').innerText = task.question;
             const optsDiv = document.getElementById('optsDiv');
-            
             if (task.type === 'multiple-choice') {
                 optsDiv.innerHTML = task.options.map((opt, i) => \`<button class="option-btn" data-index="\${i}">\${opt}</button>\`).join('');
                 optsDiv.querySelectorAll('.option-btn').forEach(btn => btn.addEventListener('click', () => selectOpt(parseInt(btn.dataset.index), btn)));
@@ -567,7 +566,6 @@
         function checkAnswer() {
             const task = state.tasks[currentTaskIndex];
             let isCorrect = false;
-
             if (task.type === 'multiple-choice') {
                 if (selectedOption === null) return;
                 isCorrect = (selectedOption === task.correctIdx);
@@ -577,9 +575,8 @@
                 if (userAnswer === '') return;
                 isCorrect = (userAnswer === correctAnswer);
             }
-            
             if(isCorrect) {
-                scores[currentPlayer]++;
+                scores[currentPlayer] += state.pointsPerAnswer;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
                 document.getElementById('liq'+currentPlayer).style.height = Math.min(pcn, 100) + '%';
                 if(scores[currentPlayer] >= state.maxScore) {
@@ -587,9 +584,8 @@
                     return;
                 }
             }
-            
             document.getElementById('modalBg').style.display = 'none';
-            updatePlayButtonVisibility(currentPlayer); // Hide button if tasks just ran out
+            updatePlayButtonVisibility(currentPlayer);
             nextTurn();
         }
 
@@ -597,7 +593,7 @@
             document.getElementById('p'+currentPlayer).classList.remove('active');
             currentPlayer = (currentPlayer + 1) % state.players.length;
             document.getElementById('p'+currentPlayer).classList.add('active');
-            updatePlayButtonVisibility(currentPlayer); // Check visibility for the new player
+            updatePlayButtonVisibility(currentPlayer);
         }
 
         function showWinner() {
@@ -606,6 +602,7 @@
             winnerScreen.style.display = 'flex';
             document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
+            document.getElementById('winnerScore').innerText = scores[currentPlayer] + ' ' + state.txt.points;
         }
 
         init();
