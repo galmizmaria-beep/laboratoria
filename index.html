@@ -46,8 +46,8 @@
         }
 
         .sidebar {
-            width: 35%;
-            max-width: 450px;
+            width: 40%;
+            max-width: 500px;
             background-color: transparent;
             border-right: 1px solid var(--border-color);
             padding: 25px;
@@ -81,6 +81,15 @@
             gap: 8px;
             margin-bottom: 15px;
         }
+        
+        .form-group.row {
+            flex-direction: row;
+            align-items: center;
+            gap: 15px;
+        }
+        .form-group.row .color-picker-wrapper {
+             flex: 1;
+        }
 
         .form-group label {
             font-size: 0.85rem;
@@ -108,7 +117,7 @@
             background-color: rgba(29, 16, 51, 0.8);
         }
 
-        input[type="color"] { padding: 2px 5px; height: 45px; width: 100%; cursor: pointer; }
+        input[type="color"] { padding: 2px 5px; height: 45px; width: 100%; cursor: pointer; border-radius: 8px; }
         input[type="range"] { padding: 0; accent-color: var(--neon-purple); }
 
         button {
@@ -137,20 +146,27 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        .card button {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border-color: var(--danger);
-            font-size: 0.8rem;
-            padding: 8px 12px;
-            margin-top: 10px;
+        .card .delete-btn {
+            background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger);
+            font-size: 0.8rem; padding: 8px 12px; margin-top: 10px;
+        }
+        .card .delete-btn:hover { background: var(--danger); color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        .card .add-option-btn {
+            background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: var(--success);
+            font-size: 0.8rem; padding: 6px 10px; margin-top: 10px; width: 100%;
+        }
+        .card .add-option-btn:hover { background: var(--success); color: white; }
+
+        .option-item { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+        .option-item input[type="radio"] { accent-color: var(--neon-blue); width: 20px; height: 20px; flex-shrink: 0;}
+        .option-item input[type="text"] { flex: 1; }
+        .option-item .remove-option-btn {
+             background: transparent; color: var(--danger); border: none; font-size: 1.2rem;
+             padding: 0 5px; cursor: pointer; line-height: 1; font-weight: bold;
         }
         
-        .card button:hover { background: var(--danger); color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
-        .card input[type="radio"] { accent-color: var(--neon-blue); width: 20px; height: 20px; margin-top: 10px; }
-        
         .info-message { font-size: 0.75rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 10px; text-align: center; }
-
+        
         .main-content { flex: 1; display: flex; flex-direction: column; padding: 25px; background: transparent; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header h2 { margin: 0; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.8rem; color: #fff; }
@@ -200,6 +216,17 @@
                 <label>Очки для победы</label>
                 <input type="number" id="maxScore" value="5" min="1" onchange="updatePreview()">
             </div>
+            
+            <div class="form-group row">
+                 <div class="color-picker-wrapper">
+                    <label>Цвет элементов</label>
+                    <input type="color" id="themeColor" value="#9d4edd" onchange="updatePreview()">
+                 </div>
+                 <div class="color-picker-wrapper">
+                    <label>Цвет свечения</label>
+                    <input type="color" id="glowColor" value="#00f5ff" onchange="updatePreview()">
+                 </div>
+            </div>
 
             <div class="form-group">
                 <label>Цвет жидкости</label>
@@ -242,18 +269,17 @@
         let config = { players: [], tasks: [] };
 
         window.onload = () => {
-            document.getElementById('bgUrl').value = ''; 
             config.players = [];
             config.tasks = [];
-            addPlayer('Игрок 1', 'https://i.imgur.com/8DbkK2i.png'); // Example player
-            addTask('Какой тег используется для создания гиперссылки?', ['<a>', '<img>', '<p>'], 0); // Example task
+            addPlayer('Игрок 1', 'https://i.imgur.com/8DbkK2i.png');
+            addTask(); // Add an empty task to start with
             updatePreview();
         };
 
+        // --- PLAYER MANAGEMENT ---
         function addPlayer(name = '', url = '') {
             if (config.players.length >= 4) return alert("Максимум 4 игрока!");
-            let id = Date.now();
-            config.players.push({ id, name, url });
+            config.players.push({ id: Date.now(), name, url });
             renderPlayers();
             updatePreview();
         }
@@ -264,9 +290,27 @@
             updatePreview();
         }
 
-        function addTask(q = '', options = ['', '', ''], correctIdx = 0) {
-            let id = Date.now();
-            config.tasks.push({ id, question: q, options, correctIdx });
+        function renderPlayers() {
+            const container = document.getElementById('playersList');
+            container.innerHTML = config.players.map((p, idx) => `
+                <div class="card">
+                    <div class="form-group">
+                        <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
+                        <input type="text" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
+                        <button class="delete-btn" onclick="removePlayer(${p.id})">Удалить</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        // --- TASK MANAGEMENT ---
+        function addTask() {
+            config.tasks.push({ 
+                id: Date.now(), 
+                type: 'multiple-choice',
+                question: 'Новый вопрос', 
+                options: ['Вариант 1', 'Вариант 2'], 
+                correctIdx: 0 
+            });
             renderTasks();
             updatePreview();
         }
@@ -277,54 +321,88 @@
             updatePreview();
         }
 
-        function renderPlayers() {
-            const container = document.getElementById('playersList');
-            container.innerHTML = '';
-            config.players.forEach((p, idx) => {
-                container.innerHTML += `
-                    <div class="card">
-                        <div class="form-group">
-                            <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
-                            <input type="text" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
-                            <button onclick="removePlayer(${p.id})">Удалить</button>
-                        </div>
-                    </div>`;
-            });
+        function changeTaskType(idx, type) {
+            config.tasks[idx].type = type;
+            // When switching to text input, ensure options array has at least one element
+            if (type === 'text-input' && config.tasks[idx].options.length === 0) {
+                config.tasks[idx].options = ['Правильный ответ'];
+            }
+            renderTasks();
+            updatePreview();
+        }
+        
+        function addOption(taskIdx) {
+            config.tasks[taskIdx].options.push('Новый вариант');
+            renderTasks();
+            updatePreview();
+        }
+        
+        function removeOption(taskIdx, optionIdx) {
+            if (config.tasks[taskIdx].options.length <= 2) {
+                return alert("Должно быть минимум 2 варианта ответа.");
+            }
+            config.tasks[taskIdx].options.splice(optionIdx, 1);
+            // Adjust correctIdx if it's out of bounds
+            if (config.tasks[taskIdx].correctIdx >= optionIdx) {
+                 config.tasks[taskIdx].correctIdx = Math.max(0, config.tasks[taskIdx].correctIdx - 1);
+            }
+            renderTasks();
+            updatePreview();
         }
 
         function renderTasks() {
             const container = document.getElementById('tasksList');
-            container.innerHTML = '';
-            config.tasks.forEach((t, idx) => {
-                let optionsHTML = t.options.map((opt, oIdx) => `
-                    <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
-                        <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
-                        <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
-                    </div>
-                `).join('');
+            container.innerHTML = config.tasks.map((t, idx) => {
+                let optionsHTML = '';
+                if (t.type === 'multiple-choice') {
+                    optionsHTML = t.options.map((opt, oIdx) => `
+                        <div class="option-item">
+                            <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
+                            <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()">
+                            <button class="remove-option-btn" onclick="removeOption(${idx}, ${oIdx})">×</button>
+                        </div>
+                    `).join('') + `<button class="add-option-btn" onclick="addOption(${idx})">+ Добавить вариант</button>`;
+                } else { // text-input
+                    optionsHTML = `
+                        <div class="form-group">
+                            <label>Правильный ответ (регистр не важен)</label>
+                            <input type="text" placeholder="Введите правильный ответ" value="${t.options[0] || ''}" onchange="config.tasks[${idx}].options[0]=this.value; updatePreview()">
+                        </div>`;
+                }
 
-                container.innerHTML += `
+                return `
                     <div class="card">
-                        <input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px);">
-                        ${optionsHTML}
-                        <button onclick="removeTask(${t.id})">Удалить</button>
+                        <div class="form-group">
+                            <label>Тип вопроса</label>
+                            <select onchange="changeTaskType(${idx}, this.value)">
+                                <option value="multiple-choice" ${t.type === 'multiple-choice' ? 'selected' : ''}>Выбор ответа</option>
+                                <option value="text-input" ${t.type === 'text-input' ? 'selected' : ''}>Ввод текста</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Текст вопроса</label>
+                            <input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()">
+                        </div>
+                        <div id="optionsContainer_${t.id}">${optionsHTML}</div>
+                        <button class="delete-btn" onclick="removeTask(${t.id})">Удалить вопрос</button>
                     </div>`;
-            });
+            }).join('');
         }
 
-        // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ---
+        // --- GAME CODE GENERATION ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
             const liquidColor = document.getElementById('liquidColor').value;
             const maxScore = document.getElementById('maxScore').value;
             const fontFamily = document.getElementById('fontFamily').value;
-            
             const avatarSize = document.getElementById('avatarSize').value;
             const finalAvatarSize = Math.round(280 * (avatarSize / 100));
+            const themeColor = document.getElementById('themeColor').value;
+            const glowColor = document.getElementById('glowColor').value;
 
-            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!' } 
-                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!' };
+            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', inputPlaceholder: 'Введите ответ...' } 
+                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', inputPlaceholder: 'Type your answer...' };
 
             const gameState = { players: config.players, tasks: config.tasks, maxScore: parseInt(maxScore), txt: txt };
             const gameBackgroundStyle = bgUrl ? `background-image: url('${bgUrl}');` : `background-color: #0b0616;`;
@@ -335,20 +413,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}:wght@400;700;800&display=swap');
         
         html, body { 
             margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important;
             overflow: hidden !important; background: transparent !important; 
         }
-        body {
-            font-family: '${fontFamily}', sans-serif !important;
-            position: relative !important;
-        }
-
+        body { font-family: '${fontFamily}', sans-serif !important; position: relative !important; }
         *, *::before, *::after { box-sizing: border-box !important; }
 
         #gameRoot {
+            --theme-color: ${themeColor};
+            --glow-color: ${glowColor};
             width: 1920px; height: 1080px;
             position: absolute; left: 50%; top: 50%;
             transform-origin: center;
@@ -359,123 +435,48 @@
             overflow: hidden;
         }
 
-        #gameRoot .overlay { 
-            position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: rgba(0,0,0,0.4) !important; pointer-events: none !important; z-index: 1;
-        }
-        
-        #gameRoot .players-container {
-            position: absolute; bottom: 80px; left: 0; width: 100%;
-            display: flex; justify-content: space-evenly; align-items: flex-end; z-index: 5;
-        }
-        
-        #gameRoot .player-wrap {
-            display: flex; flex-direction: column; align-items: center;
-            position: relative; transition: opacity 0.3s; opacity: 0.4;
-            width: 350px;
-        }
+        #gameRoot .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4) !important; pointer-events: none !important; z-index: 1; }
+        #gameRoot .players-container { position: absolute; bottom: 80px; left: 0; width: 100%; display: flex; justify-content: space-evenly; align-items: flex-end; z-index: 5; }
+        #gameRoot .player-wrap { display: flex; flex-direction: column; align-items: center; position: relative; transition: opacity 0.3s; opacity: 0.4; width: 350px; }
         #gameRoot .player-wrap.active { opacity: 1; z-index: 10; }
 
         #gameRoot .ready-btn {
             position: absolute !important; top: -110px !important;
-            background: #9d4edd !important; color: white !important; border: none !important;
-            padding: 20px 50px !important; border-radius: 40px !important; 
-            font-family: inherit !important; font-weight: 800 !important; 
-            cursor: pointer !important; box-shadow: 0 0 30px rgba(157, 78, 221, 0.8) !important; 
-            display: none; z-index: 100 !important; font-size: 28px !important; 
-            text-transform: uppercase !important; letter-spacing: 2px !important;
+            background: var(--theme-color) !important; color: white !important; border: none !important;
+            padding: 20px 50px !important; border-radius: 40px !important; font-family: inherit !important; font-weight: 800 !important; 
+            cursor: pointer !important; box-shadow: 0 0 30px var(--theme-color) !important; 
+            display: none; z-index: 100 !important; font-size: 28px !important; text-transform: uppercase !important; letter-spacing: 2px !important;
             pointer-events: auto !important;
         }
         #gameRoot .player-wrap.active .ready-btn { display: block; animation: bounceIn 0.5s ease; }
-        #gameRoot .ready-btn:hover { background: #b975f8 !important; transform: scale(1.05); }
+        @keyframes bounceIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
 
-        @keyframes bounceIn {
-            0% { transform: scale(0); opacity: 0; }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        #gameRoot .flask {
-            width: 80px; height: 380px; border: 8px solid rgba(255,255,255,0.3) !important;
-            border-radius: 40px; overflow: hidden; background: rgba(0,0,0,0.4) !important;
-            display: flex; align-items: flex-end; margin-bottom: -50px; z-index: 2;
-        }
-        #gameRoot .liquid {
-            width: 100%; background: ${liquidColor} !important; transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 -10px 40px ${liquidColor} !important;
-        }
-
-        #gameRoot .avatar-container {
-            width: ${finalAvatarSize}px; height: ${finalAvatarSize}px; border-radius: 40px;
-            border: 8px solid rgba(255,255,255,0.2) !important; background: #1d1033 !important;
-            overflow: hidden; z-index: 3; position: relative; transition: all 0.3s;
-        }
-        #gameRoot .player-wrap.active .avatar-container {
-            border-color: #9d4edd !important; box-shadow: 0 0 50px rgba(157, 78, 221, 0.9), inset 0 0 30px rgba(157, 78, 221, 0.5) !important;
-        }
+        #gameRoot .flask { width: 80px; height: 380px; border: 8px solid rgba(255,255,255,0.3) !important; border-radius: 40px; overflow: hidden; background: rgba(0,0,0,0.4) !important; display: flex; align-items: flex-end; margin-bottom: -50px; z-index: 2; }
+        #gameRoot .liquid { width: 100%; background: ${liquidColor} !important; transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 -10px 40px ${liquidColor} !important; }
+        #gameRoot .avatar-container { width: ${finalAvatarSize}px; height: ${finalAvatarSize}px; border-radius: 40px; border: 8px solid rgba(255,255,255,0.2) !important; background: #1d1033 !important; overflow: hidden; z-index: 3; position: relative; transition: all 0.3s; }
+        #gameRoot .player-wrap.active .avatar-container { border-color: var(--theme-color) !important; box-shadow: 0 0 50px var(--theme-color), inset 0 0 30px var(--theme-color) !important; }
         #gameRoot .avatar { width: 100%; height: 100%; object-fit: cover; }
+        #gameRoot .name { margin-top: 30px; background: rgba(20, 15, 35, 0.9) !important; border: 4px solid rgba(255,255,255,0.15) !important; color: white !important; padding: 15px 40px; border-radius: 40px; font-size: 26px !important; font-weight: 700; text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6); }
 
-        #gameRoot .name { 
-            margin-top: 30px; background: rgba(20, 15, 35, 0.9) !important; 
-            border: 4px solid rgba(255,255,255,0.15) !important;
-            color: white !important; padding: 15px 40px; border-radius: 40px; font-size: 26px !important; 
-            font-weight: 700; text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%;
-            overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6);
-        }
-
-        #gameRoot .modal-bg {
-            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.8) !important; backdrop-filter: blur(10px);
-            z-index: 200; justify-content: center; align-items: center;
-        }
-        
-        #gameRoot .modal {
-            background: rgba(25, 15, 45, 0.95) !important; border: 8px solid #9d4edd !important;
-            border-radius: 50px; padding: 70px; width: 1100px;
-            text-align: center; box-shadow: 0 0 80px rgba(157, 78, 221, 0.5) !important; color: white !important;
-        }
-
+        #gameRoot .modal-bg { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8) !important; backdrop-filter: blur(10px); z-index: 200; justify-content: center; align-items: center; }
+        #gameRoot .modal { background: rgba(25, 15, 45, 0.95) !important; border: 8px solid var(--theme-color) !important; border-radius: 50px; padding: 70px; width: 1100px; text-align: center; box-shadow: 0 0 80px var(--theme-color) !important; color: white !important; }
         #gameRoot .question { font-size: 48px !important; font-weight: 800; margin-bottom: 60px; line-height: 1.3;}
         #gameRoot .options { display: flex; flex-direction: column; gap: 20px; }
         
-        #gameRoot .option-btn {
-            background: rgba(255, 255, 255, 0.05) !important; color: white !important; 
-            border: 4px solid rgba(255,255,255,0.1) !important;
-            padding: 30px; border-radius: 25px; cursor: pointer !important; transition: all 0.2s; 
-            font-size: 32px !important; text-align: left; font-family: inherit !important; font-weight: 700;
-            pointer-events: auto !important;
-        }
-        #gameRoot .option-btn:hover { background: rgba(157, 78, 221, 0.2) !important; border-color: #9d4edd !important; transform: translateX(15px); }
-        #gameRoot .option-btn.selected { 
-            background: rgba(157, 78, 221, 0.6) !important; border-color: #00f5ff !important; 
-            box-shadow: 0 0 40px rgba(0, 245, 255, 0.4) !important; transform: translateX(15px);
-        }
+        #gameRoot .option-btn { background: rgba(255, 255, 255, 0.05) !important; color: white !important; border: 4px solid rgba(255,255,255,0.1) !important; padding: 30px; border-radius: 25px; cursor: pointer !important; transition: all 0.2s; font-size: 32px !important; text-align: left; font-family: inherit !important; font-weight: 700; pointer-events: auto !important; }
+        #gameRoot .option-btn:hover { background: rgba(157, 78, 221, 0.2) !important; border-color: var(--theme-color) !important; transform: translateX(15px); }
+        #gameRoot .option-btn.selected { background: rgba(157, 78, 221, 0.6) !important; border-color: var(--glow-color) !important; box-shadow: 0 0 40px var(--glow-color) !important; transform: translateX(15px); }
+        #gameRoot .text-input-answer { background: rgba(255,255,255,0.05) !important; color: white !important; border: 4px solid rgba(255,255,255,0.1) !important; padding: 30px; border-radius: 25px; font-size: 32px !important; font-family: inherit !important; width: 100%; text-align: center; }
+        #gameRoot .text-input-answer:focus { outline: none; border-color: var(--glow-color); box-shadow: 0 0 20px var(--glow-color); }
         
-        #gameRoot .check-btn {
-            margin-top: 60px; background: #00f5ff !important; color: #000 !important; border: none !important;
-            font-family: inherit !important; padding: 25px 80px; font-size: 36px !important; 
-            font-weight: 800; border-radius: 50px; cursor: pointer !important; 
-            text-transform: uppercase; box-shadow: 0 0 40px rgba(0, 245, 255, 0.5) !important; transition: 0.3s;
-            pointer-events: auto !important;
-        }
-        #gameRoot .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 245, 255, 0.8) !important; }
+        #gameRoot .check-btn { margin-top: 60px; background: var(--glow-color) !important; color: #000 !important; border: none !important; font-family: inherit !important; padding: 25px 80px; font-size: 36px !important; font-weight: 800; border-radius: 50px; cursor: pointer !important; text-transform: uppercase; box-shadow: 0 0 40px var(--glow-color) !important; transition: 0.3s; pointer-events: auto !important; }
+        #gameRoot .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px var(--glow-color) !important; }
 
-        #gameRoot .winner-screen {
-            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(11, 6, 22, 0.95) !important; z-index: 300; flex-direction: column;
-            justify-content: center; align-items: center; color: white !important;
-        }
+        #gameRoot .winner-screen { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(11, 6, 22, 0.95) !important; z-index: 300; flex-direction: column; justify-content: center; align-items: center; color: white !important; }
         #gameRoot .winner-screen h1 { font-size: 140px !important; font-weight: 800; color: ${liquidColor} !important; text-shadow: 0 0 60px ${liquidColor} !important; margin: 0 0 50px 0;}
-        #gameRoot .winner-screen img {
-            width: 450px; height: 450px; border-radius: 60px;
-            border: 15px solid ${liquidColor} !important; object-fit: cover; box-shadow: 0 0 100px ${liquidColor} !important;
-        }
+        #gameRoot .winner-screen img { width: 450px; height: 450px; border-radius: 60px; border: 15px solid ${liquidColor} !important; object-fit: cover; box-shadow: 0 0 100px ${liquidColor} !important; }
         #gameRoot .winner-screen h2 { font-size: 70px !important; margin-top: 50px; text-transform: uppercase; font-weight: 800; }
-        
-        #gameRoot .empty-state {
-            color: rgba(255,255,255,0.5) !important; font-size: 40px !important; font-weight: 700;
-            text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%;
-        }
+        #gameRoot .empty-state { color: rgba(255,255,255,0.5) !important; font-size: 40px !important; font-weight: 700; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; }
     </style>
 </head>
 <body class="genially-interactive">
@@ -483,7 +484,6 @@
         <div id="gameRoot"> 
             <div class="overlay"></div>
             <div class="players-container" id="pc"></div>
-
             <div class="modal-bg" id="modalBg">
                 <div class="modal">
                     <div class="question" id="qText"></div>
@@ -491,101 +491,63 @@
                     <button class="check-btn" id="checkBtn">${txt.check}</button>
                 </div>
             </div>
-
             <div class="winner-screen" id="winnerScreen">
-                <h1>${txt.win}</h1>
-                <img id="winnerAvatar">
-                <h2 id="winnerName"></h2>
+                <h1>${txt.win}</h1> <img id="winnerAvatar"> <h2 id="winnerName"></h2>
             </div>
         </div>
     </div>
-
     <script>
         const state = ${JSON.stringify(gameState)};
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
         let availableTaskIndices = [];
-        let usedTaskIndices = [];
+        let currentTaskIndex = -1;
         let selectedOption = null;
 
         function resizeGame() {
-            const wrapper = document.getElementById('genially-wrapper');
-            if (!wrapper) return;
-            const w = wrapper.clientWidth;
-            const h = wrapper.clientHeight;
-            const gameWidth = 1920;
-            const gameHeight = 1080;
-            const aspect = gameWidth / gameHeight;
-            
-            let scale;
-            if (w / h > aspect) {
-                scale = h / gameHeight;
-            } else {
-                scale = w / gameWidth;
-            }
-            
+            const wrapper = document.getElementById('genially-wrapper'); if (!wrapper) return;
+            const w = wrapper.clientWidth, h = wrapper.clientHeight;
+            const scale = Math.min(w / 1920, h / 1080);
             const gameRoot = document.getElementById('gameRoot');
-            if (gameRoot) {
-                gameRoot.style.transform = \`translate(-50%, -50%) scale(\${scale})\`;
-            }
+            if (gameRoot) gameRoot.style.transform = \`translate(-50%, -50%) scale(\${scale})\`;
         }
         window.addEventListener('resize', resizeGame);
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
+        function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
 
         function init() {
             const gameRoot = document.getElementById('gameRoot');
             if(!gameRoot || state.players.length === 0 || state.tasks.length === 0) {
-                if(gameRoot) gameRoot.innerHTML = '<div class="empty-state">Добавьте игроков и задания в редакторе</div>'; 
-                return;
+                if(gameRoot) gameRoot.innerHTML = '<div class="empty-state">Добавьте игроков и задания в редакторе</div>'; return;
             }
             resetTasks();
             const pc = document.getElementById('pc');
-            pc.innerHTML = state.players.map((p, i) => \`
-                <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
-                    <button class="ready-btn">\${state.txt.ready}</button>
-                    <div class="flask"><div class="liquid" id="liq\${i}" style="height: 0%;"></div></div>
-                    <div class="avatar-container"><img src="\${p.url}" class="avatar"></div>
-                    <div class="name">\${p.name || 'Игрок ' + (i+1)}</div>
-                </div>
-            \`).join('');
+            pc.innerHTML = state.players.map((p, i) => \`<div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}"><button class="ready-btn">\${state.txt.ready}</button><div class="flask"><div class="liquid" id="liq\${i}" style="height: 0%;"></div></div><div class="avatar-container"><img src="\${p.url}" class="avatar"></div><div class="name">\${p.name || 'Игрок ' + (i+1)}</div></div>\`).join('');
             
-            // Attach event listeners
             document.querySelectorAll('.ready-btn').forEach(btn => btn.addEventListener('click', openTask));
             document.getElementById('checkBtn').addEventListener('click', checkAnswer);
-            
             resizeGame();
         }
 
         function resetTasks() {
             availableTaskIndices = Array.from({length: state.tasks.length}, (_, i) => i);
             shuffleArray(availableTaskIndices);
-            usedTaskIndices = [];
         }
 
         function openTask() {
             if(availableTaskIndices.length === 0) resetTasks();
-            const taskIndex = availableTaskIndices.shift();
-            usedTaskIndices.push(taskIndex);
-            const task = state.tasks[taskIndex];
+            currentTaskIndex = availableTaskIndices.shift();
+            const task = state.tasks[currentTaskIndex];
             
             document.getElementById('qText').innerText = task.question;
             const optsDiv = document.getElementById('optsDiv');
-            optsDiv.innerHTML = task.options.map((opt, i) => 
-                \`<button class="option-btn" data-index="\${i}">\${opt}</button>\`
-            ).join('');
             
-            optsDiv.querySelectorAll('.option-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    selectOpt(parseInt(btn.dataset.index), btn);
-                });
-            });
-
+            if (task.type === 'multiple-choice') {
+                optsDiv.innerHTML = task.options.map((opt, i) => \`<button class="option-btn" data-index="\${i}">\${opt}</button>\`).join('');
+                optsDiv.querySelectorAll('.option-btn').forEach(btn => btn.addEventListener('click', () => selectOpt(parseInt(btn.dataset.index), btn)));
+            } else { // text-input
+                 optsDiv.innerHTML = \`<input type="text" class="text-input-answer" placeholder="\${state.txt.inputPlaceholder}">\`;
+            }
             selectedOption = null;
             document.getElementById('modalBg').style.display = 'flex';
         }
@@ -597,19 +559,24 @@
         }
 
         function checkAnswer() {
-            if(selectedOption === null) return;
-            const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
-            const task = state.tasks[lastTaskIndex];
+            const task = state.tasks[currentTaskIndex];
+            let isCorrect = false;
+
+            if (task.type === 'multiple-choice') {
+                if (selectedOption === null) return;
+                isCorrect = (selectedOption === task.correctIdx);
+            } else { // text-input
+                const userAnswer = document.querySelector('.text-input-answer').value.trim().toLowerCase();
+                const correctAnswer = task.options[0].trim().toLowerCase();
+                if (userAnswer === '') return;
+                isCorrect = (userAnswer === correctAnswer);
+            }
             
-            if(selectedOption === task.correctIdx) {
+            if(isCorrect) {
                 scores[currentPlayer]++;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
                 document.getElementById('liq'+currentPlayer).style.height = Math.min(pcn, 100) + '%';
-                
-                if(scores[currentPlayer] >= state.maxScore) {
-                    showWinner();
-                    return;
-                }
+                if(scores[currentPlayer] >= state.maxScore) { showWinner(); return; }
             }
             document.getElementById('modalBg').style.display = 'none';
             nextTurn();
@@ -623,7 +590,8 @@
 
         function showWinner() {
             document.getElementById('modalBg').style.display = 'none';
-            document.getElementById('winnerScreen').style.display = 'flex';
+            const winnerScreen = document.getElementById('winnerScreen');
+            winnerScreen.style.display = 'flex';
             document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
         }
@@ -638,6 +606,11 @@
             const html = getGameHTML();
             const iframe = document.getElementById('previewFrame');
             iframe.srcdoc = html;
+            
+            // Reset button state on any change
+            const btn = document.getElementById('generateBtn');
+            btn.textContent = "Сгенерировать код";
+            btn.classList.remove('success');
         }
 
         function generateCode() {
@@ -647,9 +620,8 @@
             navigator.clipboard.writeText(html).then(() => {
                 btn.textContent = "Скопировано!";
                 btn.classList.add('success');
-                setTimeout(() => { btn.textContent = "Сгенерировать код"; btn.classList.remove('success'); }, 2000);
             }).catch(err => {
-                console.log("Ошибка копирования.");
+                alert("Ошибка копирования. Попробуйте снова.");
             });
         }
     </script>
