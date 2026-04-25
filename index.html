@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -324,10 +325,10 @@
 
         // Initialize default
         window.onload = () => {
-            document.getElementById('bgUrl').value = ''; 
-            addPlayer('Игрок 1', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png');
-            addPlayer('Игрок 2', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png');
-            addTask('Сколько будет 2+2?', ['3', '4', '5'], 1);
+            document.getElementById('bgUrl').value = 'https://i.ibb.co/L5rK32P/pan.jpg'; // Установка фона по умолчанию, как на картинке
+            addPlayer('Игрок 1', 'https://genially.blob.core.windows.net/public/images/avatar-1.png'); // Использовать аватары из ваших изображений
+            addPlayer('Игрок 2', 'https://genially.blob.core.windows.net/public/images/avatar-2.png');
+            addTask('Сколько будет 2+2?', ['3', '4', '5', '4'], 3); // Изменил правильный индекс на 3 для '4'
             updatePreview();
         };
 
@@ -412,6 +413,7 @@
                 txt: txt
             };
 
+            // Если bgUrl пустой, background будет прозрачным
             const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: transparent;`;
 
             return `
@@ -440,7 +442,7 @@
             ${gameBackgroundStyle} /* Динамический фон применяется к этому контейнеру */
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             box-sizing: border-box;
-            position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
+            position: relative; /* ВАЖНО: Для абсолютно позиционированных дочерних элементов, таких как overlay, модальные окна и экран победителя */
             padding-bottom: 6vmin; /* Добавим отступ снизу, чтобы игроки не прилипали к самому низу */
         }
 
@@ -457,10 +459,7 @@
             flex-direction: column; /* Элементы внутри игрока идут колонкой */
             align-items: center;
             position: relative; /* Для эффекта пульсации */
-            transition: 0.3s; 
-            opacity: 0.5;
-            /* Важно: обеспечить, чтобы все player-wrap занимали одинаковую высоту */
-            /* Для этого, элементы внутри, которые скрываются, должны сохранять свое место */
+            transition: 0.3s; opacity: 0.5;
         }
         
         .player-wrap.active {
@@ -475,43 +474,35 @@
         }
 
         .ready-btn {
-            position: relative; /* Сохраняет кнопку в потоке */
+            position: relative; /* Статическая позиция в потоке flex-контейнера */
             margin-bottom: 2vmin; /* Отступ между кнопкой и колбой */
             background: #8b5cf6; color: white; border: none;
             padding: 1.5vmin 3vmin;
             border-radius: 1vmin;
             font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 1.5vmin #8b5cf6; 
-            z-index: 5;
+            box-shadow: 0 0 1.5vmin #8b5cf6; display: none; z-index: 5;
             font-size: 1em;
             white-space: nowrap; /* Предотвращает перенос текста */
-            
-            /* ИЗМЕНЕНИЯ ЗДЕСЬ: */
-            visibility: hidden; /* Скрываем, но сохраняем место */
-            opacity: 0;
-            transition: visibility 0s, opacity 0.3s ease;
+            min-width: 8vmin; /* ВАЖНО: Минимальный размер кнопки, чтобы она не сжималась */
+            min-height: 5vmin; /* ВАЖНО: Минимальная высота кнопки */
+            display: flex; /* Используем flexbox для центрирования текста, если он короткий */
+            align-items: center;
+            justify-content: center;
         }
         
-        .player-wrap.active .ready-btn { 
-            /* ИЗМЕНЕНИЯ ЗДЕСЬ: */
-            visibility: visible; /* Делаем видимым, когда игрок активен */
-            opacity: 1;
-            /* display: block; УДАЛЕНО */
-        }
+        .player-wrap.active .ready-btn { display: flex; } /* Сделать flex, а не block */
         .ready-btn:hover { background: #7c3aed; }
 
         .flask {
-            /* ИЗМЕНЕНИЯ ЗДЕСЬ: Увеличен размер колбы */
-            width: 7vmin; /* Было 5vmin */
-            height: 20vmin; /* Было 15vmin */
-
+            width: 5vmin;
+            height: 15vmin;
             border: 0.4vmin solid rgba(255,255,255,0.7);
-            border-radius: 0 0 3.5vmin 3.5vmin; /* Увеличил радиус в соответствии с новой шириной */
-            position: relative; 
+            border-radius: 0 0 2.5vmin 2.5vmin;
+            position: relative; /* Статическая позиция в потоке flex-контейнера */
             margin-bottom: 2vmin; /* Отступ между колбой и аватаром */
             overflow: hidden; background: rgba(0,0,0,0.5);
             display: flex; align-items: flex-end;
-            flex-shrink: 0; 
+            flex-shrink: 0; /* Чтобы колба не уменьшалась */
         }
         
         .liquid {
@@ -520,29 +511,29 @@
         }
 
         .avatar {
-            /* ИЗМЕНЕНИЯ ЗДЕСЬ: Увеличен базовый размер аватара */
-            width: calc(15vmin * ${avatarSize/100}); /* Было 10vmin */
-            height: calc(15vmin * ${avatarSize/100}); /* Было 10vmin */
-
+            width: calc(10vmin * ${avatarSize/100}); 
+            height: calc(10vmin * ${avatarSize/100}); 
             border-radius: 2vmin;
             object-fit: cover;
             border: 0.3vmin solid white;
             background: #2a2a35;
-            flex-shrink: 0; 
+            flex-shrink: 0; /* Чтобы аватар не уменьшался */
         }
 
         .name { 
             color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.5vmin; font-size: 1em;
-            white-space: nowrap; 
+            white-space: nowrap; /* Предотвращает перенос текста */
             text-align: center;
-            max-width: 100%; 
+            max-width: 100%; /* Гарантирует, что имя не выйдет за пределы родителя */
             overflow: hidden;
-            text-overflow: ellipsis; 
+            text-overflow: ellipsis; /* Добавляет многоточие для длинных имен */
         }
 
         /* Modal Task */
         .modal-bg {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            display: none; 
+            position: absolute; /* ВАЖНО: Изменено с fixed на absolute */
+            top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
         }
         
@@ -554,6 +545,8 @@
             max-width: 70vmin; 
             text-align: center;
             box-shadow: 0 0 3vmin rgba(139, 92, 246, 0.5); color: white;
+            max-height: 90vh; /* ВАЖНО: Ограничение высоты модального окна */
+            overflow-y: auto; /* ВАЖНО: Включение прокрутки, если содержимое не помещается */
         }
 
         .question { font-size: 2em; margin-bottom: 3vmin; } 
@@ -588,7 +581,9 @@
 
         /* Winner Screen */
         .winner-screen {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            display: none; 
+            position: absolute; /* ВАЖНО: Изменено с fixed на absolute */
+            top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
             justify-content: center; align-items: center; color: white;
             font-size: 1em;
@@ -628,16 +623,16 @@
     </div> <!-- Конец #gameRoot -->
 
     <script>
-        console.log("Game script template loaded and starting initialization."); // Отладочное сообщение
+        console.log("Game script template loaded and starting initialization."); 
         const state = ${JSON.stringify(gameState)};
-        console.log("Initial game state:", state); // Отладочное сообщение
+        console.log("Initial game state:", state); 
 
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
         
         let availableTaskIndices = [];
         let usedTaskIndices = [];
-        let selectedOption = null; // Добавлена переменная для отслеживания выбранного варианта
+        let selectedOption = null; 
 
         // Функция для перемешивания массива (Fisher-Yates)
         function shuffleArray(array) {
@@ -648,47 +643,48 @@
         }
 
         function init() {
-            console.log("init() function called."); // Отладочное сообщение
-            const gameRoot = document.getElementById('gameRoot'); // Получаем корневой элемент игры
+            console.log("init() function called."); 
+            const gameRoot = document.getElementById('gameRoot'); 
 
             if(state.players.length === 0) {
                 console.error("Нет игроков для начала игры. Пожалуйста, добавьте игроков в редакторе.");
-                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>'; 
                 return;
             }
             if(state.tasks.length === 0) {
                 console.error("Нет заданий для начала игры. Пожалуйста, добавьте задания в редакторе.");
-                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>'; 
                 return;
             }
 
             resetTasks();
 
             const pc = document.getElementById('pc');
-            pc.innerHTML = state.players.map((p, i) => `
-                <div class="player-wrap ${i === 0 ? 'active' : ''}" id="p${i}">
-                    <button class="ready-btn" onclick="openTask()">${state.txt.ready}</button>
+            pc.innerHTML = state.players.map((p, i) => \`
+                <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
+                    <button class="ready-btn" onclick="openTask()">\${state.txt.ready}</button>
                     <div class="flask">
-                        <div class="liquid" id="liq${i}" style="height: 0%;"></div>
+                        <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
                     </div>
-                    <img src="${p.url}" class="avatar">
-                    <div class="name">${p.name}</div>
+                    <img src="\${p.url}" class="avatar">
+                    <div class="name">\${p.name}</div>
                 </div>
-            `).join('');
-            console.log("Players rendered in game."); // Отладочное сообщение
+            \`).join('');
+            console.log("Players rendered in game. Current Player:", currentPlayer); 
+            console.log("Player wrap HTML generated:", pc.innerHTML); 
         }
 
         function resetTasks() {
             availableTaskIndices = Array.from({length: state.tasks.length}, (_, i) => i);
             shuffleArray(availableTaskIndices);
             usedTaskIndices = [];
-            console.log("Задания сброшены и перемешаны.");
+            console.log("Задания сброшены и перемешаны. Доступно заданий:", availableTaskIndices.length);
         }
 
         function openTask() {
-            console.log("openTask() called.");
+            console.log("openTask() called by player", currentPlayer);
             if(state.tasks.length === 0) {
-                console.warn("Нет заданий!");
+                console.warn("Нет заданий в списке!");
                 return;
             }
             if(availableTaskIndices.length === 0) {
@@ -704,47 +700,45 @@
             usedTaskIndices.push(taskIndex);
             
             const task = state.tasks[taskIndex];
+            console.log("Выбрано задание:", task);
             
             document.getElementById('qText').innerText = task.question;
             const optsDiv = document.getElementById('optsDiv');
             optsDiv.innerHTML = task.options.map((opt, i) => 
-                `<button class="option-btn" onclick="selectOpt(${i}, this)">${opt}</button>`
+                \`<button class="option-btn" onclick="selectOpt(\${i}, this)">\${opt}</button>\`
             ).join('');
             
             selectedOption = null;
             document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             document.getElementById('modalBg').style.display = 'flex';
-            console.log("Modal opened for task:", task);
         }
 
         function selectOpt(idx, el) {
+            console.log("Option selected:", idx);
             selectedOption = idx;
             document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             el.classList.add('selected');
-            console.log("Option selected:", idx);
         }
 
         function checkAnswer() {
-            console.log("checkAnswer() called.");
-            if(selectedOption === null) {
-                console.warn("Вариант не выбран.");
-                return;
-            }
+            console.log("checkAnswer() called. Selected option:", selectedOption);
+            if(selectedOption === null) return;
             const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
             const task = state.tasks[lastTaskIndex];
             
             if(selectedOption === task.correctIdx) {
+                console.log("Ответ верный!");
                 scores[currentPlayer]++;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
                 document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
-                console.log(`Игрок ${currentPlayer} ответил верно. Счет: ${scores[currentPlayer]}`);
                 
                 if(scores[currentPlayer] >= state.maxScore) {
+                    console.log("Игрок", currentPlayer, "победил!");
                     showWinner();
                     return;
                 }
             } else {
-                console.log(`Игрок ${currentPlayer} ответил неверно.`);
+                console.log("Ответ неверный.");
             }
             
             document.getElementById('modalBg').style.display = 'none';
@@ -752,11 +746,11 @@
         }
 
         function nextTurn() {
-            console.log("nextTurn() called.");
+            console.log("nextTurn() called. Current player before turn:", currentPlayer);
             document.getElementById('p'+currentPlayer).classList.remove('active');
             currentPlayer = (currentPlayer + 1) % state.players.length;
             document.getElementById('p'+currentPlayer).classList.add('active');
-            console.log("Текущий игрок:", currentPlayer);
+            console.log("New current player:", currentPlayer);
         }
 
         function showWinner() {
@@ -765,10 +759,9 @@
             document.getElementById('winnerScreen').style.display = 'flex';
             document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
-            console.log("Победитель:", state.players[currentPlayer].name);
         }
 
-        init(); // Вызываем инициализацию игры сразу после определения функций
+        init(); 
     </script>
 </body>
 </html>`;
