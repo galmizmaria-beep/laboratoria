@@ -155,7 +155,7 @@
         }
 
         /* Уменьшенные кнопки удаления в карточках */
-        .card .remove-btn { /* Specific class for task/player remove */
+        .card .remove-btn {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
             border-color: var(--danger);
@@ -171,25 +171,35 @@
             box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
 
-        .card .option-remove-btn { /* For individual options */
-             width: 30px; /* Small square button */
-             height: 30px;
-             padding: 0;
-             margin: 0;
-             border-radius: 50%;
-             font-size: 0.7rem;
-             display: flex;
-             justify-content: center;
-             align-items: center;
-             flex-shrink: 0;
+        /* Стиль для кнопок добавления/удаления опций в заданиях */
+        .small-btn {
+            background: rgba(0, 245, 255, 0.1); /* Neon blue variant */
+            color: var(--neon-blue);
+            border-color: var(--neon-blue);
+            font-size: 0.7rem;
+            padding: 4px 8px; /* Even smaller */
+            border-radius: 8px;
+            margin-top: 0; /* Override default button margin */
+            align-self: center; /* Vertically align with inputs */
+            line-height: 1; /* Adjust text height */
+            height: 35px; /* Match input height roughly */
+            min-width: 35px; /* Чтобы кнопки + и - были одинаковыми */
+        }
+        .small-btn:hover:not(:disabled) {
+            background: var(--neon-blue);
+            color: white;
+            box-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
+        }
+        .small-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .card input[type="radio"] {
             accent-color: var(--neon-blue);
             width: 20px;
             height: 20px;
-            margin-top: 0; /* Remove top margin */
-            flex-shrink: 0;
+            margin-top: 10px;
         }
         
         /* Стили для сообщения о сжатии */
@@ -239,7 +249,6 @@
             width: 100%;
             height: 100%;
             border: none;
-            display: block; /* Убираем лишние отступы */
         }
 
         .generate-btn {
@@ -338,21 +347,32 @@
             tasks: []
         };
 
+        // Helper for HTML escaping in input values
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
         // Initialize default
         window.onload = () => {
             document.getElementById('bgUrl').value = ''; 
             addPlayer('Игрок 1', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png'); 
             addPlayer('Игрок 2', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png');
-            addTask('Сколько будет 2+2?', 'multiple-choice', { options: ['3', '4', '5'], correctIdx: 1 });
-            addTask('Столица Франции?', 'text-input', { correctAnswer: 'Париж' }); // Пример текстового вопроса
+            // Default multiple choice task
+            addTask('Сколько будет 2+2?', 'multiple_choice', ['3', '4', '5'], 1);
+            // Add a default text input task
+            addTask('Как называется столица Франции?', 'text_input', 'Париж');
             updatePreview();
         };
 
         function addPlayer(name = '', url = '') {
-            if (config.players.length >= 4) {
-                 alert("Максимум 4 игрока!"); // alert для редактора, console.warn для Genially
-                 return;
-            }
+            if (config.players.length >= 4) return console.warn("Максимум 4 игрока!");
             let id = Date.now();
             config.players.push({ id, name, url });
             renderPlayers();
@@ -365,15 +385,20 @@
             updatePreview();
         }
 
-        // Modified addTask to support different types
-        function addTask(q = '', type = 'multiple-choice', data = {}) {
+        function addTask(q = '', type = 'multiple_choice', optionsOrAnswer = null, correctIdx = 0) {
             let id = Date.now();
-            const newTask = { id, question: q, type };
-            if (type === 'multiple-choice') {
-                newTask.options = data.options || ['', '', ''];
-                newTask.correctIdx = data.correctIdx !== undefined ? data.correctIdx : 0;
-            } else if (type === 'text-input') {
-                newTask.correctAnswer = data.correctAnswer || '';
+            let newTask;
+
+            if (type === 'multiple_choice') {
+                if (optionsOrAnswer === null || !Array.isArray(optionsOrAnswer) || optionsOrAnswer.length < 2) {
+                    optionsOrAnswer = ['', '']; // Default to 2 options if not provided or invalid
+                }
+                newTask = { id, question: q, type, options: optionsOrAnswer, correctIdx: correctIdx };
+            } else if (type === 'text_input') {
+                newTask = { id, question: q, type, correctAnswer: optionsOrAnswer || '' };
+            } else {
+                console.error("Unknown task type:", type);
+                return;
             }
             config.tasks.push(newTask);
             renderTasks();
@@ -386,29 +411,51 @@
             updatePreview();
         }
 
-        // New functions for adding/removing options in multiple-choice tasks
-        function addOptionToTask(taskIndex) {
-            if (config.tasks[taskIndex].type === 'multiple-choice') {
+        function addOption(taskIndex) {
+            if (config.tasks[taskIndex].type === 'multiple_choice') {
                 config.tasks[taskIndex].options.push('');
                 renderTasks();
                 updatePreview();
             }
         }
 
-        function removeOptionFromTask(taskIndex, optionIndex) {
+        function removeOption(taskIndex, optionIndex) {
             const task = config.tasks[taskIndex];
-            if (task.type === 'multiple-choice' && task.options.length > 1) {
+            if (task.type === 'multiple_choice' && task.options.length > 2) {
                 task.options.splice(optionIndex, 1);
-                // Adjust correctIdx if it was the removed one or after it
-                if (task.correctIdx === optionIndex) {
-                    task.correctIdx = 0; // Default to first remaining
-                } else if (task.correctIdx > optionIndex) {
-                    task.correctIdx--;
+                // Adjust correct index if the removed option was before it
+                if (task.correctIdx >= optionIndex && task.correctIdx > 0) {
+                    task.correctIdx--; 
+                } else if (task.correctIdx === optionIndex && task.options.length > 0) {
+                    // If the correct option was removed, set new correct option (e.g., the first one)
+                    task.correctIdx = 0; 
+                } else if (task.correctIdx === optionIndex && task.options.length === 0) {
+                    // If no options left, reset correctIdx
+                    task.correctIdx = -1;
                 }
                 renderTasks();
                 updatePreview();
             }
         }
+
+        function changeTaskType(taskIndex, newType) {
+            const task = config.tasks[taskIndex];
+            if (task.type === newType) return; // No change needed
+
+            task.type = newType;
+            if (newType === 'multiple_choice') {
+                task.options = ['', '']; // Default options
+                task.correctIdx = 0;
+                delete task.correctAnswer;
+            } else if (newType === 'text_input') {
+                task.correctAnswer = ''; // Default empty answer
+                delete task.options;
+                delete task.correctIdx;
+            }
+            renderTasks();
+            updatePreview();
+        }
+
 
         function renderPlayers() {
             const container = document.getElementById('playersList');
@@ -417,8 +464,8 @@
                 container.innerHTML += `
                     <div class="card">
                         <div class="form-group">
-                            <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
-                            <input type="text" id="p_url_${p.id}" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
+                            <input type="text" placeholder="Имя" value="${escapeHtml(p.name)}" onchange="config.players[${idx}].name=this.value; updatePreview()">
+                            <input type="text" id="p_url_${p.id}" placeholder="URL Аватара" value="${escapeHtml(p.url)}" onchange="config.players[${idx}].url=this.value; updatePreview()">
                             <button class="remove-btn" onclick="removePlayer(${p.id})">Удалить</button>
                         </div>
                     </div>`;
@@ -429,50 +476,40 @@
             const container = document.getElementById('tasksList');
             container.innerHTML = '';
             config.tasks.forEach((t, idx) => {
-                let taskContent = '';
-
-                // Dropdown for question type
-                taskContent += `
-                    <div class="form-group">
-                        <label>Тип вопроса</label>
-                        <select onchange="config.tasks[${idx}].type=this.value; renderTasks(); updatePreview()">
-                            <option value="multiple-choice" ${t.type === 'multiple-choice' ? 'selected' : ''}>Множественный выбор</option>
-                            <option value="text-input" ${t.type === 'text-input' ? 'selected' : ''}>Ввод текста</option>
-                        </select>
-                    </div>
-                `;
-
-                // Question text input
-                taskContent += `<input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px); margin-bottom: 15px;">`;
-
-                if (t.type === 'multiple-choice') {
-                    // Render options for multiple-choice
-                    let optionsHTML = t.options.map((opt, oIdx) => `
+                let taskSpecificHTML = '';
+                if (t.type === 'multiple_choice') {
+                    const optionsHTML = t.options.map((opt, oIdx) => `
                         <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
                             <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
-                            <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
-                            ${t.options.length > 1 ? `<button type="button" class="remove-btn option-remove-btn" onclick="removeOptionFromTask(${idx}, ${oIdx})">x</button>` : ''}
+                            <input type="text" placeholder="Вариант ${oIdx+1}" value="${escapeHtml(opt)}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
+                            <button class="small-btn" onclick="removeOption(${idx}, ${oIdx})" ${t.options.length <= 2 ? 'disabled' : ''}>-</button>
                         </div>
                     `).join('');
-
-                    taskContent += `
+                    taskSpecificHTML = `
                         ${optionsHTML}
-                        <button type="button" onclick="addOptionToTask(${idx})" style="margin-top:10px;">+ Добавить вариант</button>
+                        <button class="small-btn" onclick="addOption(${idx})" style="margin-top: 10px;">+</button>
                     `;
-                } else if (t.type === 'text-input') {
-                    // Render input for text answer
-                    taskContent += `
+                } else if (t.type === 'text_input') {
+                    taskSpecificHTML = `
                         <div class="form-group">
                             <label>Правильный ответ</label>
-                            <input type="text" placeholder="Введите правильный ответ" value="${t.correctAnswer || ''}" onchange="config.tasks[${idx}].correctAnswer=this.value; updatePreview()" style="width:calc(100% - 30px);">
+                            <input type="text" placeholder="Правильный ответ" value="${escapeHtml(t.correctAnswer)}" onchange="config.tasks[${idx}].correctAnswer=this.value; updatePreview()">
                         </div>
                     `;
                 }
 
                 container.innerHTML += `
                     <div class="card">
-                        ${taskContent}
-                        <button class="remove-btn" onclick="removeTask(${t.id})">Удалить вопрос</button>
+                        <div class="form-group">
+                            <label>Тип вопроса</label>
+                            <select onchange="changeTaskType(${idx}, this.value)">
+                                <option value="multiple_choice" ${t.type === 'multiple_choice' ? 'selected' : ''}>Множественный выбор</option>
+                                <option value="text_input" ${t.type === 'text_input' ? 'selected' : ''}>Ввод текста</option>
+                            </select>
+                        </div>
+                        <input type="text" placeholder="Текст вопроса" value="${escapeHtml(t.question)}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px);">
+                        ${taskSpecificHTML}
+                        <button class="remove-btn" onclick="removeTask(${t.id})" style="margin-top: 15px;">Удалить вопрос</button>
                     </div>`;
             });
         }
@@ -486,20 +523,8 @@
             const fontFamily = document.getElementById('fontFamily').value;
             const avatarSize = document.getElementById('avatarSize').value;
             
-            const txt = lang === 'ru' ? { 
-                                        ready: 'ИГРАТЬ', 
-                                        check: 'ПРОВЕРИТЬ', 
-                                        win: 'ПОБЕДА!', 
-                                        next: 'Следующий ход',
-                                        yourAnswer: 'Ваш ответ' 
-                                    } 
-                                      : { 
-                                        ready: 'READY', 
-                                        check: 'CHECK', 
-                                        win: 'WINNER!', 
-                                        next: 'Next Turn',
-                                        yourAnswer: 'Your answer' 
-                                    };
+            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход', enter_answer: 'Введите ответ', no_questions: 'Нет доступных заданий!' } 
+                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn', enter_answer: 'Enter your answer', no_questions: 'No tasks available!' };
 
             const gameState = {
                 players: config.players,
@@ -523,12 +548,9 @@
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
             font-family: '${fontFamily}', sans-serif;
-            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра iframe */
+            font-size: 2vmin; /* Увеличен базовый размер шрифта для лучшей видимости */
             box-sizing: border-box;
             background: transparent; /* Убедимся, что фон body сам по себе прозрачен */
-            display: flex; /* Добавлено, чтобы игра могла центрироваться */
-            justify-content: center; /* Центрируем содержимое */
-            align-items: center; /* Центрируем содержимое */
         }
         *, *::before, *::after {
             box-sizing: inherit;
@@ -536,15 +558,12 @@
 
         /* Новый корневой контейнер для всего игрового контента */
         #gameRoot {
-            width: 100%; height: 100%; /* Занимаем всю доступную площадь */
+            width: 100%; height: 100%;
             ${gameBackgroundStyle} /* Динамический фон применяется к этому контейнеру */
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; /* Центрируем игроков по вертикали */
-            align-items: center; /* Центрируем игроков по горизонтали */
+            display: flex; flex-direction: column; justify-content: center; align-items: center; /* Центрирование */
             box-sizing: border-box;
             position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
-            /* padding-bottom: 6vmin; */ /* Убран, чтобы не мешать центрированию */
+            padding-bottom: 6vmin; /* Добавим отступ снизу, чтобы игроки не прилипали к самому низу */
         }
 
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
@@ -637,17 +656,11 @@
             max-width: 70vmin; /* Максимальная ширина в vmin для лучшей адаптации */
             text-align: center;
             box-shadow: 0 0 3vmin rgba(139, 92, 246, 0.5); color: white;
-            display: flex; /* Добавлено для лучшего расположения содержимого */
-            flex-direction: column; /* Добавлено для лучшего расположения содержимого */
-            align-items: center; /* Добавлено для лучшего расположения содержимого */
         }
 
         .question { font-size: 2em; margin-bottom: 3vmin; } /* Увеличенный размер шрифта для вопроса */
         
-        .options-container { /* Обертка для кнопок-вариантов */
-            display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center;
-            width: 100%;
-        }
+        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } /* Увеличенный отступ */
         
         .option-btn {
             background: transparent; color: white; border: 0.2vmin solid #374151;
@@ -665,24 +678,23 @@
         
         .option-btn:hover { border-color: #8b5cf6; }
         .option-btn.selected { background: rgba(139, 92, 246, 0.3); border-color: #8b5cf6; }
-        
-        .text-answer-input { /* Стиль для поля ввода текстового ответа */
-            width: calc(100% - 2vmin); /* Ширина поля ввода */
-            max-width: 50vmin; /* Максимальная ширина */
-            padding: 2vmin;
-            margin-top: 2vmin;
-            border-radius: 1vmin;
-            border: 0.2vmin solid #374151;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            font-size: 1.2em;
-            text-align: center;
-        }
-        .text-answer-input:focus {
-            border-color: #8b5cf6;
-            outline: none;
-        }
 
+        .text-input-option { /* Стили для текстового поля ввода ответа */
+            background: #2a2a35; color: white; border: 0.2vmin solid #374151;
+            padding: 2vmin 3vmin;
+            border-radius: 1vmin;
+            font-size: 1.2em;
+            width: 100%;
+            margin-top: 2vmin;
+            text-align: center;
+            outline: none;
+            box-sizing: border-box; /* Важно, чтобы padding не увеличивал ширину */
+        }
+        .text-input-option:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 1vmin rgba(139, 92, 246, 0.5);
+        }
+        
         .check-btn {
             margin-top: 3vmin;
             background: #8b5cf6; color: white; border: none;
@@ -691,8 +703,10 @@
             border-radius: 1vmin;
             cursor: pointer;
         }
-        .check-btn:hover {
-            background: #7c3aed;
+        .check-btn:disabled {
+            background: #554070;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         /* Winner Screen */
@@ -723,13 +737,8 @@
         <div class="modal-bg" id="modalBg">
             <div class="modal">
                 <div class="question" id="qText"></div>
-                <!-- Контейнер для кнопок-вариантов -->
-                <div class="options-container" id="optsDiv"></div>
-                <!-- Поле для текстового ответа -->
-                <div id="textInputDiv" style="display:none;">
-                    <input type="text" id="answerInput" class="text-answer-input" placeholder="${txt.yourAnswer}">
-                </div>
-                <button class="check-btn" id="checkBtn">${txt.check}</button>
+                <div class="options" id="optsDiv"></div>
+                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
             </div>
         </div>
 
@@ -751,8 +760,7 @@
         
         let availableTaskIndices = [];
         let usedTaskIndices = [];
-        let selectedOption = null; // Для множественного выбора (индекс)
-        let currentTask = null; // Для хранения текущего задания
+        let selectedOption = null; // Добавлена переменная для отслеживания выбранного варианта
 
         // Функция для перемешивания массива (Fisher-Yates)
         function shuffleArray(array) {
@@ -782,7 +790,7 @@
             const pc = document.getElementById('pc');
             pc.innerHTML = state.players.map((p, i) => `
                 <div class="player-wrap ${i === 0 ? 'active' : ''}" id="p${i}">
-                    <button class="ready-btn" data-player-idx="${i}">${state.txt.ready}</button>
+                    <button class="ready-btn" onclick="openTask()">\${state.txt.ready}</button>
                     <div class="flask">
                         <div class="liquid" id="liq${i}" style="height: 0%;"></div>
                     </div>
@@ -791,14 +799,6 @@
                 </div>
             `).join('');
             console.log("Players rendered in game."); // Отладочное сообщение
-
-            // Прикрепляем слушатели событий к кнопкам "ИГРАТЬ"
-            document.querySelectorAll('.ready-btn').forEach(btn => {
-                btn.addEventListener('click', openTask);
-            });
-
-            // Прикрепляем слушатель к кнопке "ПРОВЕРИТЬ" в модальном окне
-            document.getElementById('checkBtn').addEventListener('click', checkAnswer);
         }
 
         function resetTasks() {
@@ -812,6 +812,10 @@
             console.log("openTask() called."); // Отладочное сообщение
             if(state.tasks.length === 0) {
                 console.warn("Нет заданий!");
+                document.getElementById('qText').innerText = state.txt.no_questions;
+                document.getElementById('optsDiv').innerHTML = '';
+                document.getElementById('checkBtn').style.display = 'none';
+                document.getElementById('modalBg').style.display = 'flex';
                 return;
             }
             if(availableTaskIndices.length === 0) {
@@ -819,41 +823,41 @@
                 resetTasks();
                 if(availableTaskIndices.length === 0) {
                     console.error("Не удалось сбросить задания. Возможно, нет заданий в списке.");
+                    document.getElementById('qText').innerText = state.txt.no_questions;
+                    document.getElementById('optsDiv').innerHTML = '';
+                    document.getElementById('checkBtn').style.display = 'none';
+                    document.getElementById('modalBg').style.display = 'flex';
                     return;
                 }
             }
             
             const taskIndex = availableTaskIndices.shift();
             usedTaskIndices.push(taskIndex);
-            currentTask = state.tasks[taskIndex]; // Сохраняем текущее задание
             
-            document.getElementById('qText').innerText = currentTask.question;
+            const task = state.tasks[taskIndex];
+            
+            document.getElementById('qText').innerText = task.question;
             const optsDiv = document.getElementById('optsDiv');
-            const textInputDiv = document.getElementById('textInputDiv');
+            optsDiv.innerHTML = ''; // Clear previous options
             
-            // Сбрасываем и отображаем нужные элементы
-            optsDiv.innerHTML = '';
-            optsDiv.style.display = 'none';
-            textInputDiv.style.display = 'none';
-            selectedOption = null; // Сбрасываем выбранный вариант
-
-            if (currentTask.type === 'multiple-choice') {
-                optsDiv.style.display = 'flex';
-                optsDiv.innerHTML = currentTask.options.map((opt, i) => 
-                    `<button class="option-btn" data-option-idx="${i}">${opt}</button>`
+            selectedOption = null;
+            document.getElementById('checkBtn').style.display = 'block'; // Show check button by default
+            
+            if (task.type === 'multiple_choice') {
+                optsDiv.innerHTML = task.options.map((opt, i) => 
+                    `<button class="option-btn" onclick="selectOpt(${i}, this)">${opt}</button>`
                 ).join('');
-                document.querySelectorAll('.option-btn').forEach(btn => {
-                    btn.addEventListener('click', (event) => selectOpt(parseInt(event.target.dataset.option-idx), event.target));
-                });
-            } else if (currentTask.type === 'text-input') {
-                textInputDiv.style.display = 'block';
-                const answerInput = document.getElementById('answerInput');
-                answerInput.value = ''; // Очищаем поле ввода
-                answerInput.placeholder = state.txt.yourAnswer;
+                document.getElementById('checkBtn').disabled = true; // For MC, check button should be enabled only after selection
+            } else if (task.type === 'text_input') {
+                optsDiv.innerHTML = `
+                    <input type="text" id="textAnswerInput" placeholder="${state.txt.enter_answer}" class="text-input-option">
+                `;
+                document.getElementById('checkBtn').disabled = false; // For text input, enable check button immediately.
             }
-            
+
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             document.getElementById('modalBg').style.display = 'flex';
-            console.log("Modal opened for task:", currentTask); // Отладочное сообщение
+            console.log("Modal opened for task:", task); // Отладочное сообщение
         }
 
         function selectOpt(idx, el) {
@@ -861,28 +865,37 @@
             selectedOption = idx;
             document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             el.classList.add('selected');
+            document.getElementById('checkBtn').disabled = false; // Enable check button after selection
         }
 
         function checkAnswer() {
             console.log("checkAnswer() called."); // Отладочное сообщение
+            const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
+            const task = state.tasks[lastTaskIndex];
+
             let isCorrect = false;
 
-            if (currentTask.type === 'multiple-choice') {
-                if (selectedOption === null) {
+            if (task.type === 'multiple_choice') {
+                if(selectedOption === null) {
                     console.warn("Не выбран вариант ответа.");
                     return;
                 }
-                isCorrect = (selectedOption === currentTask.correctIdx);
-            } else if (currentTask.type === 'text-input') {
-                const answerInput = document.getElementById('answerInput');
-                const userAnswer = answerInput.value.trim().toLowerCase();
-                const correctAnswers = Array.isArray(currentTask.correctAnswer) 
-                                     ? currentTask.correctAnswer.map(a => a.trim().toLowerCase()) 
-                                     : [currentTask.correctAnswer.trim().toLowerCase()];
-                isCorrect = correctAnswers.includes(userAnswer);
+                isCorrect = (selectedOption === task.correctIdx);
+            } else if (task.type === 'text_input') {
+                const textInput = document.getElementById('textAnswerInput');
+                if (!textInput) {
+                    console.error("Text input element not found for text_input task.");
+                    return;
+                }
+                const userAnswer = textInput.value.trim().toLowerCase();
+                const correctAnswer = task.correctAnswer.trim().toLowerCase();
+                isCorrect = (userAnswer === correctAnswer);
+            } else {
+                console.error("Unknown task type encountered in checkAnswer:", task.type);
+                return;
             }
-
-            if (isCorrect) {
+            
+            if(isCorrect) {
                 console.log("Правильный ответ!"); // Отладочное сообщение
                 scores[currentPlayer]++;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
@@ -916,9 +929,8 @@
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
         }
 
-        // Вызываем инициализацию игры после полной загрузки DOM
-        window.addEventListener('DOMContentLoaded', init);
-    <\/script>
+        init(); // Вызываем инициализацию игры сразу после определения функций
+    </script>
 </body>
 </html>`;
         }
