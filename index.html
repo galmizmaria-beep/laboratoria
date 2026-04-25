@@ -441,18 +441,23 @@
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             box-sizing: border-box;
             position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
+            padding-bottom: 6vmin; /* Добавим отступ снизу, чтобы игроки не прилипали к самому низу */
         }
 
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
         
         .players-container {
             display: flex; gap: 4vmin;
-            margin-bottom: 6vmin;
-            z-index: 2; position: relative;
+            /* margin-bottom: 6vmin; - Убрано, используется padding-bottom на gameRoot */
+            z-index: 2; /* Повышаем z-index, чтобы игроки были над оверлеем */
+            position: relative; /* Чтобы z-index работал, если это нужно */
         }
         
         .player-wrap {
-            display: flex; flex-direction: column; align-items: center; position: relative;
+            display: flex;
+            flex-direction: column; /* Элементы внутри игрока идут колонкой */
+            align-items: center;
+            position: relative; /* Для эффекта пульсации */
             transition: 0.3s; opacity: 0.5;
         }
         
@@ -468,13 +473,16 @@
         }
 
         .ready-btn {
-            position: absolute; top: -23vmin; /* Отступ кнопки "Играть" от колбы */
+            /* Было: position: absolute; top: -23vmin; */
+            position: relative; /* Статическая позиция в потоке flex-контейнера */
+            margin-bottom: 2vmin; /* Отступ между кнопкой и колбой */
             background: #8b5cf6; color: white; border: none;
             padding: 1.5vmin 3vmin;
             border-radius: 1vmin;
             font-weight: bold; cursor: pointer;
             box-shadow: 0 0 1.5vmin #8b5cf6; display: none; z-index: 5;
             font-size: 1em;
+            white-space: nowrap; /* Предотвращает перенос текста */
         }
         
         .player-wrap.active .ready-btn { display: block; }
@@ -485,9 +493,12 @@
             height: 15vmin;
             border: 0.4vmin solid rgba(255,255,255,0.7);
             border-radius: 0 0 2.5vmin 2.5vmin;
-            position: absolute; top: -17vmin;
+            /* Было: position: absolute; top: -17vmin; */
+            position: relative; /* Статическая позиция в потоке flex-контейнера */
+            margin-bottom: 2vmin; /* Отступ между колбой и аватаром */
             overflow: hidden; background: rgba(0,0,0,0.5);
             display: flex; align-items: flex-end;
+            flex-shrink: 0; /* Чтобы колба не уменьшалась */
         }
         
         .liquid {
@@ -502,9 +513,17 @@
             object-fit: cover;
             border: 0.3vmin solid white;
             background: #2a2a35;
+            flex-shrink: 0; /* Чтобы аватар не уменьшался */
         }
 
-        .name { color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.5vmin; font-size: 1em;}
+        .name { 
+            color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.5vmin; font-size: 1em;
+            white-space: nowrap; /* Предотвращает перенос текста */
+            text-align: center;
+            max-width: 100%; /* Гарантирует, что имя не выйдет за пределы родителя */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Добавляет многоточие для длинных имен */
+        }
 
         /* Modal Task */
         .modal-bg {
@@ -516,21 +535,28 @@
             background: #121212; border: 0.4vmin solid #8b5cf6;
             border-radius: 2vmin;
             padding: 4vmin;
-            width: 80%; max-width: 600px; text-align: center;
+            width: 90%; /* Ширина модального окна, чтобы оно было более гибким */
+            max-width: 70vmin; /* Максимальная ширина в vmin для лучшей адаптации */
+            text-align: center;
             box-shadow: 0 0 3vmin rgba(139, 92, 246, 0.5); color: white;
         }
 
-        .question { font-size: 1.5em; margin-bottom: 3vmin; }
+        .question { font-size: 2em; margin-bottom: 3vmin; } /* Увеличенный размер шрифта для вопроса */
         
-        .options { display: flex; flex-wrap: wrap; gap: 1.5vmin; justify-content: center; }
+        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } /* Увеличенный отступ */
         
         .option-btn {
             background: transparent; color: white; border: 0.2vmin solid #374151;
-            padding: 1.5vmin 3vmin;
+            padding: 2vmin 3vmin; /* Увеличенный паддинг */
             border-radius: 1vmin;
             cursor: pointer;
-            transition: 0.2s; font-size: 1.1em;
-            width: 45%;
+            transition: 0.2s; font-size: 1.2em; /* Увеличенный размер шрифта */
+            width: 48%; /* Подстраиваем ширину, чтобы кнопки располагались в 2 колонки с отступом */
+            min-height: 8vmin; /* Минимальная высота кнопки */
+            display: flex; /* Используем flexbox для центрирования текста */
+            align-items: center;
+            justify-content: center;
+            text-align: center; /* На случай, если flex не применится */
         }
         
         .option-btn:hover { border-color: #8b5cf6; }
@@ -552,15 +578,15 @@
             justify-content: center; align-items: center; color: white;
             font-size: 1em;
         }
-        .winner-screen h1 { font-size: 4em; color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
+        .winner-screen h1 { font-size: 6em; /* Крупнее для большего эффекта */ color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
         .winner-screen img {
-            width:25vmin;
-            height:25vmin;
+            width:30vmin; /* Крупнее аватар */
+            height:30vmin;
             border-radius:2vmin;
             border: 0.5vmin solid ${liquidColor};
             object-fit: cover;
         }
-        .winner-screen h2 { font-size: 2em; margin-top: 2vmin; }
+        .winner-screen h2 { font-size: 3em; /* Крупнее имя */ margin-top: 2vmin; }
     </style>
 </head>
 <body>
@@ -596,7 +622,8 @@
         
         let availableTaskIndices = [];
         let usedTaskIndices = [];
-        
+        let selectedOption = null; // Добавлена переменная для отслеживания выбранного варианта
+
         // Функция для перемешивания массива (Fisher-Yates)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -610,12 +637,12 @@
             const gameRoot = document.getElementById('gameRoot'); // Получаем корневой элемент игры
 
             if(state.players.length === 0) {
-                console.warn("Нет игроков для начала игры.");
+                console.error("Нет игроков для начала игры. Пожалуйста, добавьте игроков в редакторе.");
                 gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
                 return;
             }
             if(state.tasks.length === 0) {
-                console.warn("Нет заданий для начала игры.");
+                console.error("Нет заданий для начала игры. Пожалуйста, добавьте задания в редакторе.");
                 gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
                 return;
             }
@@ -712,7 +739,7 @@
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
         }
 
-        window.onload = init;
+        init(); // Вызываем инициализацию игры сразу после определения функций
     <\/script>
 </body>
 </html>`;
