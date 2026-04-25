@@ -97,7 +97,7 @@
             letter-spacing: 0.5px;
         }
 
-        input, select, button, textarea { /* Добавлено textarea */
+        input, select, button {
             background-color: var(--bg-card);
             color: var(--text-light);
             border: 1px solid var(--border-color);
@@ -109,7 +109,7 @@
             outline: none;
         }
 
-        input:focus, select:focus, textarea:focus {
+        input:focus, select:focus {
             border-color: var(--neon-purple);
             box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
             background-color: rgba(29, 16, 51, 0.8);
@@ -155,44 +155,41 @@
         }
 
         /* Уменьшенные кнопки удаления в карточках */
-        .card button {
+        .card .remove-btn { /* Specific class for task/player remove */
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
             border-color: var(--danger);
             font-size: 0.8rem;
             padding: 8px 12px;
             margin-top: 10px;
-            border-radius: 12px; /* Уменьшаем радиус для кнопок внутри карточек */
+            border-radius: 30px; /* Сохраняем круглые */
         }
         
-        .card button:hover {
+        .card .remove-btn:hover {
             background: var(--danger);
             color: white;
             box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
-        
-        /* Стили для кнопок "Добавить вариант" */
-        .card .add-option-btn {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border-color: var(--success);
-            font-size: 0.8rem;
-            padding: 8px 12px;
-            margin-top: 10px;
-            border-radius: 12px;
-        }
-        .card .add-option-btn:hover {
-            background: var(--success);
-            color: white;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+
+        .card .option-remove-btn { /* For individual options */
+             width: 30px; /* Small square button */
+             height: 30px;
+             padding: 0;
+             margin: 0;
+             border-radius: 50%;
+             font-size: 0.7rem;
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             flex-shrink: 0;
         }
 
-        .card input[type="radio"], .card input[type="checkbox"] {
+        .card input[type="radio"] {
             accent-color: var(--neon-blue);
             width: 20px;
             height: 20px;
-            margin-top: 0; /* Убираем верхний отступ */
-            margin-right: 5px; /* Небольшой отступ справа */
+            margin-top: 0; /* Remove top margin */
+            flex-shrink: 0;
         }
         
         /* Стили для сообщения о сжатии */
@@ -242,7 +239,7 @@
             width: 100%;
             height: 100%;
             border: none;
-            display: block; /* Убираем возможные отступы iframe */
+            display: block; /* Убираем лишние отступы */
         }
 
         .generate-btn {
@@ -343,20 +340,19 @@
 
         // Initialize default
         window.onload = () => {
-            document.getElementById('bgUrl').value = 'https://i.imgur.com/qE2S1W0.jpeg'; // Пример фона
-            
+            document.getElementById('bgUrl').value = ''; 
             addPlayer('Игрок 1', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png'); 
             addPlayer('Игрок 2', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png');
-
-            addTask('multipleChoice', 'Сколько будет 2 + 2?', ['3', '4', '5'], 1);
-            addTask('multipleCorrect', 'Какие числа являются четными?', ['1', '2', '3', '4'], [1, 3]);
-            addTask('textInput', 'Назовите столицу Франции (на русском).', '', 'Париж');
-            
+            addTask('Сколько будет 2+2?', 'multiple-choice', { options: ['3', '4', '5'], correctIdx: 1 });
+            addTask('Столица Франции?', 'text-input', { correctAnswer: 'Париж' }); // Пример текстового вопроса
             updatePreview();
         };
 
         function addPlayer(name = '', url = '') {
-            if (config.players.length >= 4) return console.warn("Максимум 4 игрока!");
+            if (config.players.length >= 4) {
+                 alert("Максимум 4 игрока!"); // alert для редактора, console.warn для Genially
+                 return;
+            }
             let id = Date.now();
             config.players.push({ id, name, url });
             renderPlayers();
@@ -369,15 +365,15 @@
             updatePreview();
         }
 
-        function addTask(type = 'multipleChoice', question = '', options = ['', ''], correct = 0) {
-            let id = Date.now() + Math.random(); // Более уникальный ID
-            let newTask;
-            if (type === 'multipleChoice') {
-                newTask = { id, type, question, options: options, correctIdx: correct };
-            } else if (type === 'multipleCorrect') {
-                newTask = { id, type, question, options: options, correctIndices: Array.isArray(correct) ? correct : [] };
-            } else if (type === 'textInput') {
-                newTask = { id, type, question, correctAnswer: typeof correct === 'string' ? correct : '' };
+        // Modified addTask to support different types
+        function addTask(q = '', type = 'multiple-choice', data = {}) {
+            let id = Date.now();
+            const newTask = { id, question: q, type };
+            if (type === 'multiple-choice') {
+                newTask.options = data.options || ['', '', ''];
+                newTask.correctIdx = data.correctIdx !== undefined ? data.correctIdx : 0;
+            } else if (type === 'text-input') {
+                newTask.correctAnswer = data.correctAnswer || '';
             }
             config.tasks.push(newTask);
             renderTasks();
@@ -390,32 +386,29 @@
             updatePreview();
         }
 
-        function addOption(taskId) {
-            const task = config.tasks.find(t => t.id === taskId);
-            if (task && (task.type === 'multipleChoice' || task.type === 'multipleCorrect')) {
-                task.options.push('');
+        // New functions for adding/removing options in multiple-choice tasks
+        function addOptionToTask(taskIndex) {
+            if (config.tasks[taskIndex].type === 'multiple-choice') {
+                config.tasks[taskIndex].options.push('');
                 renderTasks();
                 updatePreview();
             }
         }
 
-        function removeOption(taskId, optionIdx) {
-            const task = config.tasks.find(t => t.id === taskId);
-            if (task && (task.type === 'multipleChoice' || task.type === 'multipleCorrect')) {
-                task.options.splice(optionIdx, 1);
-                // Adjust correct indices if needed
-                if (task.type === 'multipleChoice' && task.correctIdx === optionIdx) {
-                    task.correctIdx = 0; // Default to first option if removed
-                } else if (task.type === 'multipleChoice' && task.correctIdx > optionIdx) {
+        function removeOptionFromTask(taskIndex, optionIndex) {
+            const task = config.tasks[taskIndex];
+            if (task.type === 'multiple-choice' && task.options.length > 1) {
+                task.options.splice(optionIndex, 1);
+                // Adjust correctIdx if it was the removed one or after it
+                if (task.correctIdx === optionIndex) {
+                    task.correctIdx = 0; // Default to first remaining
+                } else if (task.correctIdx > optionIndex) {
                     task.correctIdx--;
-                } else if (task.type === 'multipleCorrect') {
-                    task.correctIndices = task.correctIndices.filter(idx => idx !== optionIdx).map(idx => (idx > optionIdx ? idx - 1 : idx));
                 }
                 renderTasks();
                 updatePreview();
             }
         }
-
 
         function renderPlayers() {
             const container = document.getElementById('playersList');
@@ -424,9 +417,9 @@
                 container.innerHTML += `
                     <div class="card">
                         <div class="form-group">
-                            <input type="text" placeholder="Имя игрока" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
-                            <input type="text" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
-                            <button onclick="removePlayer(${p.id})">Удалить игрока</button>
+                            <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
+                            <input type="text" id="p_url_${p.id}" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
+                            <button class="remove-btn" onclick="removePlayer(${p.id})">Удалить</button>
                         </div>
                     </div>`;
             });
@@ -437,50 +430,49 @@
             container.innerHTML = '';
             config.tasks.forEach((t, idx) => {
                 let taskContent = '';
-                if (t.type === 'multipleChoice' || t.type === 'multipleCorrect') {
-                    let inputType = t.type === 'multipleChoice' ? 'radio' : 'checkbox';
-                    taskContent = t.options.map((opt, oIdx) => `
+
+                // Dropdown for question type
+                taskContent += `
+                    <div class="form-group">
+                        <label>Тип вопроса</label>
+                        <select onchange="config.tasks[${idx}].type=this.value; renderTasks(); updatePreview()">
+                            <option value="multiple-choice" ${t.type === 'multiple-choice' ? 'selected' : ''}>Множественный выбор</option>
+                            <option value="text-input" ${t.type === 'text-input' ? 'selected' : ''}>Ввод текста</option>
+                        </select>
+                    </div>
+                `;
+
+                // Question text input
+                taskContent += `<input type="text" placeholder="Текст вопроса" value="${t.question}" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px); margin-bottom: 15px;">`;
+
+                if (t.type === 'multiple-choice') {
+                    // Render options for multiple-choice
+                    let optionsHTML = t.options.map((opt, oIdx) => `
                         <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
-                            <input type="${inputType}" name="correct_${t.id}" 
-                                ${t.type === 'multipleChoice' ? (t.correctIdx === oIdx ? 'checked' : '') : (t.correctIndices.includes(oIdx) ? 'checked' : '')} 
-                                onchange="${t.type === 'multipleChoice' ? `config.tasks[${idx}].correctIdx=${oIdx}` : `
-                                    if(this.checked) {
-                                        if(!config.tasks[${idx}].correctIndices.includes(${oIdx})) config.tasks[${idx}].correctIndices.push(${oIdx});
-                                    } else {
-                                        config.tasks[${idx}].correctIndices = config.tasks[${idx}].correctIndices.filter(i => i !== ${oIdx});
-                                    }
-                                `}; updatePreview()">
+                            <input type="radio" name="correct_${t.id}" ${t.correctIdx === oIdx ? 'checked' : ''} onchange="config.tasks[${idx}].correctIdx=${oIdx}; updatePreview()">
                             <input type="text" placeholder="Вариант ${oIdx+1}" value="${opt}" onchange="config.tasks[${idx}].options[${oIdx}]=this.value; updatePreview()" style="flex:1;">
-                            <button class="card-small-btn" onclick="removeOption(${t.id}, ${oIdx})" style="width: auto; padding: 5px 8px; font-size: 0.7rem;">X</button>
+                            ${t.options.length > 1 ? `<button type="button" class="remove-btn option-remove-btn" onclick="removeOptionFromTask(${idx}, ${oIdx})">x</button>` : ''}
                         </div>
                     `).join('');
-                    taskContent += `<button class="add-option-btn" onclick="addOption(${t.id})">+ Добавить вариант</button>`;
 
-                } else if (t.type === 'textInput') {
-                    taskContent = `
+                    taskContent += `
+                        ${optionsHTML}
+                        <button type="button" onclick="addOptionToTask(${idx})" style="margin-top:10px;">+ Добавить вариант</button>
+                    `;
+                } else if (t.type === 'text-input') {
+                    // Render input for text answer
+                    taskContent += `
                         <div class="form-group">
                             <label>Правильный ответ</label>
-                            <input type="text" placeholder="Например: Париж" value="${t.correctAnswer}" onchange="config.tasks[${idx}].correctAnswer=this.value; updatePreview()">
+                            <input type="text" placeholder="Введите правильный ответ" value="${t.correctAnswer || ''}" onchange="config.tasks[${idx}].correctAnswer=this.value; updatePreview()" style="width:calc(100% - 30px);">
                         </div>
                     `;
                 }
 
                 container.innerHTML += `
                     <div class="card">
-                        <div class="form-group">
-                            <label>Тип задания</label>
-                            <select onchange="config.tasks[${idx}].type=this.value; renderTasks(); updatePreview()">
-                                <option value="multipleChoice" ${t.type === 'multipleChoice' ? 'selected' : ''}>Выбор одного ответа</option>
-                                <option value="multipleCorrect" ${t.type === 'multipleCorrect' ? 'selected' : ''}>Выбор нескольких ответов</option>
-                                <option value="textInput" ${t.type === 'textInput' ? 'selected' : ''}>Ввод текста</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Текст вопроса</label>
-                            <textarea placeholder="Текст вопроса" onchange="config.tasks[${idx}].question=this.value; updatePreview()" style="width:calc(100% - 30px);">${t.question}</textarea>
-                        </div>
                         ${taskContent}
-                        <button onclick="removeTask(${t.id})">Удалить задание</button>
+                        <button class="remove-btn" onclick="removeTask(${t.id})">Удалить вопрос</button>
                     </div>`;
             });
         }
@@ -494,19 +486,28 @@
             const fontFamily = document.getElementById('fontFamily').value;
             const avatarSize = document.getElementById('avatarSize').value;
             
-            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход', submit: 'ОТВЕТИТЬ', multipleCorrectHint: 'Выберите все верные варианты.' } 
-                                      : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn', submit: 'SUBMIT', multipleCorrectHint: 'Select all correct options.' };
+            const txt = lang === 'ru' ? { 
+                                        ready: 'ИГРАТЬ', 
+                                        check: 'ПРОВЕРИТЬ', 
+                                        win: 'ПОБЕДА!', 
+                                        next: 'Следующий ход',
+                                        yourAnswer: 'Ваш ответ' 
+                                    } 
+                                      : { 
+                                        ready: 'READY', 
+                                        check: 'CHECK', 
+                                        win: 'WINNER!', 
+                                        next: 'Next Turn',
+                                        yourAnswer: 'Your answer' 
+                                    };
 
             const gameState = {
                 players: config.players,
                 tasks: config.tasks,
                 maxScore: parseInt(maxScore),
-                txt: txt,
-                liquidColor: liquidColor, // Передаем цвет жидкости в игру
-                avatarSize: avatarSize
+                txt: txt
             };
 
-            // Если bgUrl пуст, используем прозрачный фон, иначе картинку
             const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: transparent;`;
 
             return `
@@ -519,18 +520,15 @@
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
         /* Стили для корневых HTML и BODY внутри iframe */
-        html { 
-            font-size: 1.5vmin; /* Базовый размер шрифта, масштабируется по наименьшей стороне области просмотра iframe */
-            box-sizing: border-box;
-        }
-        body { 
+        html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
             font-family: '${fontFamily}', sans-serif;
-            color: white; /* Дефолтный цвет текста для игры */
-            background: transparent; /* Обязательно прозрачный фон для body */
-            display: flex; /* Делаем body flex-контейнером */
-            justify-content: center; /* Центрируем контент по горизонтали */
-            align-items: center; /* Центрируем контент по вертикали */
+            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра iframe */
+            box-sizing: border-box;
+            background: transparent; /* Убедимся, что фон body сам по себе прозрачен */
+            display: flex; /* Добавлено, чтобы игра могла центрироваться */
+            justify-content: center; /* Центрируем содержимое */
+            align-items: center; /* Центрируем содержимое */
         }
         *, *::before, *::after {
             box-sizing: inherit;
@@ -538,12 +536,15 @@
 
         /* Новый корневой контейнер для всего игрового контента */
         #gameRoot {
-            width: 100%; height: 100%;
+            width: 100%; height: 100%; /* Занимаем всю доступную площадь */
             ${gameBackgroundStyle} /* Динамический фон применяется к этому контейнеру */
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; /* Центрируем игроков по вертикали */
+            align-items: center; /* Центрируем игроков по горизонтали */
             box-sizing: border-box;
             position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
-            padding-bottom: 6vmin; /* Добавим отступ снизу, чтобы игроки не прилипали к самому низу */
+            /* padding-bottom: 6vmin; */ /* Убран, чтобы не мешать центрированию */
         }
 
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
@@ -552,8 +553,6 @@
             display: flex; gap: 4vmin;
             z-index: 2; /* Повышаем z-index, чтобы игроки были над оверлеем */
             position: relative; /* Чтобы z-index работал, если это нужно */
-            flex-wrap: wrap; /* Позволяет игрокам переноситься на новую строку, если их слишком много для одной */
-            justify-content: center; /* Центрирует игроков, если они переносятся */
         }
         
         .player-wrap {
@@ -564,7 +563,6 @@
             transition: 0.3s; opacity: 0.5;
             gap: 2vmin; /* Отступ между элементами внутри player-wrap (кнопка, колба, аватар, имя) */
             justify-content: flex-end; /* Выравнивает содержимое по нижнему краю flex-контейнера */
-            min-width: 15vmin; /* Минимальная ширина, чтобы элементы не сжимались слишком сильно */
         }
         
         .player-wrap.active {
@@ -584,11 +582,8 @@
             border-radius: 1vmin;
             font-weight: bold; cursor: pointer;
             box-shadow: 0 0 1.5vmin #8b5cf6; display: none; z-index: 5;
-            font-size: 1em; /* Относительно базового font-size html */
+            font-size: 1em;
             white-space: nowrap; /* Предотвращает перенос текста */
-            transform: translateY(-50%); /* Поднимаем кнопку над игроком */
-            position: absolute; /* Позиционируем абсолютно */
-            top: 0; /* Привязываем к верху, потом сдвигаем */
         }
         
         .player-wrap.active .ready-btn { display: block; }
@@ -605,13 +600,13 @@
         }
         
         .liquid {
-            width: 100%; background: var(--liquid-color); transition: height 0.5s ease;
-            box-shadow: 0 0 1vmin var(--liquid-color);
+            width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
+            box-shadow: 0 0 1vmin ${liquidColor};
         }
 
         .avatar {
-            width: calc(10vmin * var(--avatar-size-multiplier)); 
-            height: calc(10vmin * var(--avatar-size-multiplier)); 
+            width: calc(10vmin * ${avatarSize/100}); 
+            height: calc(10vmin * ${avatarSize/100}); 
             border-radius: 2vmin;
             object-fit: cover; /* Важно для подгонки изображения в квадрат */
             border: 0.3vmin solid white;
@@ -632,7 +627,6 @@
         .modal-bg {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center;
-            padding: 2vmin; /* Добавим небольшой padding, чтобы модалка не прилипала к краям */
         }
         
         .modal {
@@ -640,17 +634,20 @@
             border-radius: 2vmin;
             padding: 4vmin;
             width: 90%; /* Ширина модального окна, чтобы оно было более гибким */
-            max-width: 80vmin; /* Максимальная ширина в vmin для лучшей адаптации */
+            max-width: 70vmin; /* Максимальная ширина в vmin для лучшей адаптации */
             text-align: center;
             box-shadow: 0 0 3vmin rgba(139, 92, 246, 0.5); color: white;
-            max-height: 90vh; /* Ограничиваем высоту, чтобы модалка не выходила за экран */
-            overflow-y: auto; /* Добавляем прокрутку, если контент не помещается */
+            display: flex; /* Добавлено для лучшего расположения содержимого */
+            flex-direction: column; /* Добавлено для лучшего расположения содержимого */
+            align-items: center; /* Добавлено для лучшего расположения содержимого */
         }
 
         .question { font-size: 2em; margin-bottom: 3vmin; } /* Увеличенный размер шрифта для вопроса */
-        .hint-text { font-size: 0.8em; color: #aaa; margin-top: -2vmin; margin-bottom: 2vmin;}
         
-        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } /* Увеличенный отступ */
+        .options-container { /* Обертка для кнопок-вариантов */
+            display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center;
+            width: 100%;
+        }
         
         .option-btn {
             background: transparent; color: white; border: 0.2vmin solid #374151;
@@ -658,29 +655,32 @@
             border-radius: 1vmin;
             cursor: pointer;
             transition: 0.2s; font-size: 1.2em; /* Увеличенный размер шрифта */
-            width: calc(50% - 1vmin); /* Подстраиваем ширину для двух колонок с gap */
+            width: 48%; /* Подстраиваем ширину, чтобы кнопки располагались в 2 колонки с отступом */
             min-height: 8vmin; /* Минимальная высота кнопки */
             display: flex; /* Используем flexbox для центрирования текста */
             align-items: center;
             justify-content: center;
             text-align: center; /* На случай, если flex не применится */
-            word-break: break-word; /* Перенос слов, чтобы длинные варианты не вылезали */
         }
         
         .option-btn:hover { border-color: #8b5cf6; }
         .option-btn.selected { background: rgba(139, 92, 246, 0.3); border-color: #8b5cf6; }
         
-        .modal-text-input {
-            width: calc(100% - 4vmin); /* Ширина с учетом паддингов модала */
+        .text-answer-input { /* Стиль для поля ввода текстового ответа */
+            width: calc(100% - 2vmin); /* Ширина поля ввода */
+            max-width: 50vmin; /* Максимальная ширина */
             padding: 2vmin;
-            font-size: 1.5em;
+            margin-top: 2vmin;
             border-radius: 1vmin;
             border: 0.2vmin solid #374151;
-            background: #2a2a35;
+            background: rgba(0,0,0,0.5);
             color: white;
-            margin-top: 2vmin;
-            margin-bottom: 2vmin;
+            font-size: 1.2em;
             text-align: center;
+        }
+        .text-answer-input:focus {
+            border-color: #8b5cf6;
+            outline: none;
         }
 
         .check-btn {
@@ -691,6 +691,9 @@
             border-radius: 1vmin;
             cursor: pointer;
         }
+        .check-btn:hover {
+            background: #7c3aed;
+        }
 
         /* Winner Screen */
         .winner-screen {
@@ -699,12 +702,12 @@
             justify-content: center; align-items: center; color: white;
             font-size: 1em;
         }
-        .winner-screen h1 { font-size: 6em; /* Крупнее для большего эффекта */ color: var(--liquid-color); text-shadow: 0 0 2vmin var(--liquid-color); margin-bottom: 2vmin;}
+        .winner-screen h1 { font-size: 6em; /* Крупнее для большего эффекта */ color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
         .winner-screen img {
             width:30vmin; /* Крупнее аватар */
             height:30vmin;
             border-radius:2vmin;
-            border: 0.5vmin solid var(--liquid-color);
+            border: 0.5vmin solid ${liquidColor};
             object-fit: cover;
         }
         .winner-screen h2 { font-size: 3em; /* Крупнее имя */ margin-top: 2vmin; }
@@ -720,10 +723,13 @@
         <div class="modal-bg" id="modalBg">
             <div class="modal">
                 <div class="question" id="qText"></div>
-                <div class="hint-text" id="qHint"></div>
-                <div class="options" id="optsDiv"></div>
-                <input type="text" id="textAnswerInput" class="modal-text-input" placeholder="${lang === 'ru' ? 'Введите ваш ответ здесь...' : 'Enter your answer here...'}" style="display:none;">
-                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+                <!-- Контейнер для кнопок-вариантов -->
+                <div class="options-container" id="optsDiv"></div>
+                <!-- Поле для текстового ответа -->
+                <div id="textInputDiv" style="display:none;">
+                    <input type="text" id="answerInput" class="text-answer-input" placeholder="${txt.yourAnswer}">
+                </div>
+                <button class="check-btn" id="checkBtn">${txt.check}</button>
             </div>
         </div>
 
@@ -740,17 +746,13 @@
         const state = ${JSON.stringify(gameState)};
         console.log("Initial game state:", state); // Отладочное сообщение
 
-        // Переменные для динамических стилей
-        document.documentElement.style.setProperty('--liquid-color', state.liquidColor);
-        document.documentElement.style.setProperty('--avatar-size-multiplier', state.avatarSize / 100);
-
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
         
         let availableTaskIndices = [];
         let usedTaskIndices = [];
-        let selectedOption = null; // Для multipleChoice
-        let selectedMultipleOptions = []; // Для multipleCorrect
+        let selectedOption = null; // Для множественного выбора (индекс)
+        let currentTask = null; // Для хранения текущего задания
 
         // Функция для перемешивания массива (Fisher-Yates)
         function shuffleArray(array) {
@@ -761,17 +763,17 @@
         }
 
         function init() {
-            console.log("init() function called."); 
-            const gameRoot = document.getElementById('gameRoot');
+            console.log("init() function called."); // Отладочное сообщение
+            const gameRoot = document.getElementById('gameRoot'); // Получаем корневой элемент игры
 
             if(state.players.length === 0) {
                 console.error("Нет игроков для начала игры. Пожалуйста, добавьте игроков в редакторе.");
-                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>'; 
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
                 return;
             }
             if(state.tasks.length === 0) {
                 console.error("Нет заданий для начала игры. Пожалуйста, добавьте задания в редакторе.");
-                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>'; 
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
                 return;
             }
 
@@ -780,26 +782,34 @@
             const pc = document.getElementById('pc');
             pc.innerHTML = state.players.map((p, i) => `
                 <div class="player-wrap ${i === 0 ? 'active' : ''}" id="p${i}">
-                    <button class="ready-btn" onclick="openTask()">${state.txt.ready}</button>
+                    <button class="ready-btn" data-player-idx="${i}">${state.txt.ready}</button>
                     <div class="flask">
                         <div class="liquid" id="liq${i}" style="height: 0%;"></div>
                     </div>
-                    <img src="${p.url}" class="avatar" onerror="this.src='https://via.placeholder.com/150/000000/FFFFFF?text=No+Avatar';">
+                    <img src="${p.url}" class="avatar">
                     <div class="name">${p.name}</div>
                 </div>
             `).join('');
-            console.log("Players rendered in game.");
+            console.log("Players rendered in game."); // Отладочное сообщение
+
+            // Прикрепляем слушатели событий к кнопкам "ИГРАТЬ"
+            document.querySelectorAll('.ready-btn').forEach(btn => {
+                btn.addEventListener('click', openTask);
+            });
+
+            // Прикрепляем слушатель к кнопке "ПРОВЕРИТЬ" в модальном окне
+            document.getElementById('checkBtn').addEventListener('click', checkAnswer);
         }
 
         function resetTasks() {
             availableTaskIndices = Array.from({length: state.tasks.length}, (_, i) => i);
             shuffleArray(availableTaskIndices);
             usedTaskIndices = [];
-            console.log("Задания сброшены и перемешаны. Доступно: " + availableTaskIndices.length);
+            console.log("Задания сброшены и перемешаны.");
         }
 
         function openTask() {
-            console.log("openTask() called."); 
+            console.log("openTask() called."); // Отладочное сообщение
             if(state.tasks.length === 0) {
                 console.warn("Нет заданий!");
                 return;
@@ -815,93 +825,65 @@
             
             const taskIndex = availableTaskIndices.shift();
             usedTaskIndices.push(taskIndex);
+            currentTask = state.tasks[taskIndex]; // Сохраняем текущее задание
             
-            const task = state.tasks[taskIndex];
-            
-            document.getElementById('qText').innerText = task.question;
+            document.getElementById('qText').innerText = currentTask.question;
             const optsDiv = document.getElementById('optsDiv');
-            const textAnswerInput = document.getElementById('textAnswerInput');
-            const qHint = document.getElementById('qHint');
+            const textInputDiv = document.getElementById('textInputDiv');
             
-            optsDiv.innerHTML = ''; // Очищаем варианты
-            textAnswerInput.style.display = 'none'; // Скрываем текстовый ввод по умолчанию
-            qHint.innerText = ''; // Очищаем подсказку
-            selectedOption = null; // Сброс для single choice
-            selectedMultipleOptions = []; // Сброс для multiple correct
+            // Сбрасываем и отображаем нужные элементы
+            optsDiv.innerHTML = '';
+            optsDiv.style.display = 'none';
+            textInputDiv.style.display = 'none';
+            selectedOption = null; // Сбрасываем выбранный вариант
 
-            if (task.type === 'multipleChoice') {
-                optsDiv.innerHTML = task.options.map((opt, i) => 
-                    `<button class="option-btn" onclick="selectOpt(${i}, this)">${opt}</button>`
+            if (currentTask.type === 'multiple-choice') {
+                optsDiv.style.display = 'flex';
+                optsDiv.innerHTML = currentTask.options.map((opt, i) => 
+                    `<button class="option-btn" data-option-idx="${i}">${opt}</button>`
                 ).join('');
-                document.getElementById('checkBtn').innerText = state.txt.check;
-            } else if (task.type === 'multipleCorrect') {
-                optsDiv.innerHTML = task.options.map((opt, i) => 
-                    `<button class="option-btn" onclick="selectMultipleOpt(${i}, this)">${opt}</button>`
-                ).join('');
-                qHint.innerText = state.txt.multipleCorrectHint;
-                document.getElementById('checkBtn').innerText = state.txt.check;
-            } else if (task.type === 'textInput') {
-                textAnswerInput.style.display = 'block';
-                textAnswerInput.value = ''; // Очищаем поле ввода
-                textAnswerInput.focus();
-                document.getElementById('checkBtn').innerText = state.txt.submit;
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.addEventListener('click', (event) => selectOpt(parseInt(event.target.dataset.option-idx), event.target));
+                });
+            } else if (currentTask.type === 'text-input') {
+                textInputDiv.style.display = 'block';
+                const answerInput = document.getElementById('answerInput');
+                answerInput.value = ''; // Очищаем поле ввода
+                answerInput.placeholder = state.txt.yourAnswer;
             }
             
             document.getElementById('modalBg').style.display = 'flex';
-            console.log("Modal opened for task:", task);
+            console.log("Modal opened for task:", currentTask); // Отладочное сообщение
         }
 
         function selectOpt(idx, el) {
-            console.log("Option selected:", idx);
+            console.log("Option selected:", idx); // Отладочное сообщение
             selectedOption = idx;
-            document.querySelectorAll('#optsDiv .option-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             el.classList.add('selected');
         }
 
-        function selectMultipleOpt(idx, el) {
-            console.log("Multiple option toggled:", idx);
-            if (selectedMultipleOptions.includes(idx)) {
-                selectedMultipleOptions = selectedMultipleOptions.filter(i => i !== idx);
-                el.classList.remove('selected');
-            } else {
-                selectedMultipleOptions.push(idx);
-                el.classList.add('selected');
-            }
-            console.log("Current multiple selections:", selectedMultipleOptions);
-        }
-
         function checkAnswer() {
-            console.log("checkAnswer() called."); 
-            const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
-            const task = state.tasks[lastTaskIndex];
+            console.log("checkAnswer() called."); // Отладочное сообщение
             let isCorrect = false;
 
-            if (task.type === 'multipleChoice') {
-                if(selectedOption === null) {
+            if (currentTask.type === 'multiple-choice') {
+                if (selectedOption === null) {
                     console.warn("Не выбран вариант ответа.");
                     return;
                 }
-                isCorrect = (selectedOption === task.correctIdx);
-                console.log("Multiple choice answer checked. Selected:", selectedOption, "Correct:", task.correctIdx, "Result:", isCorrect);
-            } else if (task.type === 'multipleCorrect') {
-                if(selectedMultipleOptions.length === 0) {
-                    console.warn("Не выбраны варианты ответа.");
-                    return;
-                }
-                // Сортируем массивы для корректного сравнения
-                const sortedSelected = [...selectedMultipleOptions].sort();
-                const sortedCorrect = [...task.correctIndices].sort();
-                isCorrect = (sortedSelected.length === sortedCorrect.length &&
-                             sortedSelected.every((val, index) => val === sortedCorrect[index]));
-                console.log("Multiple correct answer checked. Selected:", sortedSelected, "Correct:", sortedCorrect, "Result:", isCorrect);
-            } else if (task.type === 'textInput') {
-                const userAnswer = document.getElementById('textAnswerInput').value.trim();
-                isCorrect = (userAnswer.toLowerCase() === task.correctAnswer.toLowerCase().trim());
-                console.log("Text input answer checked. User:", userAnswer, "Correct:", task.correctAnswer, "Result:", isCorrect);
+                isCorrect = (selectedOption === currentTask.correctIdx);
+            } else if (currentTask.type === 'text-input') {
+                const answerInput = document.getElementById('answerInput');
+                const userAnswer = answerInput.value.trim().toLowerCase();
+                const correctAnswers = Array.isArray(currentTask.correctAnswer) 
+                                     ? currentTask.correctAnswer.map(a => a.trim().toLowerCase()) 
+                                     : [currentTask.correctAnswer.trim().toLowerCase()];
+                isCorrect = correctAnswers.includes(userAnswer);
             }
-            
-            if(isCorrect) {
-                console.log("Правильный ответ!");
+
+            if (isCorrect) {
+                console.log("Правильный ответ!"); // Отладочное сообщение
                 scores[currentPlayer]++;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
                 document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
@@ -911,7 +893,7 @@
                     return;
                 }
             } else {
-                console.log("Неправильный ответ.");
+                console.log("Неправильный ответ."); // Отладочное сообщение
             }
             
             document.getElementById('modalBg').style.display = 'none';
@@ -919,24 +901,23 @@
         }
 
         function nextTurn() {
-            console.log("nextTurn() called. Current player was:", currentPlayer);
+            console.log("nextTurn() called. Current player was:", currentPlayer); // Отладочное сообщение
             document.getElementById('p'+currentPlayer).classList.remove('active');
             currentPlayer = (currentPlayer + 1) % state.players.length;
             document.getElementById('p'+currentPlayer).classList.add('active');
-            console.log("Next player is:", currentPlayer);
+            console.log("Next player is:", currentPlayer); // Отладочное сообщение
         }
 
         function showWinner() {
-            console.log("showWinner() called. Winner is player:", currentPlayer); 
+            console.log("showWinner() called. Winner is player:", currentPlayer); // Отладочное сообщение
             document.getElementById('modalBg').style.display = 'none';
             document.getElementById('winnerScreen').style.display = 'flex';
             document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
         }
 
-        // Запускаем инициализацию после загрузки DOM
-        document.addEventListener('DOMContentLoaded', init);
-        console.log("DOMContentLoaded listener added for init().");
+        // Вызываем инициализацию игры после полной загрузки DOM
+        window.addEventListener('DOMContentLoaded', init);
     <\/script>
 </body>
 </html>`;
@@ -963,6 +944,7 @@
                 }, 2000);
             }).catch(err => {
                 console.error("Ошибка копирования в буфер обмена:", err);
+                // Используем console.log вместо alert для Genially-совместимости
                 console.log("Ошибка копирования. Скопируйте код вручную из консоли разработчика.");
                 console.log("--- Начало сгенерированного кода ---");
                 console.log(html);
