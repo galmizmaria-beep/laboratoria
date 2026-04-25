@@ -448,9 +448,8 @@
         
         .players-container {
             display: flex; gap: 4vmin;
-            /* margin-bottom: 6vmin; - Убрано, используется padding-bottom на gameRoot */
             z-index: 2; /* Повышаем z-index, чтобы игроки были над оверлеем */
-            position: relative; /* Чтобы z-index работал, если это нужно */
+            position: relative; 
         }
         
         .player-wrap {
@@ -458,7 +457,10 @@
             flex-direction: column; /* Элементы внутри игрока идут колонкой */
             align-items: center;
             position: relative; /* Для эффекта пульсации */
-            transition: 0.3s; opacity: 0.5;
+            transition: 0.3s; 
+            opacity: 0.5;
+            /* Важно: обеспечить, чтобы все player-wrap занимали одинаковую высоту */
+            /* Для этого, элементы внутри, которые скрываются, должны сохранять свое место */
         }
         
         .player-wrap.active {
@@ -473,32 +475,43 @@
         }
 
         .ready-btn {
-            /* Было: position: absolute; top: -23vmin; */
-            position: relative; /* Статическая позиция в потоке flex-контейнера */
+            position: relative; /* Сохраняет кнопку в потоке */
             margin-bottom: 2vmin; /* Отступ между кнопкой и колбой */
             background: #8b5cf6; color: white; border: none;
             padding: 1.5vmin 3vmin;
             border-radius: 1vmin;
             font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 1.5vmin #8b5cf6; display: none; z-index: 5;
+            box-shadow: 0 0 1.5vmin #8b5cf6; 
+            z-index: 5;
             font-size: 1em;
             white-space: nowrap; /* Предотвращает перенос текста */
+            
+            /* ИЗМЕНЕНИЯ ЗДЕСЬ: */
+            visibility: hidden; /* Скрываем, но сохраняем место */
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease;
         }
         
-        .player-wrap.active .ready-btn { display: block; }
+        .player-wrap.active .ready-btn { 
+            /* ИЗМЕНЕНИЯ ЗДЕСЬ: */
+            visibility: visible; /* Делаем видимым, когда игрок активен */
+            opacity: 1;
+            /* display: block; УДАЛЕНО */
+        }
         .ready-btn:hover { background: #7c3aed; }
 
         .flask {
-            width: 5vmin;
-            height: 15vmin;
+            /* ИЗМЕНЕНИЯ ЗДЕСЬ: Увеличен размер колбы */
+            width: 7vmin; /* Было 5vmin */
+            height: 20vmin; /* Было 15vmin */
+
             border: 0.4vmin solid rgba(255,255,255,0.7);
-            border-radius: 0 0 2.5vmin 2.5vmin;
-            /* Было: position: absolute; top: -17vmin; */
-            position: relative; /* Статическая позиция в потоке flex-контейнера */
+            border-radius: 0 0 3.5vmin 3.5vmin; /* Увеличил радиус в соответствии с новой шириной */
+            position: relative; 
             margin-bottom: 2vmin; /* Отступ между колбой и аватаром */
             overflow: hidden; background: rgba(0,0,0,0.5);
             display: flex; align-items: flex-end;
-            flex-shrink: 0; /* Чтобы колба не уменьшалась */
+            flex-shrink: 0; 
         }
         
         .liquid {
@@ -507,22 +520,24 @@
         }
 
         .avatar {
-            width: calc(10vmin * ${avatarSize/100}); 
-            height: calc(10vmin * ${avatarSize/100}); 
+            /* ИЗМЕНЕНИЯ ЗДЕСЬ: Увеличен базовый размер аватара */
+            width: calc(15vmin * ${avatarSize/100}); /* Было 10vmin */
+            height: calc(15vmin * ${avatarSize/100}); /* Было 10vmin */
+
             border-radius: 2vmin;
             object-fit: cover;
             border: 0.3vmin solid white;
             background: #2a2a35;
-            flex-shrink: 0; /* Чтобы аватар не уменьшался */
+            flex-shrink: 0; 
         }
 
         .name { 
             color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.5vmin; font-size: 1em;
-            white-space: nowrap; /* Предотвращает перенос текста */
+            white-space: nowrap; 
             text-align: center;
-            max-width: 100%; /* Гарантирует, что имя не выйдет за пределы родителя */
+            max-width: 100%; 
             overflow: hidden;
-            text-overflow: ellipsis; /* Добавляет многоточие для длинных имен */
+            text-overflow: ellipsis; 
         }
 
         /* Modal Task */
@@ -535,28 +550,28 @@
             background: #121212; border: 0.4vmin solid #8b5cf6;
             border-radius: 2vmin;
             padding: 4vmin;
-            width: 90%; /* Ширина модального окна, чтобы оно было более гибким */
-            max-width: 70vmin; /* Максимальная ширина в vmin для лучшей адаптации */
+            width: 90%; 
+            max-width: 70vmin; 
             text-align: center;
             box-shadow: 0 0 3vmin rgba(139, 92, 246, 0.5); color: white;
         }
 
-        .question { font-size: 2em; margin-bottom: 3vmin; } /* Увеличенный размер шрифта для вопроса */
+        .question { font-size: 2em; margin-bottom: 3vmin; } 
         
-        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } /* Увеличенный отступ */
+        .options { display: flex; flex-wrap: wrap; gap: 2vmin; justify-content: center; } 
         
         .option-btn {
             background: transparent; color: white; border: 0.2vmin solid #374151;
-            padding: 2vmin 3vmin; /* Увеличенный паддинг */
+            padding: 2vmin 3vmin; 
             border-radius: 1vmin;
             cursor: pointer;
-            transition: 0.2s; font-size: 1.2em; /* Увеличенный размер шрифта */
-            width: 48%; /* Подстраиваем ширину, чтобы кнопки располагались в 2 колонки с отступом */
-            min-height: 8vmin; /* Минимальная высота кнопки */
-            display: flex; /* Используем flexbox для центрирования текста */
+            transition: 0.2s; font-size: 1.2em; 
+            width: 48%; 
+            min-height: 8vmin; 
+            display: flex; 
             align-items: center;
             justify-content: center;
-            text-align: center; /* На случай, если flex не применится */
+            text-align: center; 
         }
         
         .option-btn:hover { border-color: #8b5cf6; }
@@ -578,15 +593,15 @@
             justify-content: center; align-items: center; color: white;
             font-size: 1em;
         }
-        .winner-screen h1 { font-size: 6em; /* Крупнее для большего эффекта */ color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
+        .winner-screen h1 { font-size: 6em; color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
         .winner-screen img {
-            width:30vmin; /* Крупнее аватар */
+            width:30vmin; 
             height:30vmin;
             border-radius:2vmin;
             border: 0.5vmin solid ${liquidColor};
             object-fit: cover;
         }
-        .winner-screen h2 { font-size: 3em; /* Крупнее имя */ margin-top: 2vmin; }
+        .winner-screen h2 { font-size: 3em; margin-top: 2vmin; }
     </style>
 </head>
 <body>
@@ -650,16 +665,16 @@
             resetTasks();
 
             const pc = document.getElementById('pc');
-            pc.innerHTML = state.players.map((p, i) => \`
-                <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
-                    <button class="ready-btn" onclick="openTask()">\${state.txt.ready}</button>
+            pc.innerHTML = state.players.map((p, i) => `
+                <div class="player-wrap ${i === 0 ? 'active' : ''}" id="p${i}">
+                    <button class="ready-btn" onclick="openTask()">${state.txt.ready}</button>
                     <div class="flask">
-                        <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
+                        <div class="liquid" id="liq${i}" style="height: 0%;"></div>
                     </div>
-                    <img src="\${p.url}" class="avatar">
-                    <div class="name">\${p.name}</div>
+                    <img src="${p.url}" class="avatar">
+                    <div class="name">${p.name}</div>
                 </div>
-            \`).join('');
+            `).join('');
             console.log("Players rendered in game."); // Отладочное сообщение
         }
 
@@ -671,6 +686,7 @@
         }
 
         function openTask() {
+            console.log("openTask() called.");
             if(state.tasks.length === 0) {
                 console.warn("Нет заданий!");
                 return;
@@ -692,22 +708,28 @@
             document.getElementById('qText').innerText = task.question;
             const optsDiv = document.getElementById('optsDiv');
             optsDiv.innerHTML = task.options.map((opt, i) => 
-                \`<button class="option-btn" onclick="selectOpt(\${i}, this)">\${opt}</button>\`
+                `<button class="option-btn" onclick="selectOpt(${i}, this)">${opt}</button>`
             ).join('');
             
             selectedOption = null;
             document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             document.getElementById('modalBg').style.display = 'flex';
+            console.log("Modal opened for task:", task);
         }
 
         function selectOpt(idx, el) {
             selectedOption = idx;
             document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             el.classList.add('selected');
+            console.log("Option selected:", idx);
         }
 
         function checkAnswer() {
-            if(selectedOption === null) return;
+            console.log("checkAnswer() called.");
+            if(selectedOption === null) {
+                console.warn("Вариант не выбран.");
+                return;
+            }
             const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
             const task = state.tasks[lastTaskIndex];
             
@@ -715,11 +737,14 @@
                 scores[currentPlayer]++;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
                 document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
+                console.log(`Игрок ${currentPlayer} ответил верно. Счет: ${scores[currentPlayer]}`);
                 
                 if(scores[currentPlayer] >= state.maxScore) {
                     showWinner();
                     return;
                 }
+            } else {
+                console.log(`Игрок ${currentPlayer} ответил неверно.`);
             }
             
             document.getElementById('modalBg').style.display = 'none';
@@ -727,20 +752,24 @@
         }
 
         function nextTurn() {
+            console.log("nextTurn() called.");
             document.getElementById('p'+currentPlayer).classList.remove('active');
             currentPlayer = (currentPlayer + 1) % state.players.length;
             document.getElementById('p'+currentPlayer).classList.add('active');
+            console.log("Текущий игрок:", currentPlayer);
         }
 
         function showWinner() {
+            console.log("showWinner() called.");
             document.getElementById('modalBg').style.display = 'none';
             document.getElementById('winnerScreen').style.display = 'flex';
             document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
+            console.log("Победитель:", state.players[currentPlayer].name);
         }
 
         init(); // Вызываем инициализацию игры сразу после определения функций
-    <\/script>
+    </script>
 </body>
 </html>`;
         }
