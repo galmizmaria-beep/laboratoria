@@ -324,7 +324,6 @@
 
         // Initialize default
         window.onload = () => {
-            // Установим пустой URL для фона по умолчанию, чтобы предпросмотр был прозрачным
             document.getElementById('bgUrl').value = ''; 
             addPlayer('Игрок 1', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png');
             addPlayer('Игрок 2', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png');
@@ -358,8 +357,6 @@
             renderTasks();
             updatePreview();
         }
-
-        // Удалена функция handleFileUpload, так как загрузка файлов больше не поддерживается.
 
         function renderPlayers() {
             const container = document.getElementById('playersList');
@@ -399,7 +396,6 @@
         // --- GAME ENGINE TEMPLATE ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
-            // Убираем дефолтную картинку. Если bgUrl пуст, фон будет прозрачным.
             const bgUrl = document.getElementById('bgUrl').value; 
             const liquidColor = document.getElementById('liquidColor').value;
             const maxScore = document.getElementById('maxScore').value;
@@ -409,7 +405,6 @@
             const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
                                       : { ready: 'READY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
 
-            // Inject state into the game
             const gameState = {
                 players: config.players,
                 tasks: config.tasks,
@@ -417,8 +412,6 @@
                 txt: txt
             };
 
-            // Определяем фон: если URL пуст, используем transparent, иначе - заданный URL.
-            // Это позволит фону Genially просвечивать, если фон игры не задан.
             const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: transparent;`;
 
             return `
@@ -429,23 +422,32 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        /* ИСПРАВЛЕНИЕ ДЛЯ GENIALLY: Использование 100% вместо 100vw/100vh */
+        /* Стили для корневых HTML и BODY внутри iframe */
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-            ${gameBackgroundStyle} /* Динамический стиль фона */
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            font-family: '${fontFamily}', sans-serif; /* Убедимся, что шрифт применяется */
-            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра */
-            box-sizing: border-box; /* Важно для корректного расчета размеров с отступами */
+            font-family: '${fontFamily}', sans-serif;
+            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра iframe */
+            box-sizing: border-box;
+            background: transparent; /* Убедимся, что фон body сам по себе прозрачен */
         }
         *, *::before, *::after {
-            box-sizing: inherit; /* Все элементы наследуют box-sizing */
+            box-sizing: inherit;
         }
+
+        /* Новый корневой контейнер для всего игрового контента */
+        #gameRoot {
+            width: 100%; height: 100%;
+            ${gameBackgroundStyle} /* Динамический фон применяется к этому контейнеру */
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            box-sizing: border-box;
+            position: relative; /* Для абсолютно позиционированных дочерних элементов, таких как overlay */
+        }
+
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
         
         .players-container {
-            display: flex; gap: 4vmin; /* Изменено с 40px */
-            margin-bottom: 6vmin; /* Изменено с 50px */
+            display: flex; gap: 4vmin;
+            margin-bottom: 6vmin;
             z-index: 2; position: relative;
         }
         
@@ -460,46 +462,45 @@
         }
         
         @keyframes pulse {
-            0% { transform: scale(1); filter: drop-shadow(0 0 1vmin rgba(139, 92, 246, 0.5)); } /* Изменено с 10px */
-            50% { transform: scale(1.05); filter: drop-shadow(0 0 2vmin rgba(139, 92, 246, 1)); } /* Изменено с 20px */
-            100% { transform: scale(1); filter: drop-shadow(0 0 1vmin rgba(139, 92, 246, 0.5)); } /* Изменено с 10px */
+            0% { transform: scale(1); filter: drop-shadow(0 0 1vmin rgba(139, 92, 246, 0.5)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 2vmin rgba(139, 92, 246, 1)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 1vmin rgba(139, 92, 246, 0.5)); }
         }
 
         .ready-btn {
             position: absolute; top: -23vmin; /* Отступ кнопки "Играть" от колбы */
             background: #8b5cf6; color: white; border: none;
-            padding: 1.5vmin 3vmin; /* Изменено с 10px 20px */
-            border-radius: 1vmin; /* Изменено с 8px */
+            padding: 1.5vmin 3vmin;
+            border-radius: 1vmin;
             font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 1.5vmin #8b5cf6; display: none; z-index: 5; /* Изменено с 15px */
-            font-size: 1em; /* Масштабируется от root font size */
+            box-shadow: 0 0 1.5vmin #8b5cf6; display: none; z-index: 5;
+            font-size: 1em;
         }
         
         .player-wrap.active .ready-btn { display: block; }
         .ready-btn:hover { background: #7c3aed; }
 
         .flask {
-            width: 5vmin; /* Изменено с 40px */
-            height: 15vmin; /* Изменено с 120px */
-            border: 0.4vmin solid rgba(255,255,255,0.7); /* Изменено с 3px */
-            border-radius: 0 0 2.5vmin 2.5vmin; /* Изменено с 20px */
-            position: absolute; top: -17vmin; /* Изменено с -140px, скорректировано для выравнивания с аватаром */
+            width: 5vmin;
+            height: 15vmin;
+            border: 0.4vmin solid rgba(255,255,255,0.7);
+            border-radius: 0 0 2.5vmin 2.5vmin;
+            position: absolute; top: -17vmin;
             overflow: hidden; background: rgba(0,0,0,0.5);
             display: flex; align-items: flex-end;
         }
         
         .liquid {
             width: 100%; background: ${liquidColor}; transition: height 0.5s ease;
-            box-shadow: 0 0 1vmin ${liquidColor}; /* Изменено с 10px */
+            box-shadow: 0 0 1vmin ${liquidColor};
         }
 
         .avatar {
-            /* Базовый размер аватара 10vmin, затем масштабируется процентом avatarSize */
             width: calc(10vmin * ${avatarSize/100}); 
             height: calc(10vmin * ${avatarSize/100}); 
-            border-radius: 2vmin; /* Изменено с 16px */
+            border-radius: 2vmin;
             object-fit: cover;
-            border: 0.3vmin solid white; /* Изменено с 2px */
+            border: 0.3vmin solid white;
             background: #2a2a35;
         }
 
@@ -512,23 +513,23 @@
         }
         
         .modal {
-            background: #121212; border: 0.4vmin solid #8b5cf6; /* Изменено с 2px */
-            border-radius: 2vmin; /* Изменено с 20px */
-            padding: 4vmin; /* Изменено с 40px */
+            background: #121212; border: 0.4vmin solid #8b5cf6;
+            border-radius: 2vmin;
+            padding: 4vmin;
             width: 80%; max-width: 600px; text-align: center;
-            box-shadow: 0 0 3vmin rgba(139, 92, 246, 0.5); color: white; /* Изменено с 30px */
+            box-shadow: 0 0 3vmin rgba(139, 92, 246, 0.5); color: white;
         }
 
-        .question { font-size: 1.5em; margin-bottom: 3vmin; } /* Изменено rem на em, margin на vmin */
+        .question { font-size: 1.5em; margin-bottom: 3vmin; }
         
-        .options { display: flex; flex-wrap: wrap; gap: 1.5vmin; justify-content: center; } /* Изменено с 15px */
+        .options { display: flex; flex-wrap: wrap; gap: 1.5vmin; justify-content: center; }
         
         .option-btn {
-            background: transparent; color: white; border: 0.2vmin solid #374151; /* Изменено с 2px */
-            padding: 1.5vmin 3vmin; /* Изменено с 15px 30px */
-            border-radius: 1vmin; /* Изменено с 10px */
+            background: transparent; color: white; border: 0.2vmin solid #374151;
+            padding: 1.5vmin 3vmin;
+            border-radius: 1vmin;
             cursor: pointer;
-            transition: 0.2s; font-size: 1.1em; /* Изменено rem на em */
+            transition: 0.2s; font-size: 1.1em;
             width: 45%;
         }
         
@@ -536,11 +537,11 @@
         .option-btn.selected { background: rgba(139, 92, 246, 0.3); border-color: #8b5cf6; }
         
         .check-btn {
-            margin-top: 3vmin; /* Изменено с 30px */
+            margin-top: 3vmin;
             background: #8b5cf6; color: white; border: none;
-            padding: 1.5vmin 4vmin; /* Изменено с 15px 40px */
-            font-size: 1.2em; /* Изменено rem на em */
-            border-radius: 1vmin; /* Изменено с 10px */
+            padding: 1.5vmin 4vmin;
+            font-size: 1.2em;
+            border-radius: 1vmin;
             cursor: pointer;
         }
 
@@ -549,46 +550,52 @@
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.9); z-index: 20; flex-direction: column;
             justify-content: center; align-items: center; color: white;
-            font-size: 1em; /* Убедимся, что текст масштабируется с корневым размером шрифта */
+            font-size: 1em;
         }
-        .winner-screen h1 { font-size: 4em; color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;} /* Изменено rem на em, тень с 20px на 2vmin */
+        .winner-screen h1 { font-size: 4em; color: ${liquidColor}; text-shadow: 0 0 2vmin ${liquidColor}; margin-bottom: 2vmin;}
         .winner-screen img {
-            width:25vmin; /* Изменено с 200px */
-            height:25vmin; /* Добавлена высота для квадратного аватара */
-            border-radius:2vmin; /* Изменено с 20px */
-            border: 0.5vmin solid ${liquidColor}; /* Изменено с 4px */
+            width:25vmin;
+            height:25vmin;
+            border-radius:2vmin;
+            border: 0.5vmin solid ${liquidColor};
             object-fit: cover;
         }
-        .winner-screen h2 { font-size: 2em; margin-top: 2vmin; } /* Добавлено */
+        .winner-screen h2 { font-size: 2em; margin-top: 2vmin; }
     </style>
 </head>
 <body>
-    <div class="overlay"></div>
-    <div class="players-container" id="pc"></div>
+    <!-- Новый корневой div для всего игрового контента -->
+    <div id="gameRoot"> 
+        <div class="overlay"></div>
+        <div class="players-container" id="pc"></div>
 
-    <!-- Modal -->
-    <div class="modal-bg" id="modalBg">
-        <div class="modal">
-            <div class="question" id="qText"></div>
-            <div class="options" id="optsDiv"></div>
-            <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+        <!-- Modal -->
+        <div class="modal-bg" id="modalBg">
+            <div class="modal">
+                <div class="question" id="qText"></div>
+                <div class="options" id="optsDiv"></div>
+                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+            </div>
         </div>
-    </div>
 
-    <!-- Winner -->
-    <div class="winner-screen" id="winnerScreen">
-        <h1>${txt.win}</h1>
-        <img id="winnerAvatar">
-        <h2 id="winnerName"></h2>
-    </div>
+        <!-- Winner -->
+        <div class="winner-screen" id="winnerScreen">
+            <h1>${txt.win}</h1>
+            <img id="winnerAvatar">
+            <h2 id="winnerName"></h2>
+        </div>
+    </div> <!-- Конец #gameRoot -->
 
     <script>
+        console.log("Game script template loaded and starting initialization."); // Отладочное сообщение
         const state = ${JSON.stringify(gameState)};
+        console.log("Initial game state:", state); // Отладочное сообщение
+
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
         
-        let availableTaskIndices = []; // Массив индексов доступных заданий
-        let usedTaskIndices = []; // Массив индексов уже использованных заданий
+        let availableTaskIndices = [];
+        let usedTaskIndices = [];
         
         // Функция для перемешивания массива (Fisher-Yates)
         function shuffleArray(array) {
@@ -599,16 +606,20 @@
         }
 
         function init() {
+            console.log("init() function called."); // Отладочное сообщение
+            const gameRoot = document.getElementById('gameRoot'); // Получаем корневой элемент игры
+
             if(state.players.length === 0) {
                 console.warn("Нет игроков для начала игры.");
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет игроков в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
                 return;
             }
             if(state.tasks.length === 0) {
                 console.warn("Нет заданий для начала игры.");
+                gameRoot.innerHTML = '<div style="color: white; font-size: 2em; text-align: center; padding: 10vmin; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Нет заданий в конфигурации! Добавьте их в редакторе.</div>'; // Визуальная обратная связь
                 return;
             }
 
-            // Инициализация пула заданий
             resetTasks();
 
             const pc = document.getElementById('pc');
@@ -622,6 +633,7 @@
                     <div class="name">\${p.name}</div>
                 </div>
             \`).join('');
+            console.log("Players rendered in game."); // Отладочное сообщение
         }
 
         function resetTasks() {
@@ -637,19 +649,16 @@
                 return;
             }
             if(availableTaskIndices.length === 0) {
-                // Если все задания использованы, сбрасываем и перемешиваем их снова
                 console.log("Все задания использованы, сброс пула заданий.");
                 resetTasks();
-                // Если после сброса заданий все еще нет, что-то пошло не так
                 if(availableTaskIndices.length === 0) {
-                    console.error("Не удалось сбросить задания.");
+                    console.error("Не удалось сбросить задания. Возможно, нет заданий в списке.");
                     return;
                 }
             }
             
-            // Берем следующее задание из перемешанного списка
-            const taskIndex = availableTaskIndices.shift(); // Удаляем первый элемент
-            usedTaskIndices.push(taskIndex); // Добавляем в использованные
+            const taskIndex = availableTaskIndices.shift();
+            usedTaskIndices.push(taskIndex);
             
             const task = state.tasks[taskIndex];
             
@@ -660,7 +669,7 @@
             ).join('');
             
             selectedOption = null;
-            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected')); // Clear previous selection visuals
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
             document.getElementById('modalBg').style.display = 'flex';
         }
 
@@ -672,8 +681,6 @@
 
         function checkAnswer() {
             if(selectedOption === null) return;
-            // currentTaskIdx теперь не нужен, так как мы берем задание по индексу из availableTaskIndices.
-            // Нужно найти последнее использованное задание.
             const lastTaskIndex = usedTaskIndices[usedTaskIndices.length - 1]; 
             const task = state.tasks[lastTaskIndex];
             
@@ -714,12 +721,8 @@
         function updatePreview() {
             const html = getGameHTML();
             const iframe = document.getElementById('previewFrame');
-            // Важно: если iframe уже имеет srcdoc, простое изменение srcdoc может не перезагрузить его
-            // Для надежной перезагрузки можно обнулить src, а затем установить srcdoc
-            iframe.src = 'about:blank'; // Очищаем текущее содержимое
-            iframe.contentWindow.document.open();
-            iframe.contentWindow.document.write(html);
-            iframe.contentWindow.document.close();
+            // Более надежный способ обновления srcdoc
+            iframe.srcdoc = html;
         }
 
         function generateCode() {
@@ -735,9 +738,12 @@
                     btn.classList.remove('success');
                 }, 2000);
             }).catch(err => {
-                console.error("Ошибка копирования:", err);
-                alert("Ошибка копирования. Скопируйте код вручную из консоли разработчика.");
+                console.error("Ошибка копирования в буфер обмена:", err);
+                // Используем console.log вместо alert для Genially-совместимости
+                console.log("Ошибка копирования. Скопируйте код вручную из консоли разработчика.");
+                console.log("--- Начало сгенерированного кода ---");
                 console.log(html);
+                console.log("--- Конец сгенерированного кода ---");
             });
         }
     </script>
