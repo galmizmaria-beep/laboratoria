@@ -310,6 +310,7 @@
             });
         }
 
+        // --- ИЗМЕНЕННАЯ ФУНКЦИЯ ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
@@ -334,11 +335,13 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        html, body { 
-            margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important;
+        html, body, #genially-wrapper { 
+            margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important;
             overflow: hidden !important; background: transparent !important; 
+        }
+        body {
             font-family: '${fontFamily}', sans-serif !important;
-            position: absolute !important; top: 0 !important; left: 0 !important;
+            position: relative !important;
         }
 
         *, *::before, *::after { box-sizing: border-box !important; }
@@ -474,29 +477,33 @@
     </style>
 </head>
 <body>
-    <div id="gameRoot"> 
-        <div class="overlay"></div>
-        <div class="players-container" id="pc"></div>
+    <div id="genially-wrapper">
+        <div id="gameRoot"> 
+            <div class="overlay"></div>
+            <div class="players-container" id="pc"></div>
 
-        <div class="modal-bg" id="modalBg">
-            <div class="modal">
-                <div class="question" id="qText"></div>
-                <div class="options" id="optsDiv"></div>
-                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+            <div class="modal-bg" id="modalBg">
+                <div class="modal">
+                    <div class="question" id="qText"></div>
+                    <div class="options" id="optsDiv"></div>
+                    <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
+                </div>
             </div>
-        </div>
 
-        <div class="winner-screen" id="winnerScreen">
-            <h1>${txt.win}</h1>
-            <img id="winnerAvatar">
-            <h2 id="winnerName"></h2>
+            <div class="winner-screen" id="winnerScreen">
+                <h1>${txt.win}</h1>
+                <img id="winnerAvatar">
+                <h2 id="winnerName"></h2>
+            </div>
         </div>
     </div>
 
     <script>
         function resizeGame() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const wrapper = document.getElementById('genially-wrapper');
+            if (!wrapper) return;
+            const w = wrapper.clientWidth;
+            const h = wrapper.clientHeight;
             const gameWidth = 1920;
             const gameHeight = 1080;
             const aspect = gameWidth / gameHeight;
@@ -613,6 +620,7 @@
 </body>
 </html>`;
         }
+        // --- КОНЕЦ ИЗМЕНЕННОЙ ФУНКЦИИ ---
 
         function updatePreview() {
             const html = getGameHTML();
