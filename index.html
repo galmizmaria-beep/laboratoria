@@ -311,7 +311,7 @@
             });
         }
 
-        // --- ОБНОВЛЕННЫЙ ДВИЖОК ИГРЫ (МАСШТАБИРУЕМЫЙ) ---
+        // --- ИДЕАЛЬНЫЙ ДВИЖОК ИГРЫ ДЛЯ GENIALLY (REM СКАЛИРОВАНИЕ) ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
@@ -319,72 +319,74 @@
             const maxScore = document.getElementById('maxScore').value;
             const fontFamily = document.getElementById('fontFamily').value;
             
-            // Расчет размера аватара в пикселях (базовый 280px)
             const avatarSize = document.getElementById('avatarSize').value;
             const finalAvatarSize = Math.round(280 * (avatarSize / 100));
 
-            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', next: 'Следующий ход' } 
-                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', next: 'Next Turn' };
+            const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!' } 
+                                      : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!' };
 
             const gameState = { players: config.players, tasks: config.tasks, maxScore: parseInt(maxScore), txt: txt };
-            const gameBackgroundStyle = bgUrl ? `background: url('${bgUrl}') no-repeat center center/cover;` : `background: #0b0616;`;
+            const gameBackgroundStyle = bgUrl ? `background-image: url('${bgUrl}');` : `background-color: #0b0616;`;
 
             return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
     <meta charset="UTF-8">
+    <!-- Отключаем масштабирование самого устройства, чтобы скрипт сделал это сам -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        /* Сброс стилей и масштабирующий контейнер */
+        /* Жесткий сброс стилей для изоляции от Genially */
         html, body { 
-            margin: 0; padding: 0; width: 100vw; height: 100vh; 
-            overflow: hidden; background: transparent; font-family: '${fontFamily}', sans-serif;
-        }
-        *, *::before, *::after { box-sizing: border-box; }
-
-        #windowScaler {
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
+            margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important; 
+            overflow: hidden !important; background: transparent !important; 
+            font-family: '${fontFamily}', sans-serif !important;
         }
 
-        /* Игровое поле всегда 1920x1080 (FullHD) */
+        *, *::before, *::after { box-sizing: border-box !important; }
+
+        /* Игровое поле. Размеры заданы в rem. Скрипт будет менять только базовый размер шрифта (1rem) */
         #gameRoot {
-            width: 1920px; height: 1080px;
-            position: relative; flex-shrink: 0;
-            transform-origin: center center;
+            width: 1920rem; height: 1080rem;
+            position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%, -50%); /* Идеальное центрирование без искажения хитбоксов */
             ${gameBackgroundStyle}
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+            background-size: cover; background-position: center;
+            box-shadow: inset 0 0 100rem rgba(0,0,0,0.8);
+            overflow: hidden;
         }
 
-        .overlay { 
+        /* Все классы начинаются с #gameRoot, чтобы перебить стили Genially */
+        #gameRoot .overlay { 
             position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: rgba(0,0,0,0.4); pointer-events: none; z-index: 1;
+            background: rgba(0,0,0,0.4) !important; pointer-events: none !important; z-index: 1;
         }
         
-        .players-container {
-            position: absolute; bottom: 80px; left: 0; width: 100%;
-            display: flex; justify-content: space-evenly; align-items: flex-end;
-            z-index: 5;
+        #gameRoot .players-container {
+            position: absolute; bottom: 80rem; left: 0; width: 100%;
+            display: flex; justify-content: space-evenly; align-items: flex-end; z-index: 5;
         }
         
-        .player-wrap {
+        #gameRoot .player-wrap {
             display: flex; flex-direction: column; align-items: center;
             position: relative; transition: opacity 0.3s; opacity: 0.4;
-            width: 350px;
+            width: 350rem;
         }
-        .player-wrap.active { opacity: 1; }
+        #gameRoot .player-wrap.active { opacity: 1; z-index: 10; }
 
-        .ready-btn {
-            position: absolute; top: -110px;
-            background: #9d4edd; color: white; border: none;
-            padding: 20px 50px; border-radius: 40px; font-family: inherit; font-weight: 800; 
-            cursor: pointer; box-shadow: 0 0 30px rgba(157, 78, 221, 0.8); 
-            display: none; z-index: 10; font-size: 28px; text-transform: uppercase;
-            letter-spacing: 2px; pointer-events: auto;
+        #gameRoot .ready-btn {
+            position: absolute !important; top: -110rem !important;
+            background: #9d4edd !important; color: white !important; border: none !important;
+            padding: 20rem 50rem !important; border-radius: 40rem !important; 
+            font-family: inherit !important; font-weight: 800 !important; 
+            cursor: pointer !important; box-shadow: 0 0 30rem rgba(157, 78, 221, 0.8) !important; 
+            display: none; z-index: 100 !important; font-size: 28rem !important; 
+            text-transform: uppercase !important; letter-spacing: 2rem !important;
+            pointer-events: auto !important;
         }
-        .player-wrap.active .ready-btn { display: block; animation: bounceIn 0.5s ease; }
-        .ready-btn:hover { background: #b975f8; transform: scale(1.05); }
+        #gameRoot .player-wrap.active .ready-btn { display: block; animation: bounceIn 0.5s ease; }
+        #gameRoot .ready-btn:hover { background: #b975f8 !important; transform: scale(1.05); }
 
         @keyframes bounceIn {
             0% { transform: scale(0); opacity: 0; }
@@ -392,118 +394,127 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .flask {
-            width: 80px; height: 380px; border: 8px solid rgba(255,255,255,0.3);
-            border-radius: 40px; overflow: hidden; background: rgba(0,0,0,0.4);
-            display: flex; align-items: flex-end; margin-bottom: -50px; z-index: 2;
+        #gameRoot .flask {
+            width: 80rem; height: 380rem; border: 8rem solid rgba(255,255,255,0.3) !important;
+            border-radius: 40rem; overflow: hidden; background: rgba(0,0,0,0.4) !important;
+            display: flex; align-items: flex-end; margin-bottom: -50rem; z-index: 2;
         }
-        .liquid {
-            width: 100%; background: ${liquidColor}; transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 -10px 40px ${liquidColor};
+        #gameRoot .liquid {
+            width: 100%; background: ${liquidColor} !important; transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: inset 0 0 20rem rgba(0,0,0,0.5), 0 -10rem 40rem ${liquidColor} !important;
         }
 
-        .avatar-container {
-            width: ${finalAvatarSize}px; height: ${finalAvatarSize}px; border-radius: 40px;
-            border: 8px solid rgba(255,255,255,0.2); background: #1d1033;
+        #gameRoot .avatar-container {
+            width: ${finalAvatarSize}rem; height: ${finalAvatarSize}rem; border-radius: 40rem;
+            border: 8rem solid rgba(255,255,255,0.2) !important; background: #1d1033 !important;
             overflow: hidden; z-index: 3; position: relative; transition: all 0.3s;
         }
-        .player-wrap.active .avatar-container {
-            border-color: #9d4edd; box-shadow: 0 0 50px rgba(157, 78, 221, 0.9), inset 0 0 30px rgba(157, 78, 221, 0.5);
+        #gameRoot .player-wrap.active .avatar-container {
+            border-color: #9d4edd !important; box-shadow: 0 0 50rem rgba(157, 78, 221, 0.9), inset 0 0 30rem rgba(157, 78, 221, 0.5) !important;
         }
-        .avatar { width: 100%; height: 100%; object-fit: cover; }
+        #gameRoot .avatar { width: 100%; height: 100%; object-fit: cover; }
 
-        .name { 
-            margin-top: 30px; background: rgba(20, 15, 35, 0.9); border: 4px solid rgba(255,255,255,0.15);
-            color: white; padding: 15px 40px; border-radius: 40px; font-size: 26px; font-weight: 700; 
-            text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%;
-            overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6);
+        #gameRoot .name { 
+            margin-top: 30rem; background: rgba(20, 15, 35, 0.9) !important; 
+            border: 4rem solid rgba(255,255,255,0.15) !important;
+            color: white !important; padding: 15rem 40rem; border-radius: 40rem; font-size: 26rem !important; 
+            font-weight: 700; text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%;
+            overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15rem 25rem rgba(0,0,0,0.6);
         }
 
-        /* Окна (Модалки) */
-        .modal-bg {
+        /* Модалки */
+        #gameRoot .modal-bg {
             display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-            z-index: 20; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.8) !important; backdrop-filter: blur(10px);
+            z-index: 200; justify-content: center; align-items: center;
         }
         
-        .modal {
-            background: rgba(25, 15, 45, 0.95); border: 8px solid #9d4edd;
-            border-radius: 50px; padding: 70px; width: 1100px;
-            text-align: center; box-shadow: 0 0 80px rgba(157, 78, 221, 0.5); color: white;
+        #gameRoot .modal {
+            background: rgba(25, 15, 45, 0.95) !important; border: 8rem solid #9d4edd !important;
+            border-radius: 50rem; padding: 70rem; width: 1100rem;
+            text-align: center; box-shadow: 0 0 80rem rgba(157, 78, 221, 0.5) !important; color: white !important;
         }
 
-        .question { font-size: 48px; font-weight: 800; margin-bottom: 60px; line-height: 1.3;}
-        .options { display: flex; flex-direction: column; gap: 20px; }
+        #gameRoot .question { font-size: 48rem !important; font-weight: 800; margin-bottom: 60rem; line-height: 1.3;}
+        #gameRoot .options { display: flex; flex-direction: column; gap: 20rem; }
         
-        .option-btn {
-            background: rgba(255, 255, 255, 0.05); color: white; border: 4px solid rgba(255,255,255,0.1);
-            padding: 30px; border-radius: 25px; cursor: pointer; transition: all 0.2s; font-size: 32px;
-            text-align: left; font-family: inherit; font-weight: 700;
+        #gameRoot .option-btn {
+            background: rgba(255, 255, 255, 0.05) !important; color: white !important; 
+            border: 4rem solid rgba(255,255,255,0.1) !important;
+            padding: 30rem; border-radius: 25rem; cursor: pointer !important; transition: all 0.2s; 
+            font-size: 32rem !important; text-align: left; font-family: inherit !important; font-weight: 700;
         }
-        .option-btn:hover { background: rgba(157, 78, 221, 0.2); border-color: #9d4edd; transform: translateX(15px); }
-        .option-btn.selected { 
-            background: rgba(157, 78, 221, 0.6); border-color: #00f5ff; 
-            box-shadow: 0 0 40px rgba(0, 245, 255, 0.4); transform: translateX(15px);
+        #gameRoot .option-btn:hover { background: rgba(157, 78, 221, 0.2) !important; border-color: #9d4edd !important; transform: translateX(15rem); }
+        #gameRoot .option-btn.selected { 
+            background: rgba(157, 78, 221, 0.6) !important; border-color: #00f5ff !important; 
+            box-shadow: 0 0 40rem rgba(0, 245, 255, 0.4) !important; transform: translateX(15rem);
         }
         
-        .check-btn {
-            margin-top: 60px; background: #00f5ff; color: #000; border: none; font-family: inherit;
-            padding: 25px 80px; font-size: 36px; font-weight: 800; border-radius: 50px; cursor: pointer; 
-            text-transform: uppercase; box-shadow: 0 0 40px rgba(0, 245, 255, 0.5); transition: 0.3s;
+        #gameRoot .check-btn {
+            margin-top: 60rem; background: #00f5ff !important; color: #000 !important; border: none !important;
+            font-family: inherit !important; padding: 25rem 80rem; font-size: 36rem !important; 
+            font-weight: 800; border-radius: 50rem; cursor: pointer !important; 
+            text-transform: uppercase; box-shadow: 0 0 40rem rgba(0, 245, 255, 0.5) !important; transition: 0.3s;
         }
-        .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 245, 255, 0.8); }
+        #gameRoot .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60rem rgba(0, 245, 255, 0.8) !important; }
 
-        .winner-screen {
+        #gameRoot .winner-screen {
             display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(11, 6, 22, 0.95); z-index: 30; flex-direction: column;
-            justify-content: center; align-items: center; color: white;
+            background: rgba(11, 6, 22, 0.95) !important; z-index: 300; flex-direction: column;
+            justify-content: center; align-items: center; color: white !important;
         }
-        .winner-screen h1 { font-size: 140px; font-weight: 800; color: ${liquidColor}; text-shadow: 0 0 60px ${liquidColor}; margin: 0 0 50px 0;}
-        .winner-screen img {
-            width: 450px; height: 450px; border-radius: 60px;
-            border: 15px solid ${liquidColor}; object-fit: cover; box-shadow: 0 0 100px ${liquidColor};
+        #gameRoot .winner-screen h1 { font-size: 140rem !important; font-weight: 800; color: ${liquidColor} !important; text-shadow: 0 0 60rem ${liquidColor} !important; margin: 0 0 50rem 0;}
+        #gameRoot .winner-screen img {
+            width: 450rem; height: 450rem; border-radius: 60rem;
+            border: 15rem solid ${liquidColor} !important; object-fit: cover; box-shadow: 0 0 100rem ${liquidColor} !important;
         }
-        .winner-screen h2 { font-size: 70px; margin-top: 50px; text-transform: uppercase; font-weight: 800; }
+        #gameRoot .winner-screen h2 { font-size: 70rem !important; margin-top: 50rem; text-transform: uppercase; font-weight: 800; }
         
-        .empty-state {
-            color: rgba(255,255,255,0.5); font-size: 40px; font-weight: 700;
+        #gameRoot .empty-state {
+            color: rgba(255,255,255,0.5) !important; font-size: 40rem !important; font-weight: 700;
             text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%;
         }
     </style>
 </head>
 <body>
-    <div id="windowScaler">
-        <div id="gameRoot"> 
-            <div class="overlay"></div>
-            <div class="players-container" id="pc"></div>
+    <div id="gameRoot"> 
+        <div class="overlay"></div>
+        <div class="players-container" id="pc"></div>
 
-            <div class="modal-bg" id="modalBg">
-                <div class="modal">
-                    <div class="question" id="qText"></div>
-                    <div class="options" id="optsDiv"></div>
-                    <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
-                </div>
+        <div class="modal-bg" id="modalBg">
+            <div class="modal">
+                <div class="question" id="qText"></div>
+                <div class="options" id="optsDiv"></div>
+                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
             </div>
+        </div>
 
-            <div class="winner-screen" id="winnerScreen">
-                <h1>${txt.win}</h1>
-                <img id="winnerAvatar">
-                <h2 id="winnerName"></h2>
-            </div>
+        <div class="winner-screen" id="winnerScreen">
+            <h1>${txt.win}</h1>
+            <img id="winnerAvatar">
+            <h2 id="winnerName"></h2>
         </div>
     </div>
 
     <script>
-        // ДВИЖОК МАСШТАБИРОВАНИЯ
-        function resize() {
-            const gameRoot = document.getElementById('gameRoot');
-            const scaleX = window.innerWidth / 1920;
-            const scaleY = window.innerHeight / 1080;
-            const scale = Math.min(scaleX, scaleY);
-            gameRoot.style.transform = \`scale(\${scale})\`;
+        // ИДЕАЛЬНОЕ МАСШТАБИРОВАНИЕ ЧЕРЕЗ REM
+        function resizeGame() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const aspect = 1920 / 1080;
+            
+            let scale;
+            if (w / h > aspect) {
+                scale = h / 1080; // Если окно слишком широкое, подгоняем по высоте
+            } else {
+                scale = w / 1920; // Если слишком узкое, подгоняем по ширине
+            }
+            
+            // Физически меняем базовый размер (1rem = scale px)
+            document.documentElement.style.fontSize = scale + 'px';
         }
-        window.addEventListener('resize', resize);
-        resize(); // Вызов при старте
+        window.addEventListener('resize', resizeGame);
+        resizeGame(); // Вызов при старте
 
         // ЛОГИКА ИГРЫ
         const state = ${JSON.stringify(gameState)};
@@ -619,7 +630,7 @@
                 btn.classList.add('success');
                 setTimeout(() => { btn.textContent = "Сгенерировать код"; btn.classList.remove('success'); }, 2000);
             }).catch(err => {
-                console.log("Ошибка копирования. Скопируйте код вручную из консоли разработчика.");
+                console.log("Ошибка копирования.");
             });
         }
     </script>
