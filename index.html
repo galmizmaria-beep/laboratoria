@@ -310,7 +310,7 @@
             });
         }
 
-        // --- ИДЕАЛЬНЫЙ ДВИЖОК ИГРЫ ДЛЯ GENIALLY (FLEXBOX + SCALE) ---
+        // --- ИСПРАВЛЕННЫЙ ДВИЖОК ИГРЫ ДЛЯ GENIALLY (CSS TRANSFORM SCALE) ---
         function getGameHTML() {
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
@@ -335,29 +335,32 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}&display=swap');
         
-        /* Жесткий сброс стилей для изоляции от Genially. Центрируем через Flexbox! */
+        /* Жесткий сброс стилей для изоляции от Genially */
         html, body { 
-            margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important;
+            margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important;
             overflow: hidden !important; background: transparent !important; 
             font-family: '${fontFamily}', sans-serif !important;
-            display: flex !important; justify-content: center !important; align-items: center !important;
+            /* Добавлено для максимально полного заполнения iframe в Genially */
+            position: absolute !important; 
+            top: 0 !important;
+            left: 0 !important;
         }
 
         *, *::before, *::after { box-sizing: border-box !important; }
 
-        /* Игровое поле. Жесткий размер. Масштабируется от центра без Translate! */
+        /* Игровое поле. Жесткий размер в px. Масштабируется скриптом через transform */
         #gameRoot {
             width: 1920px; height: 1080px;
-            position: relative; 
-            flex-shrink: 0;
-            transform-origin: center center;
+            position: absolute; left: 50%; top: 50%;
+            transform-origin: center;
+            transform: translate(-50%, -50%); /* Это будет перезаписано в JS с добавлением scale */
             ${gameBackgroundStyle}
             background-size: cover; background-position: center;
             box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
             overflow: hidden;
         }
 
-        /* Все классы начинаются с #gameRoot, чтобы перебить стили Genially */
+        /* Все классы начинаются с #gameRoot, чтобы перебить стили Genially. Все rem заменены на px */
         #gameRoot .overlay { 
             position: absolute; top:0; left:0; width:100%; height:100%; 
             background: rgba(0,0,0,0.4) !important; pointer-events: none !important; z-index: 1;
@@ -443,6 +446,7 @@
             border: 4px solid rgba(255,255,255,0.1) !important;
             padding: 30px; border-radius: 25px; cursor: pointer !important; transition: all 0.2s; 
             font-size: 32px !important; text-align: left; font-family: inherit !important; font-weight: 700;
+            pointer-events: auto !important; /* Добавлено */
         }
         #gameRoot .option-btn:hover { background: rgba(157, 78, 221, 0.2) !important; border-color: #9d4edd !important; transform: translateX(15px); }
         #gameRoot .option-btn.selected { 
@@ -455,6 +459,7 @@
             font-family: inherit !important; padding: 25px 80px; font-size: 36px !important; 
             font-weight: 800; border-radius: 50px; cursor: pointer !important; 
             text-transform: uppercase; box-shadow: 0 0 40px rgba(0, 245, 255, 0.5) !important; transition: 0.3s;
+            pointer-events: auto !important; /* Добавлено */
         }
         #gameRoot .check-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 245, 255, 0.8) !important; }
 
@@ -497,26 +502,27 @@
     </div>
 
     <script>
-        // ИДЕАЛЬНОЕ МАСШТАБИРОВАНИЕ ЧЕРЕЗ FLEXBOX + SCALE (Без смещения координат!)
+        // ИДЕАЛЬНОЕ МАСШТАБИРОВАНИЕ ЧЕРЕЗ TRANSFORM: SCALE
         function resizeGame() {
-            const w = window.innerWidth || document.documentElement.clientWidth;
-            const h = window.innerHeight || document.documentElement.clientHeight;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const gameWidth = 1920;
+            const gameHeight = 1080;
+            const aspect = gameWidth / gameHeight;
             
-            // Защита от нулевых значений при инициализации iframe в Genially
-            if (w === 0 || h === 0) {
-                setTimeout(resizeGame, 50);
-                return;
+            let scale;
+            if (w / h > aspect) {
+                scale = h / gameHeight; // Подгоняем по высоте
+            } else {
+                scale = w / gameWidth; // Подгоняем по ширине
             }
-
-            // Вычисляем минимальный масштаб, чтобы игра всегда помещалась в экран
-            const scale = Math.min(w / 1920, h / 1080);
             
-            // Применяем ТОЛЬКО scale. Центрирование делает Flexbox на теге body
-            document.getElementById('gameRoot').style.transform = \`scale(\${scale})\`;
+            // Жестко масштабируем весь блок без зависимости от размера шрифта браузера
+            const gameRoot = document.getElementById('gameRoot');
+            gameRoot.style.transform = \`translate(-50%, -50%) scale(\${scale})\`;
         }
         window.addEventListener('resize', resizeGame);
-        window.addEventListener('load', resizeGame); // Запуск после полной загрузки
-        resizeGame(); // Запуск сразу
+        resizeGame(); // Вызов при старте
 
         // ЛОГИКА ИГРЫ
         const state = ${JSON.stringify(gameState)};
@@ -549,9 +555,6 @@
                     <div class="name">\${p.name || 'Игрок ' + (i+1)}</div>
                 </div>
             \`).join('');
-            
-            // Запускаем пересчет размера после рендера элементов
-            setTimeout(resizeGame, 100);
         }
 
         function resetTasks() {
