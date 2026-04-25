@@ -2,61 +2,40 @@
 <html lang="${lang}">
 <head>
     <meta charset="UTF-8">
-    <title>Game Genially</title> <!-- Добавлен заголовок для ясности -->
+    <title>${txt.gameTitle || 'Игра'}</title> <!-- Добавлен заголовок для вкладки браузера -->
     <style>
-        /*
-         * ИСПРАВЛЕНИЯ ДЛЯ GENIALLY:
-         * 1. Убедитесь, что html и body полностью занимают доступное пространство iframe.
-         * 2. Все содержимое игры обернуто в div#game-container для лучшей инкапсуляции и контроля размеров.
-         * 3. #game-container занимает 100% ширины и высоты, используя absolute positioning для надежности.
-         * 4. Фон и основные стили (шрифт, flexbox) применены к #game-container.
-         * 5. Более надежный стек системных шрифтов на случай блокировки внешних шрифтов Genially.
-         * 6. Убедитесь, что все URL (bgUrl, аватары) доступны публично и не блокируются CSP Genially.
-         * 7. Избегайте слишком длинных Base64 строк для изображений, так как Genially может обрезать код.
+        /* 
+         * ИСПРАВЛЕНИЯ ДЛЯ GENIALLY: 
+         * 1. Шрифты: @import или <link> на внешние шрифты (например, Google Fonts) часто блокируются Genially
+         *    из-за ограничений безопасности или iframe-среды.
+         *    Для максимальной совместимости рекомендуется использовать системные шрифты (например, Arial, Verdana, sans-serif).
+         *    Если нужен кастомный шрифт, попробуйте:
+         *    а) Вставить его как @font-face напрямую с URL, разрешенным Genially,
+         *    б) Использовать кодировку Base64 для очень маленьких шрифтов (увеличит размер кода HTML).
          */
-        
-        /* Сброс стандартных отступов и установка 100% размера для html и body */
+        body { font-family: '${fontFamily}', sans-serif; } /* Использует заданный шрифт или системный sans-serif */
+
+        /* ИСПРАВЛЕНИЕ ДЛЯ GENIALLY: Использование 100% вместо 100vw/100vh для базовых размеров */
         html, body { 
-            margin: 0; padding: 0; 
-            width: 100%; height: 100%; 
-            overflow: hidden; /* Важно, чтобы избежать прокрутки внутри iframe Genially */
-            box-sizing: border-box; /* Важно для корректного расчета размеров */
-        }
-        
-        /* Главный контейнер игры - ВСЁ содержимое игры находится внутри него */
-        #game-container {
-            position: absolute; /* Абсолютное позиционирование для перекрытия любых внешних стилей */
-            top: 0; left: 0;
-            width: 100%; 
-            height: 100%;
-            
-            /* Фон теперь применяется к этому контейнеру */
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            /* 
+             * Фон: Убедитесь, что bgUrl - это URL, а не слишком длинное Base64 изображение.
+             * Если Base64 слишком длинное, Genially может обрезать код. Используйте оптимизированные URL.
+             * Для лучшей производительности используйте сжатые изображения (например, WebP).
+             */
             background: url('${bgUrl}') no-repeat center center/cover;
-            
-            /* Flexbox-свойства для выравнивания содержимого */
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; /* Выравнивает элементы внизу */
-            align-items: center;
-            
-            /* Шрифт и базовый размер для масштабирования внутри контейнера */
-            font-family: '${fontFamily}', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-            font-size: 1.6vmin; /* Базовый размер шрифта, масштабируется по наименьшей стороне области просмотра iframe */
-            color: white; /* Базовый цвет текста */
-            box-sizing: border-box; /* Все элементы внутри наследуют этот box-sizing */
-            z-index: 0; /* Убедимся, что контейнер находится под overlay */
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            font-family: '${fontFamily}', sans-serif; /* Убедимся, что шрифт применяется */
+            font-size: 1.6vmin; /* Базовый размер шрифта масштабируется по наименьшей стороне области просмотра.
+                                   ВНИМАНИЕ: Иногда Genially может некорректно обрабатывать vmin/vw/vh.
+                                   Если наблюдаются проблемы с масштабированием, попробуйте использовать rem или em
+                                   и задать font-size на html или body, или использовать JavaScript для динамического расчета размеров. */
+            box-sizing: border-box; /* Важно для корректного расчета размеров с отступами */
         }
-
-        /* Наследуем box-sizing для всех элементов внутри контейнера */
-        #game-container *, #game-container *::before, #game-container *::after {
-            box-sizing: inherit; 
+        *, *::before, *::after {
+            box-sizing: inherit; /* Все элементы наследуют box-sizing */
         }
-
-        /* Overlay теперь позиционируется относительно #game-container */
-        .overlay { 
-            position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;
-        }
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); pointer-events: none; z-index: 1;}
         
         .players-container {
             display: flex; gap: 4vmin;
@@ -87,7 +66,7 @@
             border-radius: 1vmin;
             font-weight: bold; cursor: pointer;
             box-shadow: 0 0 1.5vmin #8b5cf6; display: none; z-index: 5;
-            font-size: 1em; /* Размер шрифта относительно родителя (game-container) */
+            font-size: 1em; /* Используем em для относительного размера шрифта */
         }
         
         .player-wrap.active .ready-btn { display: block; }
@@ -107,6 +86,18 @@
             box-shadow: 0 0 1vmin ${liquidColor};
         }
 
+        /* 
+         * Оптимизация изображений: Этот код устанавливает РАЗМЕР ОТОБРАЖЕНИЯ картинок
+         * с помощью 'vmin' единиц, которые масштабируются относительно размера Genially-окна.
+         * 
+         * Для реального "сжатия" (уменьшения размера файла и ускорения загрузки)
+         * изображения ДОЛЖНЫ быть предварительно оптимизированы и сжаты
+         * перед загрузкой и использованием в Genially.
+         * 
+         * Genially может обрезать код, если URL изображений слишком длинные или данные Base64 слишком велики.
+         * Используйте сервисы для сжатия изображений (например, TinyPNG, Squoosh) или CDN,
+         * которые позволяют изменять размеры изображений по URL-параметрам (если возможно).
+         */
         .avatar {
             width: calc(10vmin * ${avatarSize/100}); 
             height: calc(10vmin * ${avatarSize/100}); 
@@ -114,6 +105,7 @@
             object-fit: cover;
             border: 0.3vmin solid white;
             background: #2a2a35;
+            /* loading="lazy" помогает отложить загрузку изображений, которые не видны сразу */
         }
 
         .name { color: white; margin-top: 1vmin; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0.5vmin 1vmin; border-radius: 0.5vmin; font-size: 1em;}
@@ -167,83 +159,64 @@
             border-radius:2vmin;
             border: 0.5vmin solid ${liquidColor};
             object-fit: cover;
+            /* loading="lazy" помогает отложить загрузку изображений, которые не видны сразу */
         }
         .winner-screen h2 { font-size: 2em; margin-top: 2vmin; }
     </style>
 </head>
 <body>
-    <div id="game-container"> <!-- ВЕСЬ КОНТЕНТ ИГРЫ ТЕПЕРЬ ВНУТРИ ЭТОГО ДИВА -->
-        <div class="overlay"></div>
-        <div class="players-container" id="pc"></div>
+    <div class="overlay"></div>
+    <div class="players-container" id="pc"></div>
 
-        <!-- Modal -->
-        <div class="modal-bg" id="modalBg">
-            <div class="modal">
-                <div class="question" id="qText"></div>
-                <div class="options" id="optsDiv"></div>
-                <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
-            </div>
+    <!-- Modal -->
+    <div class="modal-bg" id="modalBg">
+        <div class="modal">
+            <div class="question" id="qText"></div>
+            <div class="options" id="optsDiv"></div>
+            <button class="check-btn" id="checkBtn" onclick="checkAnswer()">${txt.check}</button>
         </div>
+    </div>
 
-        <!-- Winner -->
-        <div class="winner-screen" id="winnerScreen">
-            <h1>${txt.win}</h1>
-            <img id="winnerAvatar">
-            <h2 id="winnerName"></h2>
-        </div>
-    </div> <!-- КОНЕЦ #game-container -->
+    <!-- Winner -->
+    <div class="winner-screen" id="winnerScreen">
+        <h1>${txt.win}</h1>
+        <img id="winnerAvatar" loading="lazy"> <!-- Добавлен атрибут loading="lazy" -->
+        <h2 id="winnerName"></h2>
+    </div>
 
     <script>
         // ИНЖЕКТИРОВАННЫЙ ОБЪЕКТ СОСТОЯНИЯ. Убедитесь, что он не слишком большой!
+        // Genially может обрезать код, если объем данных слишком велик,
+        // особенно для строки JSON. Старайтесь держать 'gameState' минимальным.
         const state = ${JSON.stringify(gameState)};
         let currentPlayer = 0;
         let scores = Array(state.players.length).fill(0);
         let currentTaskIdx = 0;
         let selectedOption = null;
 
-        // Добавлена проверка на корректность состояния игры при загрузке
-        if (!state || !Array.isArray(state.players) || state.players.length === 0 || !Array.isArray(state.tasks) || state.tasks.length === 0) {
-            console.error("Game State is invalid or empty. Please check the injected 'gameState' object.");
-            // Отобразить сообщение об ошибке пользователю, если данные критически неверны
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer) {
-                gameContainer.innerHTML = '<div style="text-align: center; margin-top: 20%; font-size: 2em; color: #f00;">Ошибка загрузки игры: Некорректные данные.</div>';
-                gameContainer.style.background = '#333'; // Темный фон для сообщения
-            }
-        } else {
-            console.log("Game State loaded successfully:", state);
-            window.onload = init; // Вызываем init только если состояние валидно
-        }
-
         function init() {
-            if (!state || !Array.isArray(state.players) || state.players.length === 0) {
-                console.error("Initialization failed: No players found in state. Skipping player rendering.");
-                return;
-            }
+            if(state.players.length === 0) return;
             const pc = document.getElementById('pc');
-            if (pc) {
-                pc.innerHTML = state.players.map((p, i) => \`
-                    <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
-                        <button class="ready-btn" onclick="openTask()">\${state.txt.ready || 'Готов!'}</button>
-                        <div class="flask">
-                            <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
-                        </div>
-                        <img src="\${p.url}" class="avatar">
-                        <div class="name">\${p.name}</div>
+            pc.innerHTML = state.players.map((p, i) => \`
+                <div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
+                    <button class="ready-btn" onclick="openTask()">\${state.txt.ready}</button>
+                    <div class="flask">
+                        <div class="liquid" id="liq\${i}" style="height: 0%;"></div>
                     </div>
-                \`).join('');
-            } else {
-                console.error("Player container element 'pc' not found.");
-            }
+                    <img src="\${p.url}" class="avatar" loading="lazy"> <!-- Добавлен атрибут loading="lazy" -->
+                    <div class="name">\${p.name}</div>
+                </div>
+            \`).join('');
         }
 
         function openTask() {
             if(state.tasks.length === 0) {
-                alert("${txt.no_tasks || 'Нет заданий!'}" ); 
-                console.error("No tasks available in gameState.");
+                alert(state.txt.noTasks || "Нет заданий!"); // Используем тексты из gameState
                 return;
             }
             
+            // Выбираем случайное задание, чтобы игра была более реиграбельной.
+            // Если нужно, чтобы задания не повторялись до исчерпания, понадобится более сложная логика.
             currentTaskIdx = Math.floor(Math.random() * state.tasks.length);
             const task = state.tasks[currentTaskIdx];
             
@@ -265,18 +238,25 @@
         }
 
         function checkAnswer() {
-            if(selectedOption === null) return;
+            if(selectedOption === null) {
+                alert(state.txt.selectAnswer || "Пожалуйста, выберите ответ!"); // Используем тексты из gameState
+                return;
+            }
             const task = state.tasks[currentTaskIdx];
             
             if(selectedOption === task.correctIdx) {
                 scores[currentPlayer]++;
-                const pcn = (scores[currentPlayer] / state.maxScore) * 100;
+                // Проверяем, что state.maxScore > 0, чтобы избежать деления на ноль
+                const pcn = state.maxScore > 0 ? (scores[currentPlayer] / state.maxScore) * 100 : 0;
                 document.getElementById('liq'+currentPlayer).style.height = pcn + '%';
                 
                 if(scores[currentPlayer] >= state.maxScore) {
                     showWinner();
                     return;
                 }
+            } else {
+                // Опционально: можно добавить обратную связь при неправильном ответе
+                // alert(state.txt.wrongAnswer || "Неправильный ответ!");
             }
             
             document.getElementById('modalBg').style.display = 'none';
@@ -295,6 +275,11 @@
             document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
         }
+
+        // Используем DOMContentLoaded для более ранней инициализации скрипта
+        document.addEventListener('DOMContentLoaded', init);
+        // Fallback на window.onload, если DOMContentLoaded вызывает проблемы (менее вероятно)
+        // window.onload = init; 
     <\/script>
 </body>
 </html>
