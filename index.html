@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Редактор игры: Лаборатория (Genially)</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Montserrat:wght@400;700;800&family=Roboto:wght@4400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Montserrat:wght@400;700;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-deep-space: #0b0616;
@@ -235,21 +235,23 @@
                  </div>
             </div>
 
-            <div class="form-group row">
-                <div class="color-picker-wrapper">
-                   <label>Цвет рамки модала</label>
-                   <input type="color" id="modalBorderColor" value="#9d4edd" onchange="updatePreview()">
-                </div>
-                <div class="color-picker-wrapper">
-                   <label>Цвет фона модала</label>
-                   <input type="color" id="modalBgColor" value="#1a0f2e" onchange="updatePreview()">
-                </div>
-           </div>
-
             <div class="form-group">
                 <label>Цвет жидкости</label>
                 <input type="color" id="liquidColor" value="#00f5ff" onchange="updatePreview()">
             </div>
+
+            <!-- НОВЫЕ ПОЛЯ: Цвета плашки с заданиями -->
+            <div class="form-group row">
+                <div class="color-picker-wrapper">
+                   <label>Цвет фона заданий</label>
+                   <input type="color" id="modalBgColor" value="#190f2d" onchange="updatePreview()">
+                </div>
+                <div class="color-picker-wrapper">
+                   <label>Цвет рамки заданий</label>
+                   <input type="color" id="modalBorderColor" value="#9d4edd" onchange="updatePreview()">
+                </div>
+            </div>
+            <!-- КОНЕЦ НОВЫХ ПОЛЕЙ -->
 
             <div class="form-group">
                 <label>Фон игры (URL)</label>
@@ -258,18 +260,23 @@
             </div>
 
             <div class="form-group">
-                <label>Звук: правильный ответ (URL)</label>
-                <input type="text" id="correctSoundUrl" value="https://assets.mixkit.co/sfx/preview/mixkit-game-bling-2000.mp3" placeholder="URL аудио файла" onchange="updatePreview()">
-            </div>
-            <div class="form-group">
-                <label>Звук: неправ. ответ (URL)</label>
-                <input type="text" id="incorrectSoundUrl" value="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-bass-bubble-946.mp3" placeholder="URL аудио файла" onchange="updatePreview()">
-            </div>
-
-            <div class="form-group">
                 <label>Размер аватаров (%)</label>
                 <input type="range" id="avatarSize" min="50" max="150" value="100" onchange="updatePreview()">
             </div>
+
+            <!-- НОВЫЕ ПОЛЯ: Звуковые эффекты -->
+            <h2 style="margin-top: 10px;">Звуковые эффекты</h2>
+            <div class="form-group">
+                <label>Звук правильного ответа (URL)</label>
+                <input type="text" id="correctSoundUrl" placeholder="Ссылка на аудио файл" value="https://www.soundjay.com/buttons/beep-07.mp3" onchange="updatePreview()">
+                <div class="info-message">Вставьте ссылку на MP3/WAV файл.</div>
+            </div>
+            <div class="form-group">
+                <label>Звук неправильного ответа (URL)</label>
+                <input type="text" id="incorrectSoundUrl" placeholder="Ссылка на аудио файл" value="https://www.soundjay.com/buttons/beep-04.mp3" onchange="updatePreview()">
+                <div class="info-message">Вставьте ссылку на MP3/WAV файл.</div>
+            </div>
+            <!-- КОНЕЦ НОВЫХ ПОЛЕЙ -->
 
             <h2>Игроки</h2>
             <div id="playersList"></div>
@@ -298,7 +305,7 @@
         window.onload = () => {
             config.players = [];
             config.tasks = [];
-            addPlayer('Игрок 1', 'https://i.imgur.com/8DbkK2i.png'); // Default working avatar image
+            addPlayer('Игрок 1', 'https://i.imgur.com/8DbkK2i.png'); // New working default image
             addTask();
             updatePreview();
         };
@@ -323,7 +330,7 @@
                 <div class="card">
                     <div class="form-group">
                         <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
-                        <input type="text" placeholder="URL Аватара (поддерживает GIF)" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
+                        <input type="text" placeholder="URL Аватара (картинка или GIF)" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
                         <button class="delete-btn" onclick="removePlayer(${p.id})">Удалить</button>
                     </div>
                 </div>`).join('');
@@ -426,13 +433,12 @@
             const finalAvatarSize = Math.round(280 * (avatarSize / 100));
             const themeColor = document.getElementById('themeColor').value;
             const glowColor = document.getElementById('glowColor').value;
-            // NEW: Modal colors
-            const modalBorderColor = document.getElementById('modalBorderColor').value;
+            // НОВЫЕ ПЕРЕМЕННЫЕ
             const modalBgColor = document.getElementById('modalBgColor').value;
-            // NEW: Sound URLs
+            const modalBorderColor = document.getElementById('modalBorderColor').value;
             const correctSoundUrl = document.getElementById('correctSoundUrl').value;
             const incorrectSoundUrl = document.getElementById('incorrectSoundUrl').value;
-
+            // КОНЕЦ НОВЫХ ПЕРЕМЕННЫХ
 
             const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', points: 'очков', inputPlaceholder: 'Введите ответ...' } 
                                       : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', points: 'points', inputPlaceholder: 'Type your answer...' };
@@ -442,7 +448,11 @@
                 tasks: config.tasks, 
                 maxScore: parseInt(maxScore) || 20, 
                 pointsPerAnswer: parseInt(pointsPerAnswer) || 5,
-                txt: txt 
+                txt: txt,
+                // НОВЫЕ ПОЛЯ В СОСТОЯНИИ ИГРЫ
+                correctSound: correctSoundUrl,
+                incorrectSound: incorrectSoundUrl
+                // КОНЕЦ НОВЫХ ПОЛЕЙ
             };
             
             const allTaskIndices = gameState.tasks.map((_, i) => i);
@@ -472,11 +482,7 @@
         body { font-family: '${fontFamily}', sans-serif !important; position: relative !important; }
         *, *::before, *::after { box-sizing: border-box !important; }
         #gameRoot {
-            --theme-color: ${themeColor};
-            --glow-color: ${glowColor};
-            --modal-border-color: ${modalBorderColor}; /* NEW */
-            --modal-bg-color: ${modalBgColor};       /* NEW */
-            width: 1920px; height: 1080px; position: absolute; left: 50%; top: 50%;
+            --theme-color: ${themeColor}; --glow-color: ${glowColor}; width: 1920px; height: 1080px; position: absolute; left: 50%; top: 50%;
             transform-origin: center; transform: translate(-50%, -50%) scale(1); ${gameBackgroundStyle} background-size: cover; background-position: center;
             box-shadow: inset 0 0 100px rgba(0,0,0,0.8); overflow: hidden;
         }
@@ -499,10 +505,13 @@
         #gameRoot .avatar { width: 100%; height: 100%; object-fit: cover; }
         #gameRoot .name { margin-top: 30px; background: rgba(20, 15, 35, 0.9) !important; border: 4px solid rgba(255,255,255,0.15) !important; color: white !important; padding: 15px 40px; border-radius: 40px; font-size: 26px !important; font-weight: 700; text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6); }
         #gameRoot .modal-bg { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8) !important; backdrop-filter: blur(10px); z-index: 200; justify-content: center; align-items: center; }
-        #gameRoot .modal {
-            background: var(--modal-bg-color) !important; /* Используем новую переменную */
-            border: 8px solid var(--modal-border-color) !important; /* Используем новую переменную */
-            border-radius: 50px; padding: 70px; width: 1100px; text-align: center; box-shadow: 0 0 80px var(--theme-color) !important; color: white !important;
+        /* ОБНОВЛЕНО: Цвета фона и рамки модального окна */
+        #gameRoot .modal { 
+            background: ${modalBgColor} !important; 
+            border: 8px solid ${modalBorderColor} !important; 
+            border-radius: 50px; padding: 70px; width: 1100px; text-align: center; 
+            box-shadow: 0 0 80px var(--theme-color) !important; /* Тень остается от theme-color */
+            color: white !important; 
         }
         #gameRoot .question { font-size: 48px !important; font-weight: 800; margin-bottom: 60px; line-height: 1.3;}
         #gameRoot .options { display: flex; flex-direction: column; gap: 20px; }
@@ -536,13 +545,13 @@
             <div class="winner-screen" id="winnerScreen">
                 <h1>${txt.win}</h1> <img id="winnerAvatar"> <h2 id="winnerName"></h2> <h3 id="winnerScore"></h3>
             </div>
-            <!-- Аудио элементы для звуковых эффектов -->
-            <audio id="correctSound" src="${correctSoundUrl}" preload="auto"></audio>
-            <audio id="incorrectSound" src="${incorrectSoundUrl}" preload="auto"></audio>
         </div>
     </div>
-    <!-- Библиотека для салюта -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- НОВЫЕ ЭЛЕМЕНТЫ: Аудио и Скрипт салюта -->
+    <audio id="correctSound" src="${correctSoundUrl}" preload="auto"></audio>
+    <audio id="incorrectSound" src="${incorrectSoundUrl}" preload="auto"></audio>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <!-- КОНЕЦ НОВЫХ ЭЛЕМЕНТОВ -->
     <script>
         const state = ${JSON.stringify(gameState)};
         let currentPlayer = 0;
@@ -551,12 +560,10 @@
         let currentTaskIndex = -1;
         let selectedOption = null;
 
-        // Получаем элементы аудио
-        const correctSound = document.getElementById('correctSound');
-        const incorrectSound = document.getElementById('incorrectSound');
-        // Обработка ошибок загрузки аудио (если URL пуст или неверен)
-        if (correctSound) correctSound.onerror = function() { console.error('Failed to load correct sound', this.src); this.src = ''; };
-        if (incorrectSound) incorrectSound.onerror = function() { console.error('Failed to load incorrect sound', this.src); this.src = ''; };
+        // НОВЫЕ ПЕРЕМЕННЫЕ: Аудио
+        const correctAudio = document.getElementById('correctSound');
+        const incorrectAudio = document.getElementById('incorrectSound');
+        // КОНЕЦ НОВЫХ ПЕРЕМЕННЫХ
 
         function resizeGame() {
             const wrapper = document.getElementById('genially-wrapper'); if (!wrapper) return;
@@ -623,24 +630,23 @@
                 isCorrect = (userAnswer === correctAnswer);
             }
             
+            // НОВОЕ: Воспроизведение звуков
             if(isCorrect) {
-                // Воспроизводим звук правильного ответа, если URL указан
-                if (correctSound && correctSound.src) { 
-                    correctSound.currentTime = 0; // Начинаем с начала
-                    correctSound.play(); 
-                }
+                correctAudio.currentTime = 0; // Сброс для повторного воспроизведения
+                correctAudio.play();
+            } else {
+                incorrectAudio.currentTime = 0; // Сброс для повторного воспроизведения
+                incorrectAudio.play();
+            }
+            // КОНЕЦ НОВОГО
+
+            if(isCorrect) {
                 scores[currentPlayer] += state.pointsPerAnswer;
                 const pcn = (scores[currentPlayer] / state.maxScore) * 100;
                 document.getElementById('liq'+currentPlayer).style.height = Math.min(pcn, 100) + '%';
                 if(scores[currentPlayer] >= state.maxScore) {
                     showWinner();
                     return;
-                }
-            } else {
-                // Воспроизводим звук неправильного ответа, если URL указан
-                if (incorrectSound && incorrectSound.src) { 
-                    incorrectSound.currentTime = 0; // Начинаем с начала
-                    incorrectSound.play(); 
                 }
             }
             document.getElementById('modalBg').style.display = 'none';
@@ -663,28 +669,35 @@
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
             document.getElementById('winnerScore').innerText = scores[currentPlayer] + ' ' + state.txt.points;
 
-            // Салют при победе
-            if (typeof confetti === 'function') { // Проверяем, загружена ли библиотека confetti
-                setTimeout(() => { // Небольшая задержка для лучшего визуального эффекта
-                    confetti({
-                        particleCount: 150,
-                        spread: 120,
-                        origin: { y: 0.6 }
-                    });
-                    confetti({
-                        particleCount: 100,
-                        angle: 60,
-                        spread: 55,
-                        origin: { x: 0 }
-                    });
-                    confetti({
-                        particleCount: 100,
-                        angle: 120,
-                        spread: 55,
-                        origin: { x: 1 }
-                    });
-                }, 500); // Салют начнется через 0.5 секунды
+            // НОВОЕ: Эффект салюта
+            if (typeof confetti === 'function') { // Проверка, загружен ли confetti
+                const duration = 5 * 1000;
+                const animationEnd = Date.now() + duration;
+                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 301 }; // z-index выше, чем у winner-screen
+
+                function randomInRange(min, max) {
+                    return Math.random() * (max - min) + min;
+                }
+
+                const interval = setInterval(function() {
+                    const timeLeft = animationEnd - Date.now();
+
+                    if (timeLeft <= 0) {
+                        return clearInterval(interval);
+                    }
+
+                    const particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, {
+                        particleCount,
+                        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                    }));
+                    confetti(Object.assign({}, defaults, {
+                        particleCount,
+                        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                    }));
+                }, 250);
             }
+            // КОНЕЦ НОВОГО
         }
 
         init();
@@ -696,6 +709,9 @@
         function updatePreview() {
             const html = getGameHTML();
             const iframe = document.getElementById('previewFrame');
+            // Важно: srcdoc может вызывать проблемы с воспроизведением медиа (аудио) из-за ограничений безопасности браузера
+            // для iframes в режиме "sandbox". Если звуки не работают, это может быть причиной.
+            // Для Genially это обычно работает, так как Genially часто устанавливает нужные разрешения.
             iframe.srcdoc = html;
             const btn = document.getElementById('generateBtn');
             btn.textContent = "Сгенерировать код";
