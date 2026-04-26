@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -214,9 +213,15 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Очки за правильный ответ</label>
-                <input type="number" id="pointsPerAnswer" value="10" min="1" onchange="updatePreview()">
+            <div class="form-group row">
+                <div class="input-wrapper">
+                    <label>Очки для победы</label>
+                    <input type="number" id="maxScore" value="20" min="1" onchange="updatePreview()">
+                </div>
+                <div class="input-wrapper">
+                    <label>Очки за ответ</label>
+                    <input type="number" id="pointsPerAnswer" value="5" min="1" onchange="updatePreview()">
+                </div>
             </div>
             
             <div class="form-group row">
@@ -246,6 +251,30 @@
                 <input type="range" id="avatarSize" min="50" max="150" value="100" onchange="updatePreview()">
             </div>
 
+            <h2 style="margin-top: 10px;">Настройки модального окна</h2>
+            <div class="form-group row">
+                <div class="color-picker-wrapper">
+                   <label>Цвет рамки модального окна</label>
+                   <input type="color" id="modalBorderColor" value="#9d4edd" onchange="updatePreview()">
+                </div>
+                <div class="color-picker-wrapper">
+                   <label>Цвет фона модального окна</label>
+                   <input type="color" id="modalBgColor" value="rgba(25, 15, 45, 0.95)" onchange="updatePreview()">
+                </div>
+            </div>
+
+            <h2 style="margin-top: 10px;">Звуковые эффекты</h2>
+            <div class="form-group">
+                <label>Звук правильного ответа (URL)</label>
+                <input type="text" id="correctSoundUrl" placeholder="Ссылка на .mp3 или .wav" onchange="updatePreview()">
+                <div class="info-message">Например: https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3</div>
+            </div>
+            <div class="form-group">
+                <label>Звук неправильного ответа (URL)</label>
+                <input type="text" id="wrongSoundUrl" placeholder="Ссылка на .mp3 или .wav" onchange="updatePreview()">
+                <div class="info-message">Например: https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3</div>
+            </div>
+
             <h2>Игроки</h2>
             <div id="playersList"></div>
             <button onclick="addPlayer()">+ Добавить игрока (до 4)</button>
@@ -273,7 +302,7 @@
         window.onload = () => {
             config.players = [];
             config.tasks = [];
-            addPlayer('Игрок 1', ''); // Default URL is now empty
+            addPlayer('Игрок 1', 'https://i.imgur.com/8DbkK2i.png'); // New working default image
             addTask();
             updatePreview();
         };
@@ -298,13 +327,13 @@
                 <div class="card">
                     <div class="form-group">
                         <input type="text" placeholder="Имя" value="${p.name}" onchange="config.players[${idx}].name=this.value; updatePreview()">
-                        <input type="text" placeholder="URL Аватара" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
+                        <input type="text" placeholder="URL Аватара (или GIF)" value="${p.url}" onchange="config.players[${idx}].url=this.value; updatePreview()">
                         <button class="delete-btn" onclick="removePlayer(${p.id})">Удалить</button>
                     </div>
                 </div>`).join('');
         }
 
-        // --- TASK MANAGEMENT (Unchanged) ---
+        // --- TASK MANAGEMENT ---
         function addTask() {
             config.tasks.push({ 
                 id: Date.now(), 
@@ -327,6 +356,13 @@
             config.tasks[idx].type = type;
             if (type === 'text-input' && config.tasks[idx].options.length === 0) {
                 config.tasks[idx].options = ['Правильный ответ'];
+            }
+            // If changing from text-input to multiple-choice, ensure default options
+            if (type === 'multiple-choice' && config.tasks[idx].options.length < 2) {
+                config.tasks[idx].options = ['Вариант 1', 'Вариант 2'];
+                config.tasks[idx].correctIdx = 0;
+            } else if (type === 'text-input' && config.tasks[idx].options.length === 0) {
+                 config.tasks[idx].options = ['Правильный ответ'];
             }
             renderTasks();
             updatePreview();
@@ -394,12 +430,17 @@
             const lang = document.getElementById('lang').value;
             const bgUrl = document.getElementById('bgUrl').value; 
             const liquidColor = document.getElementById('liquidColor').value;
+            const maxScore = document.getElementById('maxScore').value;
             const pointsPerAnswer = document.getElementById('pointsPerAnswer').value;
             const fontFamily = document.getElementById('fontFamily').value;
             const avatarSize = document.getElementById('avatarSize').value;
             const finalAvatarSize = Math.round(280 * (avatarSize / 100));
             const themeColor = document.getElementById('themeColor').value;
             const glowColor = document.getElementById('glowColor').value;
+            const modalBorderColor = document.getElementById('modalBorderColor').value;
+            const modalBgColor = document.getElementById('modalBgColor').value;
+            const correctSoundUrl = document.getElementById('correctSoundUrl').value;
+            const wrongSoundUrl = document.getElementById('wrongSoundUrl').value;
 
             const txt = lang === 'ru' ? { ready: 'ИГРАТЬ', check: 'ПРОВЕРИТЬ', win: 'ПОБЕДА!', points: 'очков', inputPlaceholder: 'Введите ответ...' } 
                                       : { ready: 'PLAY', check: 'CHECK', win: 'WINNER!', points: 'points', inputPlaceholder: 'Type your answer...' };
@@ -407,8 +448,11 @@
             const gameState = { 
                 players: config.players, 
                 tasks: config.tasks, 
-                pointsPerAnswer: parseInt(pointsPerAnswer) || 10,
-                txt: txt 
+                maxScore: parseInt(maxScore) || 20, 
+                pointsPerAnswer: parseInt(pointsPerAnswer) || 5,
+                txt: txt,
+                correctSoundUrl: correctSoundUrl,
+                wrongSoundUrl: wrongSoundUrl
             };
             
             const allTaskIndices = gameState.tasks.map((_, i) => i);
@@ -438,7 +482,9 @@
         body { font-family: '${fontFamily}', sans-serif !important; position: relative !important; }
         *, *::before, *::after { box-sizing: border-box !important; }
         #gameRoot {
-            --theme-color: ${themeColor}; --glow-color: ${glowColor}; width: 1920px; height: 1080px; position: absolute; left: 50%; top: 50%;
+            --theme-color: ${themeColor}; --glow-color: ${glowColor}; 
+            --modal-border-color: ${modalBorderColor}; --modal-bg-color: ${modalBgColor};
+            width: 1920px; height: 1080px; position: absolute; left: 50%; top: 50%;
             transform-origin: center; transform: translate(-50%, -50%) scale(1); ${gameBackgroundStyle} background-size: cover; background-position: center;
             box-shadow: inset 0 0 100px rgba(0,0,0,0.8); overflow: hidden;
         }
@@ -459,10 +505,9 @@
         #gameRoot .avatar-container { width: ${finalAvatarSize}px; height: ${finalAvatarSize}px; border-radius: 40px; border: 8px solid rgba(255,255,255,0.2) !important; background: #1d1033 !important; overflow: hidden; z-index: 3; position: relative; transition: all 0.3s; }
         #gameRoot .player-wrap.active .avatar-container { border-color: var(--theme-color) !important; box-shadow: 0 0 50px var(--theme-color), inset 0 0 30px var(--theme-color) !important; }
         #gameRoot .avatar { width: 100%; height: 100%; object-fit: cover; }
-        #gameRoot .name { margin-top: 20px; background: rgba(20, 15, 35, 0.9) !important; border: 4px solid rgba(255,255,255,0.15) !important; color: white !important; padding: 15px 40px; border-radius: 40px; font-size: 26px !important; font-weight: 700; text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6); }
-        #gameRoot .score-display { position: absolute; bottom: 105px; background: rgba(0,0,0,0.7); color: var(--glow-color); font-size: 24px; font-weight: 800; padding: 8px 20px; border-radius: 20px; border: 2px solid var(--glow-color); box-shadow: 0 0 15px var(--glow-color); z-index: 15; }
+        #gameRoot .name { margin-top: 30px; background: rgba(20, 15, 35, 0.9) !important; border: 4px solid rgba(255,255,255,0.15) !important; color: white !important; padding: 15px 40px; border-radius: 40px; font-size: 26px !important; font-weight: 700; text-transform: uppercase; white-space: nowrap; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; z-index: 4; box-shadow: 0 15px 25px rgba(0,0,0,0.6); }
         #gameRoot .modal-bg { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8) !important; backdrop-filter: blur(10px); z-index: 200; justify-content: center; align-items: center; }
-        #gameRoot .modal { background: rgba(25, 15, 45, 0.95) !important; border: 8px solid var(--theme-color) !important; border-radius: 50px; padding: 70px; width: 1100px; text-align: center; box-shadow: 0 0 80px var(--theme-color) !important; color: white !important; }
+        #gameRoot .modal { background: var(--modal-bg-color) !important; border: 8px solid var(--modal-border-color) !important; border-radius: 50px; padding: 70px; width: 1100px; text-align: center; box-shadow: 0 0 80px var(--modal-border-color) !important; color: white !important; }
         #gameRoot .question { font-size: 48px !important; font-weight: 800; margin-bottom: 60px; line-height: 1.3;}
         #gameRoot .options { display: flex; flex-direction: column; gap: 20px; }
         #gameRoot .option-btn { background: rgba(255, 255, 255, 0.05) !important; color: white !important; border: 4px solid rgba(255,255,255,0.1) !important; padding: 30px; border-radius: 25px; cursor: pointer !important; transition: all 0.2s; font-size: 32px !important; text-align: left; font-family: inherit !important; font-weight: 700; pointer-events: auto !important; }
@@ -495,17 +540,21 @@
             <div class="winner-screen" id="winnerScreen">
                 <h1>${txt.win}</h1> <img id="winnerAvatar"> <h2 id="winnerName"></h2> <h3 id="winnerScore"></h3>
             </div>
+            ${gameState.correctSoundUrl ? `<audio id="correctSound" src="${gameState.correctSoundUrl}" preload="auto"></audio>` : ''}
+            ${gameState.wrongSoundUrl ? `<audio id="wrongSound" src="${gameState.wrongSoundUrl}" preload="auto"></audio>` : ''}
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
         const state = ${JSON.stringify(gameState)};
         let currentPlayer = 0;
-        let scores = Array(state.players.length).fill(0); // Tracks points
-        let correctAnswers = Array(state.players.length).fill(0); // Tracks number of correct answers for progress
-        let initialTaskCounts = []; // Stores how many tasks each player started with
+        let scores = Array(state.players.length).fill(0);
         let playerTaskQueues;
         let currentTaskIndex = -1;
         let selectedOption = null;
+
+        let correctSound = null;
+        let wrongSound = null;
 
         function resizeGame() {
             const wrapper = document.getElementById('genially-wrapper'); if (!wrapper) return;
@@ -522,20 +571,22 @@
                 if(gameRoot) gameRoot.innerHTML = '<div class="empty-state">Добавьте игроков и задания в редакторе</div>'; return;
             }
             playerTaskQueues = JSON.parse(JSON.stringify(state.playerTasks || []));
-            initialTaskCounts = playerTaskQueues.map(tasks => tasks.length); // Store initial task count
-
             const pc = document.getElementById('pc');
-            pc.innerHTML = state.players.map((p, i) => \`<div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}">
-                <button class="ready-btn">\${state.txt.ready}</button>
-                <div class="score-display" id="score\${i}">0 \${state.txt.points}</div>
-                <div class="flask"><div class="liquid" id="liq\${i}" style="height: 0%;"></div></div>
-                <div class="avatar-container"><img src="\${p.url || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='}" class="avatar"></div>
-                <div class="name">\${p.name || 'Игрок ' + (i+1)}</div>
-            </div>\`).join('');
+            pc.innerHTML = state.players.map((p, i) => \`<div class="player-wrap \${i === 0 ? 'active' : ''}" id="p\${i}"><button class="ready-btn">\${state.txt.ready}</button><div class="flask"><div class="liquid" id="liq\${i}" style="height: 0%;"></div></div><div class="avatar-container"><img src="\${p.url}" class="avatar" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'><text x=\\'50%\\' y=\\'50%\\' font-size=\\'20\\' text-anchor=\\'middle\\' dominant-baseline=\\'central\\' fill=\\'#ccc\\'>Недоступен</text></svg>';"></div><div class="name">\${p.name || 'Игрок ' + (i+1)}</div></div>\`).join('');
             document.querySelectorAll('.ready-btn').forEach(btn => btn.addEventListener('click', openTask));
             document.getElementById('checkBtn').addEventListener('click', checkAnswer);
             updatePlayButtonVisibility(currentPlayer);
             resizeGame();
+
+            if (state.correctSoundUrl) correctSound = document.getElementById('correctSound');
+            if (state.wrongSoundUrl) wrongSound = document.getElementById('wrongSound');
+        }
+
+        function playSound(sound) {
+            if (sound) {
+                sound.currentTime = 0; // Rewind to start
+                sound.play().catch(e => console.error("Error playing sound:", e));
+            }
         }
 
         function updatePlayButtonVisibility(playerIndex) {
@@ -546,7 +597,10 @@
         }
 
         function openTask() {
-            if (!playerTaskQueues[currentPlayer] || playerTaskQueues[currentPlayer].length === 0) return;
+            if (!playerTaskQueues[currentPlayer] || playerTaskQueues[currentPlayer].length === 0) {
+                 alert("Нет больше вопросов для этого игрока!"); // Or disable button more gracefully
+                 return;
+            }
             currentTaskIndex = playerTaskQueues[currentPlayer].shift();
             const task = state.tasks[currentTaskIndex];
             document.getElementById('qText').innerText = task.question;
@@ -574,30 +628,30 @@
                 if (selectedOption === null) return;
                 isCorrect = (selectedOption === task.correctIdx);
             } else {
-                const userAnswer = document.querySelector('.text-input-answer').value.trim().toLowerCase();
+                const inputElement = document.querySelector('.text-input-answer');
+                if (!inputElement || inputElement.value.trim() === '') return;
+                const userAnswer = inputElement.value.trim().toLowerCase();
                 const correctAnswer = task.options[0].trim().toLowerCase();
-                if (userAnswer === '') return;
                 isCorrect = (userAnswer === correctAnswer);
             }
+
             if(isCorrect) {
                 scores[currentPlayer] += state.pointsPerAnswer;
-                correctAnswers[currentPlayer]++;
-                
-                // Update score display
-                document.getElementById('score'+currentPlayer).innerText = scores[currentPlayer] + ' ' + state.txt.points;
-
-                // Calculate liquid fill percentage based on task progress
-                const totalTasks = initialTaskCounts[currentPlayer];
-                const pcn = totalTasks > 0 ? (correctAnswers[currentPlayer] / totalTasks) * 100 : 0;
-                document.getElementById('liq'+currentPlayer).style.height = Math.min(pcn, 100) + '%';
-                
-                // Check for win condition (all tasks for that player are answered correctly)
-                if(correctAnswers[currentPlayer] >= totalTasks && totalTasks > 0) {
-                    showWinner();
-                    return;
-                }
+                playSound(correctSound);
+            } else {
+                playSound(wrongSound);
             }
+
+            const pcn = (scores[currentPlayer] / state.maxScore) * 100;
+            document.getElementById('liq'+currentPlayer).style.height = Math.min(pcn, 100) + '%';
+            
             document.getElementById('modalBg').style.display = 'none';
+
+            if(scores[currentPlayer] >= state.maxScore) {
+                showWinner();
+                return;
+            }
+            
             updatePlayButtonVisibility(currentPlayer);
             nextTurn();
         }
@@ -613,9 +667,16 @@
             document.getElementById('modalBg').style.display = 'none';
             const winnerScreen = document.getElementById('winnerScreen');
             winnerScreen.style.display = 'flex';
-            document.getElementById('winnerAvatar').src = state.players[currentPlayer].url || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            document.getElementById('winnerAvatar').src = state.players[currentPlayer].url;
             document.getElementById('winnerName').innerText = state.players[currentPlayer].name;
             document.getElementById('winnerScore').innerText = scores[currentPlayer] + ' ' + state.txt.points;
+
+            // Confetti
+            confetti({
+                particleCount: 150,
+                spread: 90,
+                origin: { y: 0.6 }
+            });
         }
 
         init();
@@ -627,7 +688,16 @@
         function updatePreview() {
             const html = getGameHTML();
             const iframe = document.getElementById('previewFrame');
+            // Using srcdoc directly might cause issues with external scripts/styles in some contexts
+            // A more robust solution for complex iframes might involve creating a blob URL,
+            // but for Genially, srcdoc usually works if content is self-contained.
+            // However, to ensure sounds and confetti work, we will explicitly add them.
             iframe.srcdoc = html;
+            
+            // Re-render tasks and players to ensure data consistency in case of type change issues
+            renderTasks();
+            renderPlayers();
+
             const btn = document.getElementById('generateBtn');
             btn.textContent = "Сгенерировать код";
             btn.classList.remove('success');
