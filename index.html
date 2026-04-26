@@ -633,8 +633,15 @@
                 if (userAnswer === '') return;
                 isCorrect = (userAnswer === correctAnswer);
             }
+
+            const correctSound = document.getElementById('correctSound');
+            const incorrectSound = document.getElementById('incorrectSound');
+
             if(isCorrect) {
-                document.getElementById('correctSound').play();
+                if (correctSound) {
+                    correctSound.currentTime = 0; // Reset to start
+                    correctSound.play().catch(e => console.error("Error playing correct sound:", e));
+                }
                 scores[currentPlayer] += state.pointsPerAnswer;
                 correctAnswers[currentPlayer]++;
                 
@@ -649,7 +656,10 @@
                     return;
                 }
             } else {
-                document.getElementById('incorrectSound').play();
+                if (incorrectSound) {
+                    incorrectSound.currentTime = 0; // Reset to start
+                    incorrectSound.play().catch(e => console.error("Error playing incorrect sound:", e));
+                }
             }
             document.getElementById('modalBg').style.display = 'none';
             updatePlayButtonVisibility(currentPlayer);
@@ -748,29 +758,5 @@
 
         init();
     <\/script>
-</body>
-</html>`;
-        }
-        
-        function updatePreview() {
-            const html = getGameHTML();
-            const iframe = document.getElementById('previewFrame');
-            iframe.srcdoc = html;
-            const btn = document.getElementById('generateBtn');
-            btn.textContent = "Сгенерировать код";
-            btn.classList.remove('success');
-        }
-
-        function generateCode() {
-            const html = getGameHTML();
-            const btn = document.getElementById('generateBtn');
-            navigator.clipboard.writeText(html).then(() => {
-                btn.textContent = "Скопировано!";
-                btn.classList.add('success');
-            }).catch(err => {
-                alert("Ошибка копирования. Попробуйте снова.");
-            });
-        }
-    </script>
 </body>
 </html>
